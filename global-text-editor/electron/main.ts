@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { initDb } from "./db/db";
+import { registerNodeHandlers } from "./ipc/nodes";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -31,7 +33,11 @@ function createWindow() {
 // renderer -> main demo (invoke)
 ipcMain.handle("ping", async () => "pong from main");
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    initDb();
+    registerNodeHandlers()
+    createWindow()
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
