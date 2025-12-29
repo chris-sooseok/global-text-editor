@@ -52,6 +52,8 @@ function createWindow() {
     }
   })
 
+  win.maximize()
+
   const isDev = !app.isPackaged
 
   if (isDev) {

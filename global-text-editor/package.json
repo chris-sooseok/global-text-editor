@@ -12,10 +12,12 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "better-sqlite3": "^12.5.0",
     "electron": "^39.2.7",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.7.2",
