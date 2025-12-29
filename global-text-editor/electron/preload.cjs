@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-contextBridge.exposeInMainWorld('db', {
-  listNotes: () => ipcRenderer.invoke('notes:list'),
-  addNote: (text) => ipcRenderer.invoke('notes:add', text)
+contextBridge.exposeInMainWorld('api', {
+    createFolder: (name, parentId) => 
+        ipcRenderer.invoke('folders:create', { name, parentId }),
+    listFolders: (parentId) =>
+    ipcRenderer.invoke('folders:list', parentId === undefined ? {} : { parentId })
 })
