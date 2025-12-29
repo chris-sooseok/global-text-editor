@@ -1,10 +1,23 @@
-export default function Sidebar() {
-  function handleCreateFolder() {
-    console.log('Create Folder')
-  }
 
-  function handleCreateFile() {
-    console.log('Create File')
+export default function Sidebar() {
+
+    async function handleCreateFolder() {
+        const name = window.prompt('Folder name?')
+        if (!name) return
+
+        const res = await window.api.createFolder(name, 1)
+
+        if (!res.ok) {
+            window.alert(res.message)
+            return
+        }
+
+        console.log('Created folder:', res.folder)
+        // Later: refresh your folder list here
+    }
+
+    function handleCreateFile() {
+        console.log('Create File')
   }
 
   return (

@@ -2,7 +2,6 @@ const { app, BrowserWindow } = require('electron')
 const path = require('node:path')
 const { migrate, close_db } = require("./db/index.cjs");
 
-
 function createWindow() {
   const win = new BrowserWindow({
     width: 900,
@@ -20,7 +19,7 @@ function createWindow() {
   const isDev = !app.isPackaged
   if (isDev) {
     win.loadURL('http://localhost:5173')
-    // win.webContents.openDevTools()
+    win.webContents.openDevTools()
   } else {
     win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
   }
@@ -28,6 +27,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   migrate()
+  require('./ipc/nodes.cjs')
   createWindow()
 })
 
