@@ -1,6 +1,6 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow } = require('electron')
 const path = require('node:path')
-const { migrate, close_db } = require("./db/index");
+const { migrate, close_db } = require("./db/index.cjs");
 
 
 function createWindow() {

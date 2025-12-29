@@ -1,5 +1,7 @@
-import MainPage from './pages/MainPage'
+import Sidebar from './pages/Sidebar'
 
 export default function App() {
-  return <MainPage />
+  return (
+      <Sidebar />
+  )
 }
