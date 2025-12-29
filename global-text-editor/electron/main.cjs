@@ -1,45 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('node:path')
-const Database = require('better-sqlite3')
+const { migrate, close_db } = require("./db/index");
 
-let db = null
-
-function getDb() {
-  if (db) return db
-
-  // Where your DB file will live (per-user app data dir)
-  const dbPath = path.join(app.getPath('userData'), 'app.db')
-
-  db = new Database(dbPath)
-  db.pragma('journal_mode = WAL')
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS notes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      text TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-  `)
-
-  return db
-}
-
-function registerIpc() {
-  ipcMain.handle('notes:list', () => {
-    return getDb()
-      .prepare('SELECT id, text, created_at AS createdAt FROM notes ORDER BY id DESC')
-      .all()
-  })
-
-  ipcMain.handle('notes:add', (_evt, text) => {
-    const createdAt = Date.now()
-    const info = getDb()
-      .prepare('INSERT INTO notes (text, created_at) VALUES (?, ?)')
-      .run(text, createdAt)
-
-    return { id: Number(info.lastInsertRowid), text, createdAt }
-  })
-}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -54,8 +16,8 @@ function createWindow() {
 
   win.maximize()
 
+  // app.isPackaged returns true in production mode
   const isDev = !app.isPackaged
-
   if (isDev) {
     win.loadURL('http://localhost:5173')
     // win.webContents.openDevTools()
@@ -65,8 +27,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  registerIpc()
-  getDb() // create db + tables early
+  migrate()
   createWindow()
 })
 
@@ -75,5 +36,5 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
-  if (db) db.close()
+  close_db()
 })
