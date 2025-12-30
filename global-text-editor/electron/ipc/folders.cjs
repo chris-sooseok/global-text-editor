@@ -18,31 +18,44 @@ ipcMain.handle('folders:create', (_evt, payload) => {
     }
 
     const now = Date.now()
+    const db = connect_db()
 
-    const info = connect_db()
+    // Put new folder at the end among its siblings
+    const nextSortOrder = db
       .prepare(`
-        INSERT INTO folders (parent_id, name, created_at, updated_at)
-        VALUES (?, ?, ?, ?)
+        SELECT COALESCE(MAX(sort_order) + 1, 0) AS nextSortOrder
+        FROM folders
+        WHERE parent_id IS ?
       `)
-      .run(parentId, name, now, now)
+      .get(parentId).nextSortOrder
+
+    const info = db
+      .prepare(`
+        INSERT INTO folders (parent_id, name, sort_order, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      .run(parentId, name, nextSortOrder, now, now)
 
     return {
       ok: true,
-      folder: { id: Number(info.lastInsertRowid), parentId, name, createdAt: now, updatedAt: now }
+      folder: {
+        id: Number(info.lastInsertRowid),
+        parentId,
+        name,
+        sortOrder: nextSortOrder,
+        createdAt: now,
+        updatedAt: now
+      }
     }
   } catch (err) {
-    // ...
     return { ok: false, message: 'Failed to create folder.' }
   }
 })
 
-
 // List folders (all, or by parentId if provided)
 ipcMain.handle('folders:list', (_evt, payload) => {
-  
   try {
     const db = connect_db()
-
     const parentId = payload?.parentId
 
     let rows
@@ -51,19 +64,23 @@ ipcMain.handle('folders:list', (_evt, payload) => {
     if (parentId === undefined) {
       rows = db
         .prepare(`
-          SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
+          SELECT id, parent_id AS parentId, name,
+                 sort_order AS sortOrder,
+                 created_at AS createdAt, updated_at AS updatedAt
           FROM folders
-          ORDER BY parent_id IS NOT NULL, parent_id, name
+          ORDER BY parent_id IS NOT NULL, parent_id, sort_order, name
         `)
         .all()
     } else if (parentId === null) {
       // parentId === null -> only root-level folders (parent_id IS NULL)
       rows = db
         .prepare(`
-          SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
+          SELECT id, parent_id AS parentId, name,
+                 sort_order AS sortOrder,
+                 created_at AS createdAt, updated_at AS updatedAt
           FROM folders
           WHERE parent_id IS NULL
-          ORDER BY name
+          ORDER BY sort_order, name
         `)
         .all()
     } else {
@@ -71,16 +88,17 @@ ipcMain.handle('folders:list', (_evt, payload) => {
       const pid = Number(parentId)
       rows = db
         .prepare(`
-          SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
+          SELECT id, parent_id AS parentId, name,
+                 sort_order AS sortOrder,
+                 created_at AS createdAt, updated_at AS updatedAt
           FROM folders
           WHERE parent_id = ?
-          ORDER BY name
+          ORDER BY sort_order, name
         `)
         .all(pid)
     }
 
     return { ok: true, folders: rows }
-
   } catch (err) {
     console.error('[folders:list] failed:', err)
     return { ok: false, message: 'Failed to read folders.' }
