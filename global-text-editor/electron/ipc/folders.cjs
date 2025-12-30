@@ -1,4 +1,4 @@
-const { ipcMain, app } = require('electron')
+const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
 
 ipcMain.handle('folders:create', (_evt, payload) => {
@@ -12,6 +12,7 @@ ipcMain.handle('folders:create', (_evt, payload) => {
         : Number(payload.parentId)
 
     if (!name) return { ok: false, message: 'Folder name is required.' }
+
     if (parentId !== null && Number.isNaN(parentId)) {
       return { ok: false, message: 'Invalid parent folder.' }
     }
@@ -36,11 +37,11 @@ ipcMain.handle('folders:create', (_evt, payload) => {
 })
 
 
-
 // List folders (all, or by parentId if provided)
 ipcMain.handle('folders:list', (_evt, payload) => {
+  
   try {
-    const database = connect_db()
+    const db = connect_db()
 
     const parentId = payload?.parentId
 
@@ -48,7 +49,7 @@ ipcMain.handle('folders:list', (_evt, payload) => {
 
     // If parentId is not provided -> return all folders
     if (parentId === undefined) {
-      rows = database
+      rows = db
         .prepare(`
           SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
           FROM folders
@@ -57,7 +58,7 @@ ipcMain.handle('folders:list', (_evt, payload) => {
         .all()
     } else if (parentId === null) {
       // parentId === null -> only root-level folders (parent_id IS NULL)
-      rows = database
+      rows = db
         .prepare(`
           SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
           FROM folders
@@ -68,7 +69,7 @@ ipcMain.handle('folders:list', (_evt, payload) => {
     } else {
       // parentId is a number -> children of that parent
       const pid = Number(parentId)
-      rows = database
+      rows = db
         .prepare(`
           SELECT id, parent_id AS parentId, name, created_at AS createdAt, updated_at AS updatedAt
           FROM folders
@@ -79,8 +80,9 @@ ipcMain.handle('folders:list', (_evt, payload) => {
     }
 
     return { ok: true, folders: rows }
+
   } catch (err) {
-    if (!app.isPackaged) console.error('[folders:list] failed:', err)
+    console.error('[folders:list] failed:', err)
     return { ok: false, message: 'Failed to read folders.' }
   }
 })

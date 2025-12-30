@@ -1,12 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-
-type Folder = {
-  id: number
-  parentId: number | null
-  name: string
-  createdAt: number
-  updatedAt: number
-}
+import type { Folder } from '../types/api'
 
 export default function Sidebar() {
   const [folders, setFolders] = useState<Folder[]>([])
