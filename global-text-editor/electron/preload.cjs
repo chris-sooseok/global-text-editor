@@ -18,5 +18,8 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('folders:create', { name, parentId }),
 
   listFolders: (parentId) =>
-    invokeLogged('folders:list', parentId === undefined ? {} : { parentId })
+    invokeLogged('folders:list', parentId === undefined ? {} : { parentId }),
+
+  createFile: (name, parentId) =>
+    invokeLogged('files:create', {name, parentId })
 })

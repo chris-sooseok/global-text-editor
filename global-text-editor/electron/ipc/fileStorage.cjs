@@ -68,7 +68,7 @@ ipcMain.handle('folders:list', (_evt, payload) => {
                  sort_order AS sortOrder,
                  created_at AS createdAt, updated_at AS updatedAt
           FROM folders
-          ORDER BY parent_id IS NOT NULL, parent_id, sort_order, name
+          ORDER BY parent_id IS NOT NULL
         `)
         .all()
     } else if (parentId === null) {
@@ -80,7 +80,6 @@ ipcMain.handle('folders:list', (_evt, payload) => {
                  created_at AS createdAt, updated_at AS updatedAt
           FROM folders
           WHERE parent_id IS NULL
-          ORDER BY sort_order, name
         `)
         .all()
     } else {
@@ -104,3 +103,10 @@ ipcMain.handle('folders:list', (_evt, payload) => {
     return { ok: false, message: 'Failed to read folders.' }
   }
 })
+
+
+ipcMain.handle('files:create', (_evt, payload)) => {
+  try {
+    
+  }
+}
