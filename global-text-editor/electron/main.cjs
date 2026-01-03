@@ -27,7 +27,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   migrate()
-  require('./ipc/folders.cjs')
+  require('./ipc/fileStorage.cjs')
   createWindow()
 })
 

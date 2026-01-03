@@ -1,110 +1,69 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
-import type { Folder } from 'types'
+import { useState, useCallback } from 'react'
 
 export default function Sidebar() {
-  const [folders, setFolders] = useState<Folder[]>([])
 
-  async function loadFolders() {
-    const res = await window.api.listFolders()
-    if (!res.ok) {
-      console.error(res.message)
-      return
-    }
-    setFolders(res.folders)
-  }
+  const [folderName, setFolderName] = useState('')
+  const [folderParentId, setFolderParentId] = useState('')
 
-  useEffect(() => {
-    loadFolders()
-  }, [])
-
-
-  // Build parentId -> children[] map, so we can render a tree easily.
-  const childrenByParent = useMemo(() => {
-    const m = new Map<number | null, Folder[]>()
-
-    for (const f of folders) {
-      const key = f.parentId
-      const arr = m.get(key) ?? []
-      arr.push(f)
-      m.set(key, arr)
-    }
-
-    // sort children by name (optional, but makes UI stable)
-    for (const [, arr] of m) {
-      arr.sort((a, b) => a.name.localeCompare(b.name))
-    }
-
-    console.log(m);
-
-    return m
-  }, [folders])
-
-  console.log(childrenByParent)
-
-
-  function parseNullableId(input: string | null): number | null {
-    // If user cancels or leaves it empty, treat as root (null)
-    if (input == null) return null
-    const s = input.trim()
-    if (s === '' || s.toLowerCase() === 'null') return null
-
-    // Convert to number; reject non-integers
-    const n = Number(s)
-    if (!Number.isInteger(n)) return NaN
-    return n
-  }
+  const [fileName, setFileName] = useState('')
+  const [fileParentId, setFileParentId] = useState('')
 
   const handleCreateFolder = useCallback(async () => {
 
-      const name = window.prompt('Folder Name?')
-      if (!name) return
+    const parentId = folderParentId === '' ? null: Number(folderParentId)
 
-      const parentIdInput = window.prompt('id')
-      var parentId: number | null
-      if (parentIdInput === '') {
-        parentId = null
-      } else {
-        parentId = Number(parentIdInput)
-      }
-      
-      const res = await window.api.createFolder(name, parentId)
+    const res = await window.api.createFolder(folderName, parentId)
   
-      if (res.ok) {
-        console.log(`${name} is created`)
-      }
-  }, [])
+    if (res.ok) {
+      console.log(`${folderName} is created`)
+    }
+  }, [folderName, folderParentId])
 
   const handleCreateFile = useCallback(async () => {
 
-    const name = window.prompt('File Name?')
-    if (!name) return
-
-    const parentIdInput = window.prompt('id')
-    var parentId: number | null
-
-    if (parentIdInput === '') {
-        parentId = null
-    } else {
-      parentId = Number(parentIdInput)
-    }
-
-    const res = await window.api.createFile(name, parentId)
+    const parentId = fileParentId === '' ? null: Number(fileParentId)
+   
+    const res = await window.api.createFile(fileName, parentId)
 
     if (res.ok) {
-      console.log(`${name} is created`)
+      console.log(`${fileName} is created`)
     }
 
-  }, [])
+  }, [fileName, fileParentId])
 
-    return (
-    <aside style={{ padding: 12, display: 'flex', gap: 8 }}>
-      <button type="button" onClick={handleCreateFolder}>
-        + Folder
-      </button>
+  return (
+    <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          placeholder="Folder name"
+          value={folderName}
+          onChange={(e) => setFolderName(e.target.value)}
+        />
+        <input
+          placeholder="parentId (blank = root)"
+          value={folderParentId}
+          onChange={(e) => setFolderParentId(e.target.value)}
+        />
+        <button type="button" onClick={handleCreateFolder}>
+          + Folder
+        </button>
+      </div>
 
-      <button type="button" onClick={handleCreateFile}>
-        + File
-      </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          placeholder="File name"
+          value={fileName}
+          onChange={(e) => setFileName(e.target.value)}
+        />
+        <input
+          placeholder="folderId (blank = root)"
+          value={fileParentId}
+          onChange={(e) => setFileParentId(e.target.value)}
+        />
+        <button type="button" onClick={handleCreateFile}>
+          + File
+        </button>
+      </div>
     </aside>
   )
 }

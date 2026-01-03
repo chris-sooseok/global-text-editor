@@ -1,22 +1,4 @@
-/**
- * Tree nodes you render:
- * - folder nodes have children
- * - file nodes do not
- */
-export type FolderNode = {
-  type: 'folder'
-  id: number
-  name: string
-  children: Node[]
-}
-
-export type FileNode = {
-  type: 'file'
-  id: number
-  name: string
-}
-
-export type Node = FolderNode | FileNode
+export{}
 
 export type Folder = {
   id: number
@@ -49,9 +31,9 @@ declare global {
   interface Window {
     api: {
       createFolder(name: string, parentId?: number | null): Promise<CreateFolderResult>
-      listFolders(parentId?: number | null): Promise<ListFoldersResult>
+      fetchFolders(parentId?: number | null): Promise<ListFoldersResult>
       createFile(name: string, parentId?: number | null): Promise<CreateFileResult>
-      listFiles(parentId?: number | null): Promise<ListFilesResult>
+      fetchFiles(parentId?: number | null): Promise<ListFilesResult>
     }
   }
 }
