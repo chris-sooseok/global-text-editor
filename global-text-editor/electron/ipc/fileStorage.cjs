@@ -1,15 +1,15 @@
 const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
 
+const db = connect_db()
 
-ipcMain.handle('folders:create', (_evt, payload) => {
+ipcMain.handle('folders:create', (_event, payload) => {
 
   try{
     const name = payload.name
     const parentId = payload.parentId
 
     const now = Date.now()
-    const db = connect_db()
 
     // Put new folder at the end among its siblings
     const nextSortOrder = db
@@ -45,25 +45,13 @@ ipcMain.handle('folders:create', (_evt, payload) => {
 })
 
 // List folders (all, or by parentId if provided)
-ipcMain.handle('folders:fetch', (_evt, payload) => {
+ipcMain.handle('folders:fetch', (_event, payload) => {
   try {
-    const db = connect_db()
-    const parentId = payload?.parentId
-
+    const parentId = payload.parentId ?? null
     let rows
 
     // If parentId is not provided -> return all folders
-    if (parentId === undefined) {
-      rows = db
-        .prepare(`
-          SELECT id, parent_id AS parentId, name,
-                 sort_order AS sortOrder,
-                 created_at AS createdAt, updated_at AS updatedAt
-          FROM folders
-          ORDER BY parent_id IS NOT NULL
-        `)
-        .all()
-    } else if (parentId === null) {
+    if (parentId === null) {
       // parentId === null -> only root-level folders (parent_id IS NULL)
       rows = db
         .prepare(`
@@ -71,7 +59,7 @@ ipcMain.handle('folders:fetch', (_evt, payload) => {
                  sort_order AS sortOrder,
                  created_at AS createdAt, updated_at AS updatedAt
           FROM folders
-          WHERE parent_id IS NULL
+          ORDER BY parent_id IS NOT NULL
         `)
         .all()
     } else {
@@ -92,17 +80,15 @@ ipcMain.handle('folders:fetch', (_evt, payload) => {
     return { ok: true, folders: rows }
   } catch (err) {
     console.error('[folders:fetch] failed:', err)
-    return { ok: false, message: String(err) }
+    return { ok: false, message: 'Failed to fetch folders' }
   }
 })
 
-ipcMain.handle('files:create', (_evt, payload) => {
+ipcMain.handle('files:create', (_event, payload) => {
   try {
     const name = payload.name
     const parentId = payload.parentId ?? null
-
     const now = Date.now()
-    const db = connect_db()
 
     const nextSortOrder = db
       .prepare(`
@@ -140,4 +126,28 @@ ipcMain.handle('files:create', (_evt, payload) => {
 
 })
 
-ipcMain.handle('files:fetch')
+ipcMain.handle('files:fetch', (_event, payload) => {
+  try {
+    const parentId = payload.parentId ?? null
+    let rows
+
+    if (parentId === null) {
+      rows = db
+      .prepare(`
+        SELECT id, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
+        FROM files
+        WHERE parent_id = ?
+        ORDER BY sort_order
+      `)
+      .all(parentId)
+    }
+
+
+    return { ok: true, files: rows}
+
+  } catch (err) {
+     console.error('[files:fetch] failed:', err)
+    return { ok: false, message: 'Failed to fetch files' }
+  }
+
+})
