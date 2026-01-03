@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { FileStorageTree } from '../FileStorageTree'
 
 export default function Sidebar() {
 
@@ -7,6 +8,17 @@ export default function Sidebar() {
 
   const [fileName, setFileName] = useState('')
   const [fileParentId, setFileParentId] = useState('')
+
+
+  useEffect(() => {
+    const fetchTree = async () => {
+      const t = await FileStorageTree.buildTree(window.api)
+      return t
+    }
+
+    console.log(fetchTree())
+    
+  }, [])
 
   const handleCreateFolder = useCallback(async () => {
 

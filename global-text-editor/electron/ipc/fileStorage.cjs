@@ -1,5 +1,6 @@
 const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
+const { getNextSortOrder } = require('./fileStorageHelper.cjs')
 
 const db = connect_db()
 
@@ -12,13 +13,7 @@ ipcMain.handle('folders:create', (_event, payload) => {
     const now = Date.now()
 
     // Put new folder at the end among its siblings
-    const nextSortOrder = db
-      .prepare(`
-        SELECT COALESCE(MAX(sort_order) + 1, 0) AS nextSortOrder
-        FROM folders
-        WHERE parent_id IS ?
-      `)
-      .get(parentId).nextSortOrder
+    const nextSortOrder = getNextSortOrder(db, parentId)
 
     const info = db
       .prepare(`
@@ -59,22 +54,11 @@ ipcMain.handle('folders:fetch', (_event, payload) => {
                  sort_order AS sortOrder,
                  created_at AS createdAt, updated_at AS updatedAt
           FROM folders
-          ORDER BY parent_id IS NOT NULL
+          WHERE parent_id IS ?
+          ORDER BY sort_order
         `)
-        .all()
+        .all(parentId)
     } else {
-      // parentId is a number -> children of that parent
-      const pid = Number(parentId)
-      rows = db
-        .prepare(`
-          SELECT id, parent_id AS parentId, name,
-                 sort_order AS sortOrder,
-                 created_at AS createdAt, updated_at AS updatedAt
-          FROM folders
-          WHERE parent_id = ?
-          ORDER BY sort_order, name
-        `)
-        .all(pid)
     }
 
     return { ok: true, folders: rows }
@@ -90,14 +74,7 @@ ipcMain.handle('files:create', (_event, payload) => {
     const parentId = payload.parentId ?? null
     const now = Date.now()
 
-    const nextSortOrder = db
-      .prepare(`
-        SELECT COALESCE(MAX(sort_order) + 1, 0) AS nextSortOrder
-        FROM files
-        WHERE parent_id IS ?
-      `)
-      .get(parentId).nextSortOrder
-
+    const nextSortOrder = getNextSortOrder(db, parentId)
 
     const info = db
       .prepare(`
@@ -136,12 +113,11 @@ ipcMain.handle('files:fetch', (_event, payload) => {
       .prepare(`
         SELECT id, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
         FROM files
-        WHERE parent_id = ?
+        WHERE parent_id IS ?
         ORDER BY sort_order
       `)
       .all(parentId)
     }
-
 
     return { ok: true, files: rows}
 
@@ -151,3 +127,4 @@ ipcMain.handle('files:fetch', (_event, payload) => {
   }
 
 })
+

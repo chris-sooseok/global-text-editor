@@ -1,4 +1,8 @@
-export {}
+
+export class FileStorageTree {
+  roots: any
+  static buildTree(api: any): Promise<FileStorageTree>
+}
 
 export type FolderNode = {
   type: 'folder',
