@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect, useContext } from 'react'
+import { useState, useCallback, useContext } from 'react'
 import { FsTreeContext } from '../context/FsTreeContext'
 
 export default function Sidebar() {
 
-  const tree = useContext(FsTreeContext)
+  const fsTree = useContext(FsTreeContext)
 
-  console.log(tree)
+  console.log(fsTree?.tree?.roots)
 
   const [folderName, setFolderName] = useState('')
   const [folderParentId, setFolderParentId] = useState('')
@@ -39,6 +39,23 @@ export default function Sidebar() {
 
   return (
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* display roots */}
+      <div>
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>Roots</div>
+
+        {fsTree?.tree?.roots.length === 0 ? (
+          <div style={{ opacity: 0.7 }}>No items</div>
+        ) : (
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {fsTree?.tree?.roots.map((f: any) => (
+              <li key={`${f.type}-${f.id}`}>
+                {f.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           placeholder="Folder name"
