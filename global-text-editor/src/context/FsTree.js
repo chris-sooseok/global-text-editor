@@ -25,22 +25,33 @@ class FileNode {
     }
 }
 
-class FileStorageTree {
+class FsTree {
 
     constructor(folders = [], files = []) {
         this.roots = []
-        this.files = files
         this.folders = folders
+        this.files = files
     }
  
     static async buildTree(api) {
-        const folders = await api.fetchFolders()
-        const files = await api.fetchFiles()
+
+        const tree = new FsTree()
+
+        const folder_res = await api.fetchFolders()
+        const file_res = await api.fetchFiles()
         
-        return new FileStorageTree(folders, files)
+        for (const f of folder_res) {
+            tree.roots.push(f)
+        }
+
+        for (const f of file_res) {
+            tree.roots.push(f)
+        }
+
+        return tree
     }
 
 }
 
 
-export { FileStorageTree }
+export { FsTree }
