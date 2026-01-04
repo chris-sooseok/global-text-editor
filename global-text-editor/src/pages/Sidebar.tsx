@@ -5,6 +5,8 @@ export default function Sidebar() {
 
   const tree = useContext(FsTreeContext)
 
+  console.log(tree)
+
   const [folderName, setFolderName] = useState('')
   const [folderParentId, setFolderParentId] = useState('')
 
