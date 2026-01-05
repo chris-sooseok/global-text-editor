@@ -1,16 +1,15 @@
 
 function getNextSortOrder(db, parentId) {
-  // parentId can be null (root) or a number (folder id)
-  const row = db.prepare(`
-    SELECT COALESCE(MAX(sort_order), -1) + 1 AS nextSortOrder
-    FROM (
-      SELECT sort_order FROM folders WHERE parent_id IS ?
-      UNION ALL
-      SELECT sort_order FROM files   WHERE parent_id IS ?
-    )
-  `).get(parentId, parentId)
+  // MAX(sort_order) among siblings; if none, start at 0
+  const row = db
+    .prepare(`
+      SELECT COALESCE(MAX(sort_order), -1) AS maxSort
+      FROM fsNode
+      WHERE parent_id IS ?
+    `)
+    .get(parentId ?? null)
 
-  return row.nextSortOrder
+  return Number(row.maxSort) + 1
 }
 
 module.exports = { getNextSortOrder }

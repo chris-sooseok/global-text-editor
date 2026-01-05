@@ -1,72 +1,46 @@
 const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
 const { getNextSortOrder } = require('./fileStorageHelper.cjs')
+const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
 
 ipcMain.handle('folders:create', (_event, payload) => {
-
-  try{
+  try {
     const name = payload.name
-    const parentId = payload.parentId
-
+    const parentId = payload.parentId ?? null
     const now = Date.now()
 
-    // Put new folder at the end among its siblings
     const nextSortOrder = getNextSortOrder(db, parentId)
 
     const info = db
       .prepare(`
-        INSERT INTO folders (parent_id, name, sort_order, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+        VALUES ('folder', ?, ?, NULL, NULL, NULL, ?, ?, ?)
       `)
-      .run(parentId, name, nextSortOrder, now, now)
+      .run(parentId, name, now, now, nextSortOrder)
 
     return {
       ok: true,
-      folder: {
+      node: {
         id: Number(info.lastInsertRowid),
+        type: 'folder',
         parentId,
         name,
-        sortOrder: nextSortOrder,
+        storagePath: null,
+        sizeBytes: null,
+        mimeType: null,
         createdAt: now,
-        updatedAt: now
-      }
+        updatedAt: now,
+        sortOrder: nextSortOrder,
+      },
     }
-  } catch (err) {
-    console.error('[folders:created] failed:', err)
-    return {ok: false, message: 'Failed to create folder'}
+  }catch (err) {
+    console.error('[folders:create] failed:', err)
+    return { ok: false, message: 'Failed to create folder' }
   }
 })
 
-// List folders (all, or by parentId if provided)
-ipcMain.handle('folders:fetch', (_event, payload) => {
-  try {
-    const parentId = payload.parentId ?? null
-    let rows
-
-    // If parentId is not provided -> return all folders
-    if (parentId === null) {
-      // parentId === null -> only root-level folders (parent_id IS NULL)
-      rows = db
-        .prepare(`
-          SELECT id, parent_id AS parentId, name,
-                 sort_order AS sortOrder,
-                 created_at AS createdAt, updated_at AS updatedAt
-          FROM folders
-          WHERE parent_id IS ?
-          ORDER BY sort_order
-        `)
-        .all(parentId)
-    } else {
-    }
-
-    return { ok: true, folders: rows }
-  } catch (err) {
-    console.error('[folders:fetch] failed:', err)
-    return { ok: false, message: 'Failed to fetch folders' }
-  }
-})
 
 ipcMain.handle('files:create', (_event, payload) => {
   try {
@@ -76,61 +50,45 @@ ipcMain.handle('files:create', (_event, payload) => {
 
     const nextSortOrder = getNextSortOrder(db, parentId)
 
+    // Unique blob key (you’ll store the physical file at <storageRoot>/<storagePath>)
+    const storagePath = randomUUID()
+
+    // Until you write the file bytes, 0 is fine (must be NOT NULL and >= 0)
+    const sizeBytes = 0
+    const mimeType = null
+
     const info = db
       .prepare(`
-        INSERT INTO files (parent_id, name, storage_path, mime_type, created_at, updated_at, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+        VALUES ('file', ?, ?, ?, ?, ?, ?, ?, ?)
       `)
-      .run(parentId, name, '/', null, now, now, nextSortOrder)
+      .run(parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
 
-      return {
-        ok: true,
-        file: {
-          id: Number(info.lastInsertRowid),
-          parentId,
-          name,
-          storage_path: '/',
-          mime_type: null,
-          createdAt: now,
-          updatedAt: now,
-          sortOrder: nextSortOrder
-        }
-      }
-  } catch (err) {
-    console.error('[files:created] failed:', err)
-    return {ok: false, message: 'Failed to create file'}
-  }
-
-})
-
-ipcMain.handle('files:fetch', (_event, payload) => {
-  try {
-    const parentId = payload.parentId ?? null
-    let rows
-
-    if (parentId === null) {
-      rows = db
-      .prepare(`
-        SELECT id, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
-        FROM files
-        WHERE parent_id IS ?
-        ORDER BY sort_order
-      `)
-      .all(parentId)
+    return {
+      ok: true,
+      node: {
+        id: Number(info.lastInsertRowid),
+        type: 'file',
+        parentId,
+        name,
+        storagePath,
+        sizeBytes,
+        mimeType,
+        createdAt: now,
+        updatedAt: now,
+        sortOrder: nextSortOrder,
+      },
     }
-
-    return { ok: true, files: rows}
-
   } catch (err) {
-     console.error('[files:fetch] failed:', err)
-    return { ok: false, message: 'Failed to fetch files' }
+    console.error('[files:create] failed:', err)
+    return { ok: false, message: 'Failed to create file' }
   }
-
 })
 
-ipcMain.handle('fsNode:fetch', (_event, _payload) => {
+
+ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
   try {
-    rows = db
+    const rows = db
       .prepare(`
         SELECT id, type, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
         FROM fsNode

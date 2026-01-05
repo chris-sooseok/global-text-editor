@@ -1,20 +1,7 @@
+
+import type { NodeRow } from '../api'
+
 type FsApi = Window["api"]
-
-// Raw row coming back from ipcMain (plain object)
-type NodeRow = {
-  id: number
-  type: "folder" | "file"
-  parentId: number | null
-  name: string
-  createdAt: number
-  updatedAt: number
-  sortOrder: number
-
-  // file-only fields (will be null/undefined for folders)
-  storagePath?: string | null
-  sizeBytes?: number | null
-  mimeType?: string | null
-}
 
 type FsNode = FolderNode | FileNode
 
@@ -76,6 +63,9 @@ class FsTree {
 
   static async buildFsTree(api: FsApi): Promise<FsTree> {
     const tree = new FsTree()
+
+    const res = await api.fetchFsNodes()
+    
 
 
     return tree

@@ -1,21 +1,18 @@
 export {}
 
-export type Folder = {
+export type NodeRow = {
   id: number
+  type: "folder" | "file"
   parentId: number | null
   name: string
-  sortOrder: number
   createdAt: number
   updatedAt: number
-}
+  sortOrder: number
 
-export type File = {
-  id: number
-  folderId: number | null
-  name: string
-  sortOrder: number
-  createdAt: number
-  updatedAt: number
+  // file-only fields (will be null/undefined for folders)
+  storagePath?: string | null
+  sizeBytes?: number | null
+  mimeType?: string | null
 }
 
 declare global {
@@ -26,23 +23,14 @@ declare global {
         parentId?: number | null
       ): Promise<{ ok: boolean; message: string }>
 
-      fetchFolders(
-        parentId?: number | null
-      ): Promise<
-        | { ok: true; folders: Folder[] }
-        | { ok: false; message: string }
-      >
-
       createFile(
         name: string,
         parentId?: number | null
       ): Promise<{ ok: boolean; message: string }>
 
-      fetchFiles(
-        parentId?: number | null
-      ): Promise<
-        | { ok: true; files: File[] }
-        | { ok: false; message: string }
+      fetchFsNodes(): Promise<
+      | { ok: true; rows: NodeRow[] }
+      | { ok: false; message: string }
       >
     }
   }
