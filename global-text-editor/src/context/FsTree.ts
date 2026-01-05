@@ -1,60 +1,38 @@
 
-import type { NodeRow } from '../api'
-
+import type { FsNode, NodeRow, FolderNode, FileNode } from '../types/fsNode'
+import type { FetchFsNodeRes } from '../api/fsApi'
 type FsApi = Window["api"]
 
-type FsNode = FolderNode | FileNode
-
-class FolderNode {
-  type: "folder" = "folder"
-  id: number
-  parentId: number | null
-  name: string
-  createdAt: number
-  updatedAt: number
-  sortOrder: number
-  children: FsNode[]
-
-  constructor(r: NodeRow) {
-    // r.type should be "folder" when you call this
-    this.id = r.id
-    this.parentId = r.parentId
-    this.name = r.name
-    this.createdAt = r.createdAt
-    this.updatedAt = r.updatedAt
-    this.sortOrder = r.sortOrder
-    this.children = []
+function makeFolderNode(r: NodeRow): FolderNode {
+  return {
+    type: "folder",
+    id: r.id,
+    parentId: r.parentId,
+    name: r.name,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    sortOrder: r.sortOrder,
+    children: [],
   }
 }
 
-class FileNode {
-  type: "file" = "file"
-  id: number
-  parentId: number | null
-  name: string
-  storagePath: string
-  sizeBytes: number
-  mimeType: string | null
-  createdAt: number
-  updatedAt: number
-  sortOrder: number
+function makeFileNode(r: NodeRow): FileNode {
+  if (r.storagePath == null) throw new Error("FileNode requires storagePath")
+  if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
 
-  constructor(r: NodeRow) {
-    if (r.storagePath == null) throw new Error("FileNode requires storagePath")
-    if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
-  
-    this.id = r.id
-    this.parentId = r.parentId
-    this.name = r.name
-    this.storagePath = r.storagePath
-    this.sizeBytes = r.sizeBytes
-    this.mimeType = r.mimeType ?? null //! null for now
-    this.createdAt = r.createdAt
-    this.updatedAt = r.updatedAt
-    this.sortOrder = r.sortOrder
+  return {
+    type: "file",
+    id: r.id,
+    parentId: r.parentId,
+    name: r.name,
+    storagePath: r.storagePath,
+    sizeBytes: r.sizeBytes,
+    mimeType: r.mimeType ?? null,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    sortOrder: r.sortOrder,
   }
 }
-
 
 class FsTree {
   roots: FsNode[]
@@ -66,16 +44,16 @@ class FsTree {
   static async buildFsTree(api: FsApi): Promise<FsTree> {
     const tree = new FsTree()
 
-    const res = await api.fetchFsNodes()
+    const res: FetchFsNodeRes = await api.fetchFsNodes()
     if (!res.ok) throw new Error(res.message)
     
-    const rows = res.rows
+    const rows: NodeRow[] = res.rows
 
     const byId = new Map<number, FsNode>()
 
     // loop through rows, and construct FolderNode and FileNode objects
     for (const r of rows) {
-      const node: FsNode = r.type === 'folder' ? new FolderNode(r) : new FileNode(r)
+      const node: FsNode = r.type === 'folder' ? makeFolderNode(r) : makeFileNode(r)
       byId.set(node.id, node)
     }
 
