@@ -1,5 +1,9 @@
 import type { NodeRow } from "../context/fsNode";
 
+type CreateFsNodeRes =
+  | { ok: true; node: NodeRow[] }
+  | { ok: false; message: string }
+
 export type FetchFsNodeRes =
   | { ok: true; rows: NodeRow[] }
   | { ok: false; message: string }
@@ -7,15 +11,11 @@ export type FetchFsNodeRes =
 declare global {
   interface Window {
     api: {
-      createFolder(
-        name: string,
-        parentId?: number | null
-      ): Promise<{ ok: boolean; message: string }>
-
-      createFile(
-        name: string,
-        parentId?: number | null
-      ): Promise<{ ok: boolean; message: string }>
+      createFsNode(
+        type: string,
+        parentId: number | null,
+        name: string
+      ): Promise< CreateFsNodeRes >
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
     }

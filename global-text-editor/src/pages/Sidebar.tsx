@@ -5,40 +5,27 @@ export default function Sidebar() {
   const fsTree = useContext(FsTreeContext)
 
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
+  const [fsNodeName, setFsNodeName] = useState<string>('')
 
-  const [folderName, setFolderName] = useState('')
-  const [fileName, setFileName] = useState('')
-
-  async function handleCreateFolder() {
+  async function handleCreateFsNode(type: 'folder' | 'file') {
     const parentId = selectedParentId
-    const res = await window.api.createFolder(folderName, parentId)
+    const res = await window.api.createFsNode(type, parentId, fsNodeName)
 
     if (res.ok) {
-      console.log(`${folderName} is created`)
       setSelectedParentId(null)
-      setFolderName('')
+      setFsNodeName('')
     }
   }
 
-  async function handleCreateFile() {
-    const parentId = selectedParentId
-    const res = await window.api.createFile(fileName, parentId)
-
-    if (res.ok) {
-      console.log(`${fileName} is created`)
-      setSelectedParentId(null)
-      setFileName('')
-    }
+  // default for Enter key
+  async function handleSubmitDefault(e: React.FormEvent) {
+    e.preventDefault()
+    await handleCreateFsNode('folder')
   }
 
-  async function handleCreateFolderSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    await handleCreateFolder()
-  }
-
-  async function handleCreateFileSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    await handleCreateFile()
+  async function handleClickSubmit(e: React.MouseEvent<HTMLButtonElement>, type: 'folder' | 'file') {
+    e.preventDefault() // prevent the form's default submit
+    await handleCreateFsNode(type)
   }
 
   function renderNode(node: any, depth = 0) {
@@ -96,24 +83,21 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Enter submits folder */}
-      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleCreateFolderSubmit}>
+      {/* One input, two buttons, no extra state */}
+      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleSubmitDefault}>
         <input
-          placeholder="Folder name"
-          value={folderName}
-          onChange={(e) => setFolderName(e.target.value)}
+          placeholder="New folder/file name"
+          value={fsNodeName}
+          onChange={(e) => setFsNodeName(e.target.value)}
         />
-        <button type="submit">+ Folder</button>
-      </form>
 
-      {/* Enter submits file */}
-      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleCreateFileSubmit}>
-        <input
-          placeholder="File name"
-          value={fileName}
-          onChange={(e) => setFileName(e.target.value)}
-        />
-        <button type="submit">+ File</button>
+        <button type="submit" onClick={(e) => handleClickSubmit(e, 'folder')}>
+          + Folder
+        </button>
+
+        <button type="submit" onClick={(e) => handleClickSubmit(e, 'file')}>
+          + File
+        </button>
       </form>
     </aside>
   )
