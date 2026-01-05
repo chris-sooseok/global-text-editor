@@ -14,48 +14,54 @@ function connect_db() {
     const db_path = path.join(app.getPath('userData'), 'app.db')
     db = new Database(db_path)
 
-    // sets WAL (write-ahead logging) mode, which improves reliability/performance
+    // sets WAL (write-ahead logging) mode, which improves reliability and performance
     db.pragma('journal_mode = WAL')
-    // enables foreign key rules
+    // enables foreign key rules since sqlite doesn't enable it by default
     db.pragma('foreign_keys = ON')
+
     return db
 }
 
 function migrate() {
   const database = connect_db()
-  // __dirname returns dir of this file
-  // get migrations files
+  // get migrations dir
   const migrationsDir = path.join(__dirname, 'migrations')
-  // if migration folder doesn't exist, stop
+
   if (!fs.existsSync(migrationsDir)) return
 
+  // ensure migrations bookkeeping table exists
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename   TEXT PRIMARY KEY,
+      applied_at INTEGER NOT NULL
+    );
+  `)
+
+  // read migration files ascending order
   const migrationFiles = fs
-    // read all files in the directory
     .readdirSync(migrationsDir)
-    // keeps only files that match the format
     .filter((f) => /^\d+_.*\.sql$/.test(f))
-    // order the versions
-    .sort() // relies on zero-padded numbers like 001, 002, ...
+    .sort()
 
-  // read SQLite's built-in integer called user_version
-  // {simple:true} returns only number, not a row object
-  const curVersion = database.pragma('user_version', { simple: true })
-
-  // creates a transaction wrapper function which means everything inside either
-    // all succeeds and commits, or
-    // if anything fails, it rolls back and changes aren't partially applied
+  // get already applied files
+  const appliedRows = database
+    .prepare(`SELECT filename FROM schema_migrations`)
+    .all()
+  const applied = new Set(appliedRows.map((r) => r.filename))
+    
+  // apply only files not yet applied, and record them
   const run = database.transaction(() => {
-    for (const f of migrationFiles) {
-      const nextVersion = Number(f.split('_')[0]) // "001" -> 1
-      // if file is already applied, skip
-      if (nextVersion <= curVersion) continue
+    for (const fName of migrationFiles) {
+      if (applied.has(fName)) continue
 
-      // read the file contents into a string
-      const sql = fs.readFileSync(path.join(migrationsDir, f), 'utf8')
-      // executes the SQL text
+      // read sql code
+      const sql = fs.readFileSync(path.join(migrationsDir, fName), 'utf8')
       database.exec(sql)
-      // updates SQLite's user_version to the version just applied
-      database.pragma(`user_version = ${nextVersion}`)
+
+      // record applied file
+      database
+        .prepare(`INSERT INTO schema_migrations (filename, applied_at) VALUES (?, ?)`)
+        .run(fName, Date.now())
     }
   })
 

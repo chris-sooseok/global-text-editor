@@ -15,19 +15,18 @@ function createWindow() {
 
   win.maximize()
 
-  // app.isPackaged returns true in production mode
-  const isDev = !app.isPackaged
-  if (isDev) {
+  const isProd = app.isPackaged
+  if (isProd) {
+    win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
+  } else {
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools()
-  } else {
-    win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
   }
 }
 
 app.whenReady().then(() => {
-  migrate()
-  require('./ipc/nodes.cjs')
+  migrate() // ensure migrating all sqls
+  require('./ipc/fsIpc.cjs') // load ipc handlers
   createWindow()
 })
 
