@@ -31,8 +31,9 @@ WHERE type = 'file';
 
 -- enforce: every fsNode siblings must have unique sort_order
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_sort_order
-ON fsNode(COALESCE(parent_id, -1), sort_order); -- 
-
+-- COALESCE allows parend_id null values to be treated as -1 since sql doesn't regard null as a value
+-- enforce: within the same parent directory, sort_order must be unique
+ON fsNode(COALESCE(parent_id, -1), sort_order); 
 
 -- enforce: any fsNode's parent must be a folder when insert
 CREATE TRIGGER IF NOT EXISTS trg_fsNode_parent_must_be_folder_insert

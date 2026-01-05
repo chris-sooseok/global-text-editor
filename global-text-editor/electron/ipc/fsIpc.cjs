@@ -98,8 +98,8 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
           updated_at AS updatedAt,
           sort_order AS sortOrder
         FROM fsNode
-        -- sort ascending from root nodes to child nodes
-        -- then sort by sort_order within each parent_id
+        -- sort ascending order
+        -- sort based on sort_order within each parent group
         ORDER BY COALESCE(parent_id, -1), sort_order
         `)
         .all()

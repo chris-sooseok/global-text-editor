@@ -48,26 +48,28 @@ class FsTree {
     const res: FetchFsNodeRes = await api.fetchFsNodes()
     if (!res.ok) throw new Error(res.message)
     
-    const rows: FsNodeRow[] = res.rows
+    // rows arrives in (parent, sort_order) order
+    const fsNodeRows: FsNodeRow[] = res.rows
 
-    const byId = new Map<number, FsNode>()
+    const fsNodeById = new Map<number, FsNode>()
 
-    // loop through rows, and construct FolderNode and FileNode objects
-    for (const r of rows) {
+    // construct FolderNode and FileNode objects
+    for (const r of fsNodeRows) {
       const node: FsNode = r.type === 'folder' ? makeFolderNode(r) : makeFileNode(r)
-      byId.set(node.id, node)
+      fsNodeById.set(node.id, node)
     }
 
-    // 
-    for (const node of byId.values()) {
+    // construct tree
+    for (const node of fsNodeById.values()) {
 
-      // if root
+      // if root, insert into roots
       if (node.parentId == null) {
         tree.roots.push(node)
         continue
       }
 
-      const parent = byId.get(node.parentId)
+      // if not root
+      const parent = fsNodeById.get(node.parentId)
 
       // safety 
       if (!parent || parent.type !== 'folder') {

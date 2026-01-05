@@ -1,50 +1,67 @@
-import { useState, useCallback, useContext } from 'react'
+import { useState, useContext } from 'react'
 import { FsTreeContext } from '../context/FsTreeContext'
 
 export default function Sidebar() {
-
   const fsTree = useContext(FsTreeContext)
 
-  console.log(fsTree?.tree?.roots)
+  const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
 
   const [folderName, setFolderName] = useState('')
-  const [folderParentId, setFolderParentId] = useState('')
-
   const [fileName, setFileName] = useState('')
-  const [fileParentId, setFileParentId] = useState('')
 
-
-  const handleCreateFolder = useCallback(async () => {
-
-    const parentId = folderParentId === '' ? null: Number(folderParentId)
-
+  async function handleCreateFolder() {
+    const parentId = selectedParentId
     const res = await window.api.createFolder(folderName, parentId)
-  
+
     if (res.ok) {
       console.log(`${folderName} is created`)
+      setSelectedParentId(null)
+      setFolderName('')
     }
-  }, [folderName, folderParentId])
+  }
 
-  const handleCreateFile = useCallback(async () => {
-
-    const parentId = fileParentId === '' ? null: Number(fileParentId)
-   
+  async function handleCreateFile() {
+    const parentId = selectedParentId
     const res = await window.api.createFile(fileName, parentId)
 
     if (res.ok) {
       console.log(`${fileName} is created`)
+      setSelectedParentId(null)
+      setFileName('')
     }
+  }
 
-  }, [fileName, fileParentId])
+  async function handleCreateFolderSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    await handleCreateFolder()
+  }
 
-  const renderNode = (node: any, depth = 0) => {
+  async function handleCreateFileSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    await handleCreateFile()
+  }
+
+  function renderNode(node: any, depth = 0) {
     const isFolder = node.type === 'folder'
     const children = isFolder && Array.isArray(node.children) ? node.children : []
+    const isSelectedFolder = isFolder && selectedParentId === node.id
 
     return (
       <li key={`${node.type}-${node.id}`}>
-        <div style={{ paddingLeft: depth * 14 }}>
+        <div
+          style={{
+            paddingLeft: depth * 14,
+            cursor: isFolder ? 'pointer' : 'default',
+            fontWeight: isSelectedFolder ? 700 : 400,
+            opacity: isSelectedFolder ? 1 : 0.95,
+          }}
+          onClick={() => {
+            if (!isFolder) return
+            setSelectedParentId((prev) => (prev === node.id ? null : node.id))
+          }}
+        >
           {isFolder ? '📁' : '📄'} {node.name}
+          {isSelectedFolder ? ' (selected)' : ''}
         </div>
 
         {isFolder && children.length > 0 && (
@@ -58,7 +75,6 @@ export default function Sidebar() {
 
   return (
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* display full tree */}
       <div>
         <div style={{ marginBottom: 8, fontWeight: 600 }}>All nodes</div>
 
@@ -71,37 +87,34 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ fontSize: 13, opacity: 0.85 }}>
+        Creating under: {selectedParentId === null ? 'Root' : `Folder ID ${selectedParentId}`}
+        {selectedParentId !== null && (
+          <button type="button" style={{ marginLeft: 8 }} onClick={() => setSelectedParentId(null)}>
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Enter submits folder */}
+      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleCreateFolderSubmit}>
         <input
           placeholder="Folder name"
           value={folderName}
           onChange={(e) => setFolderName(e.target.value)}
         />
-        <input
-          placeholder="parentId (blank = root)"
-          value={folderParentId}
-          onChange={(e) => setFolderParentId(e.target.value)}
-        />
-        <button type="button" onClick={handleCreateFolder}>
-          + Folder
-        </button>
-      </div>
+        <button type="submit">+ Folder</button>
+      </form>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Enter submits file */}
+      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleCreateFileSubmit}>
         <input
           placeholder="File name"
           value={fileName}
           onChange={(e) => setFileName(e.target.value)}
         />
-        <input
-          placeholder="parentId (blank = root)"
-          value={fileParentId}
-          onChange={(e) => setFileParentId(e.target.value)}
-        />
-        <button type="button" onClick={handleCreateFile}>
-          + File
-        </button>
-      </div>
+        <button type="submit">+ File</button>
+      </form>
     </aside>
   )
 }
