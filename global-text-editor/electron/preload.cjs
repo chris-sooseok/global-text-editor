@@ -22,4 +22,6 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('files:create', {name, parentId }),
   fetchFiles: (parentId) =>
     invokeLogged('files:fetch', parentId === undefined ? {} : { parentId }),
+  fetchFsNode: () =>
+    invokeLogged('fsNode:fetch', {})
 })

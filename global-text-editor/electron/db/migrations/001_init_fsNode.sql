@@ -20,11 +20,18 @@ CREATE TABLE IF NOT EXISTS fsNode (
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
 
+-- enforce: every fsNode storage_path must be unique
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_storage_path_for_files
 ON fsNode(storage_path)
 WHERE type = 'file';
 
--- enforce: parent must be a folder
+
+-- enforce: every fsNode under same directory must have unique sort_order
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_sort_order
+ON fsNode(COALESCE(parent_id, -1), sort_order);
+
+
+-- enforce: any fsNode's parent must be a folder
 CREATE TRIGGER IF NOT EXISTS trg_fsNode_parent_must_be_folder_insert
 BEFORE INSERT ON fsNode
 FOR EACH ROW

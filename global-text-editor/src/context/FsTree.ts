@@ -1,19 +1,41 @@
-type FsNode = FolderNode | FileNode
 type FsApi = Window["api"]
+
+// Raw row coming back from ipcMain (plain object)
+type NodeRow = {
+  id: number
+  type: "folder" | "file"
+  parentId: number | null
+  name: string
+  createdAt: number
+  updatedAt: number
+  sortOrder: number
+
+  // file-only fields (will be null/undefined for folders)
+  storagePath?: string | null
+  sizeBytes?: number | null
+  mimeType?: string | null
+}
+
+type FsNode = FolderNode | FileNode
 
 class FolderNode {
   type: "folder" = "folder"
   id: number
   parentId: number | null
   name: string
+  createdAt: number
+  updatedAt: number
   sortOrder: number
   children: FsNode[]
 
-  constructor(f: { id: number; parentId: number | null; name: string; sortOrder: number }) {
-    this.id = f.id
-    this.parentId = f.parentId
-    this.name = f.name
-    this.sortOrder = f.sortOrder
+  constructor(r: NodeRow) {
+    // r.type should be "folder" when you call this
+    this.id = r.id
+    this.parentId = r.parentId
+    this.name = r.name
+    this.createdAt = r.createdAt
+    this.updatedAt = r.updatedAt
+    this.sortOrder = r.sortOrder
     this.children = []
   }
 }
@@ -23,16 +45,28 @@ class FileNode {
   id: number
   parentId: number | null
   name: string
+  storagePath: string
+  sizeBytes: number
+  mimeType: string | null
+  createdAt: number
+  updatedAt: number
   sortOrder: number
 
-  constructor(f: { id: number; folderId: number | null; name: string; sortOrder: number }) {
-    this.id = f.id
-    this.parentId = f.folderId
-    this.name = f.name
-    this.sortOrder = f.sortOrder
+  constructor(r: NodeRow) {
+    if (r.storagePath == null) throw new Error("FileNode requires storagePath")
+    if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
+  
+    this.id = r.id
+    this.parentId = r.parentId
+    this.name = r.name
+    this.storagePath = r.storagePath
+    this.sizeBytes = r.sizeBytes
+    this.mimeType = r.mimeType ?? null //! null for now
+    this.createdAt = r.createdAt
+    this.updatedAt = r.updatedAt
+    this.sortOrder = r.sortOrder
   }
 }
-
 class FsTree {
   roots: FsNode[]
 
@@ -40,22 +74,9 @@ class FsTree {
     this.roots = []
   }
 
-  static async buildTree(api: FsApi): Promise<FsTree> {
+  static async buildFsTree(api: FsApi): Promise<FsTree> {
     const tree = new FsTree()
 
-    const folder_res = await api.fetchFolders()
-    if (!folder_res.ok) throw new Error(folder_res.message)
-
-    const file_res = await api.fetchFiles()
-    if (!file_res.ok) throw new Error(file_res.message)
-
-    for (const f of folder_res.folders) {
-      tree.roots.push(new FolderNode(f))
-    }
-
-    for (const f of file_res.files) {
-      tree.roots.push(new FileNode(f))
-    }
 
     return tree
   }

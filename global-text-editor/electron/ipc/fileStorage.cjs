@@ -128,3 +128,22 @@ ipcMain.handle('files:fetch', (_event, payload) => {
 
 })
 
+ipcMain.handle('fsNode:fetch', (_event, _payload) => {
+  try {
+    rows = db
+      .prepare(`
+        SELECT id, type, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
+        FROM fsNode
+        -- sort ascending from root nodes to child nodes
+        -- then sort by sort_order within each parent_id
+        ORDER BY COALESCE(parent_id, -1), sort_order
+        `)
+        .all()
+
+     return { ok: true, rows}
+
+  } catch (err) {
+    console.error('[fsNode:fetch] failed:', err)
+    return { ok: false, message: 'Failed to fetch fsNode'}
+  }
+})
