@@ -29,6 +29,14 @@ function migrate() {
   // if migration folder doesn't exist, stop
   if (!fs.existsSync(migrationsDir)) return
 
+  // ensure migrations bookkeeping table exists
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename   TEXT PRIMARY KEY,
+      applied_at INTEGER NOT NULL
+    );
+  `)
+
   const migrationFiles = fs
     // read all files in the directory
     .readdirSync(migrationsDir)
@@ -37,25 +45,23 @@ function migrate() {
     // order the versions
     .sort() // relies on zero-padded numbers like 001, 002, ...
 
-  // read SQLite's built-in integer called user_version
-  // {simple:true} returns only number, not a row object
-  const curVersion = database.pragma('user_version', { simple: true })
+  const appliedRows = database
+    .prepare(`SELECT filename FROM schema_migrations`)
+    .all()
 
-  // creates a transaction wrapper function which means everything inside either
-    // all succeeds and commits, or
-    // if anything fails, it rolls back and changes aren't partially applied
+  const applied = new Set(appliedRows.map((r) => r.filename))
+    
+  // apply only files not yet applied, and record them
   const run = database.transaction(() => {
     for (const f of migrationFiles) {
-      const nextVersion = Number(f.split('_')[0]) // "001" -> 1
-      // if file is already applied, skip
-      if (nextVersion <= curVersion) continue
+      if (applied.has(f)) continue
 
-      // read the file contents into a string
       const sql = fs.readFileSync(path.join(migrationsDir, f), 'utf8')
-      // executes the SQL text
       database.exec(sql)
-      // updates SQLite's user_version to the version just applied
-      database.pragma(`user_version = ${nextVersion}`)
+
+      database
+        .prepare(`INSERT INTO schema_migrations (filename, applied_at) VALUES (?, ?)`)
+        .run(f, Date.now())
     }
   })
 
