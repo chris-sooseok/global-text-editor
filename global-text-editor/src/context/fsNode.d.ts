@@ -1,7 +1,7 @@
 
 export type FsNode = FolderNode | FileNode
 
-export type NodeRow = {
+export type FsNodeRow = {
   id: number
   type: "folder" | "file"
   parentId: number | null

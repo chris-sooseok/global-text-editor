@@ -1,9 +1,10 @@
 
-import type { FsNode, NodeRow, FolderNode, FileNode } from '../types/fsNode'
+import type { FsNode, FsNodeRow as FsNodeRow, FolderNode, FileNode } from './fsNode'
 import type { FetchFsNodeRes } from '../api/fsApi'
+
 type FsApi = Window["api"]
 
-function makeFolderNode(r: NodeRow): FolderNode {
+function makeFolderNode(r: FsNodeRow): FolderNode {
   return {
     type: "folder",
     id: r.id,
@@ -16,7 +17,7 @@ function makeFolderNode(r: NodeRow): FolderNode {
   }
 }
 
-function makeFileNode(r: NodeRow): FileNode {
+function makeFileNode(r: FsNodeRow): FileNode {
   if (r.storagePath == null) throw new Error("FileNode requires storagePath")
   if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
 
@@ -47,7 +48,7 @@ class FsTree {
     const res: FetchFsNodeRes = await api.fetchFsNodes()
     if (!res.ok) throw new Error(res.message)
     
-    const rows: NodeRow[] = res.rows
+    const rows: FsNodeRow[] = res.rows
 
     const byId = new Map<number, FsNode>()
 

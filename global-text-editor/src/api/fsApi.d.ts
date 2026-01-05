@@ -1,4 +1,4 @@
-import type { NodeRow } from "../types/fsNode";
+import type { NodeRow } from "../context/fsNode";
 
 export type FetchFsNodeRes =
   | { ok: true; rows: NodeRow[] }

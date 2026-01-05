@@ -5,6 +5,7 @@ const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
 
+// create 
 ipcMain.handle('folders:create', (_event, payload) => {
   try {
     const name = payload.name
@@ -81,7 +82,7 @@ ipcMain.handle('files:create', (_event, payload) => {
   }
 })
 
-
+// fetch entire row of fsNodes to construct fsTree
 ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
   try {
     const rows = db
