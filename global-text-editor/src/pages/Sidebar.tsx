@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react'
 import { FsTreeContext } from '../context/FsTreeContext'
+import type { FsNode } from '../context/fsNode'
 
 export default function Sidebar() {
   const fsTree = useContext(FsTreeContext)
@@ -17,59 +18,37 @@ export default function Sidebar() {
     }
   }
 
-  // default for Enter key
-  async function handleSubmitDefault(e: React.FormEvent) {
-    e.preventDefault()
-    await handleCreateFsNode('folder')
-  }
-
-  async function handleClickSubmit(e: React.MouseEvent<HTMLButtonElement>, type: 'folder' | 'file') {
-    e.preventDefault() // prevent the form's default submit
-    await handleCreateFsNode(type)
-  }
-
-  function renderNode(node: any, depth = 0) {
-    const isFolder = node.type === 'folder'
-    const children = isFolder && Array.isArray(node.children) ? node.children : []
-    const isSelectedFolder = isFolder && selectedParentId === node.id
-
-    return (
-      <li key={`${node.type}-${node.id}`}>
-        <div
-          style={{
-            paddingLeft: depth * 14,
-            cursor: isFolder ? 'pointer' : 'default',
-            fontWeight: isSelectedFolder ? 700 : 400,
-            opacity: isSelectedFolder ? 1 : 0.95,
-          }}
-          onClick={() => {
-            if (!isFolder) return
-            setSelectedParentId((prev) => (prev === node.id ? null : node.id))
-          }}
-        >
-          {isFolder ? '📁' : '📄'} {node.name}
-          {isSelectedFolder ? ' (selected)' : ''}
-        </div>
-
-        {isFolder && children.length > 0 && (
-          <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {children.map((child: any) => renderNode(child, depth + 1))}
-          </ul>
-        )}
-      </li>
-    )
-  }
-
   return (
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
-        <div style={{ marginBottom: 8, fontWeight: 600 }}>All nodes</div>
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>Root nodes</div>
 
         {!fsTree?.tree?.roots || fsTree.tree.roots.length === 0 ? (
           <div style={{ opacity: 0.7 }}>No items</div>
         ) : (
           <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {fsTree.tree.roots.map((node: any) => renderNode(node, 0))}
+            {fsTree.tree.roots.map((node: FsNode) => {
+              const isFolder = node.type === 'folder'
+              const isSelectedFolder = isFolder && selectedParentId === node.id
+
+              return (
+                <li key={`${node.type}-${node.id}`}>
+                  <div
+                    style={{
+                      cursor: isFolder ? 'pointer' : 'default',
+                      fontWeight: isSelectedFolder ? 700 : 400,
+                    }}
+                    onClick={() => {
+                      if (!isFolder) return
+                      setSelectedParentId((prev) => (prev === node.id ? null : node.id))
+                    }}
+                  >
+                    {isFolder ? '📁' : '📄'} {node.name}
+                    {isSelectedFolder ? ' (selected)' : ''}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>
@@ -83,22 +62,21 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* One input, two buttons, no extra state */}
-      <form style={{ display: 'flex', gap: 8 }} onSubmit={handleSubmitDefault}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <input
           placeholder="New folder/file name"
           value={fsNodeName}
           onChange={(e) => setFsNodeName(e.target.value)}
         />
 
-        <button type="submit" onClick={(e) => handleClickSubmit(e, 'folder')}>
+        <button type="button" onClick={() => handleCreateFsNode('folder')}>
           + Folder
         </button>
 
-        <button type="submit" onClick={(e) => handleClickSubmit(e, 'file')}>
+        <button type="button" onClick={() => handleCreateFsNode('file')}>
           + File
         </button>
-      </form>
+      </div>
     </aside>
   )
 }
