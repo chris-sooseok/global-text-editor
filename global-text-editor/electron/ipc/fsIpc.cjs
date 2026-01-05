@@ -5,67 +5,46 @@ const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
 
-// create 
-ipcMain.handle('folders:create', (_event, payload) => {
+ipcMain.handle('fsNodes:create', (_event, payload) => {
   try {
-    const name = payload.name
+    const type = payload.type
     const parentId = payload.parentId ?? null
+    const name = payload.name
+    let storagePath = null
+    let sizeBytes = null
+    let mimeType = null
     const now = Date.now()
     const nextSortOrder = getNextSortOrder(db, parentId)
+    
+    let info
 
-    const info = db
-      .prepare(`
-        INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-        VALUES ('folder', ?, ?, NULL, NULL, NULL, ?, ?, ?)
-      `)
-      .run(parentId, name, now, now, nextSortOrder)
+    if (type === 'folder') {
+      info = db
+        .prepare(`
+          INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+          VALUES ('folder', ?, ?, NULL, NULL, NULL, ?, ?, ?)
+        `)
+        .run(parentId, name, now, now, nextSortOrder)
+    } else if (type === 'file') {
+      storagePath = randomUUID()
+      sizeBytes = 0
+      mimeType = null
 
-    return {
-      ok: true,
-      node: {
-        id: Number(info.lastInsertRowid),
-        type: 'folder',
-        parentId,
-        name,
-        storagePath: null,
-        sizeBytes: null,
-        mimeType: null,
-        createdAt: now,
-        updatedAt: now,
-        sortOrder: nextSortOrder,
-      },
+      info = db
+        .prepare(`
+          INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+          VALUES ('file', ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
+    } else {
+      return { ok: false, message: 'Invalid node type' }
     }
-  }catch (err) {
-    console.error('[folders:create] failed:', err)
-    return { ok: false, message: 'Failed to create folder' }
-  }
-})
-
-
-ipcMain.handle('files:create', (_event, payload) => {
-  try {
-    const name = payload.name
-    const parentId = payload.parentId ?? null
-    const now = Date.now()
-    const nextSortOrder = getNextSortOrder(db, parentId)
-    const storagePath = randomUUID()
-
-    // ! for now
-    const sizeBytes = 0
-    const mimeType = null
-
-    const info = db
-      .prepare(`
-        INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-        VALUES ('file', ?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-      .run(parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
 
     return {
       ok: true,
       node: {
         id: Number(info.lastInsertRowid),
-        type: 'file',
+        type,
         parentId,
         name,
         storagePath,
@@ -76,11 +55,13 @@ ipcMain.handle('files:create', (_event, payload) => {
         sortOrder: nextSortOrder,
       },
     }
+
   } catch (err) {
-    console.error('[files:create] failed:', err)
-    return { ok: false, message: 'Failed to create file' }
-  }
+    console.error('[fsNodes:create] failed:', err)
+    return { ok: false, message: 'Failed to create node' }
+  } 
 })
+
 
 // fetch entire row of fsNodes to construct fsTree
 ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
