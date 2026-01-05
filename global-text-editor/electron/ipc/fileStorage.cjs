@@ -10,7 +10,6 @@ ipcMain.handle('folders:create', (_event, payload) => {
     const name = payload.name
     const parentId = payload.parentId ?? null
     const now = Date.now()
-
     const nextSortOrder = getNextSortOrder(db, parentId)
 
     const info = db
@@ -47,13 +46,10 @@ ipcMain.handle('files:create', (_event, payload) => {
     const name = payload.name
     const parentId = payload.parentId ?? null
     const now = Date.now()
-
     const nextSortOrder = getNextSortOrder(db, parentId)
-
-    // Unique blob key (you’ll store the physical file at <storageRoot>/<storagePath>)
     const storagePath = randomUUID()
 
-    // Until you write the file bytes, 0 is fine (must be NOT NULL and >= 0)
+    // ! for now
     const sizeBytes = 0
     const mimeType = null
 
@@ -90,7 +86,16 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
   try {
     const rows = db
       .prepare(`
-        SELECT id, type, parent_id AS parentId, name, storage_path AS storagePath, size_bytes AS sizeBytes, mime_type AS mimeType, created_at AS createdAt, updated_at AS updatedAt, sort_order AS sortOrder
+        SELECT 
+          id,
+          type, parent_id AS parentId,
+          name,
+          storage_path AS storagePath,
+          size_bytes AS sizeBytes,
+          mime_type AS mimeType,
+          created_at AS createdAt,
+          updated_at AS updatedAt,
+          sort_order AS sortOrder
         FROM fsNode
         -- sort ascending from root nodes to child nodes
         -- then sort by sort_order within each parent_id

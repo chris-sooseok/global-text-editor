@@ -19,7 +19,7 @@ function FsTreeProvider({ api, children }: FsTreeProviderProps) {
   useEffect(() => {
     ;(async () => {
       try {
-        const t = await FsTree.buildTree(api)
+        const t = await FsTree.buildFsTree(api)
         setFsTree(t)
       } catch (err) {
         console.error(err)

@@ -54,22 +54,13 @@ BEGIN
   END;
 END;
 
--- trigger that updates updated_at of updated folders
-CREATE TRIGGER IF NOT EXISTS trg_folders_updated_at
-AFTER UPDATE ON folders
+-- trigger that updates updated_at of updated fsNode
+CREATE TRIGGER IF NOT EXISTS trg_fsNode_updated_at
+AFTER UPDATE ON fsNode
 FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
 BEGIN
-  UPDATE folders
-  SET updated_at = strftime('%s','now')*1000
-  WHERE id = OLD.id;
-END;
-
--/ trigger that updates updated_at of updated files
-CREATE TRIGGER IF NOT EXISTS trg_files_updated_at
-AFTER UPDATE ON files
-FOR EACH ROW
-BEGIN
-  UPDATE files
+  UPDATE fsNode
   SET updated_at = strftime('%s','now')*1000
   WHERE id = OLD.id;
 END;

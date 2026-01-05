@@ -54,6 +54,8 @@ class FileNode {
     this.sortOrder = r.sortOrder
   }
 }
+
+
 class FsTree {
   roots: FsNode[]
 
@@ -65,8 +67,37 @@ class FsTree {
     const tree = new FsTree()
 
     const res = await api.fetchFsNodes()
+    if (!res.ok) throw new Error(res.message)
     
+    const rows = res.rows
 
+    const byId = new Map<number, FsNode>()
+
+    // loop through rows, and construct FolderNode and FileNode objects
+    for (const r of rows) {
+      const node: FsNode = r.type === 'folder' ? new FolderNode(r) : new FileNode(r)
+      byId.set(node.id, node)
+    }
+
+    // 
+    for (const node of byId.values()) {
+
+      // if root
+      if (node.parentId == null) {
+        tree.roots.push(node)
+        continue
+      }
+
+      const parent = byId.get(node.parentId)
+
+      // safety 
+      if (!parent || parent.type !== 'folder') {
+        tree.roots.push(node)
+        continue
+      }
+      
+      parent.children.push(node)
+    }
 
     return tree
   }

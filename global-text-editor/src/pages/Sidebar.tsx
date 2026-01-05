@@ -37,21 +37,36 @@ export default function Sidebar() {
 
   }, [fileName, fileParentId])
 
+  const renderNode = (node: any, depth = 0) => {
+    const isFolder = node.type === 'folder'
+    const children = isFolder && Array.isArray(node.children) ? node.children : []
+
+    return (
+      <li key={`${node.type}-${node.id}`}>
+        <div style={{ paddingLeft: depth * 14 }}>
+          {isFolder ? '📁' : '📄'} {node.name}
+        </div>
+
+        {isFolder && children.length > 0 && (
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {children.map((child: any) => renderNode(child, depth + 1))}
+          </ul>
+        )}
+      </li>
+    )
+  }
+
   return (
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* display roots */}
+      {/* display full tree */}
       <div>
-        <div style={{ marginBottom: 8, fontWeight: 600 }}>Roots</div>
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>All nodes</div>
 
-        {fsTree?.tree?.roots.length === 0 ? (
+        {!fsTree?.tree?.roots || fsTree.tree.roots.length === 0 ? (
           <div style={{ opacity: 0.7 }}>No items</div>
         ) : (
           <ul style={{ margin: 0, paddingLeft: 16 }}>
-            {fsTree?.tree?.roots.map((f: any) => (
-              <li key={`${f.type}-${f.id}`}>
-                {f.name}
-              </li>
-            ))}
+            {fsTree.tree.roots.map((node: any) => renderNode(node, 0))}
           </ul>
         )}
       </div>
@@ -79,7 +94,7 @@ export default function Sidebar() {
           onChange={(e) => setFileName(e.target.value)}
         />
         <input
-          placeholder="folderId (blank = root)"
+          placeholder="parentId (blank = root)"
           value={fileParentId}
           onChange={(e) => setFileParentId(e.target.value)}
         />
