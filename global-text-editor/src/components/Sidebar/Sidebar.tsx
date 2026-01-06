@@ -3,15 +3,10 @@ import { FsTreeContext } from '../../context/FsTreeContext'
 import type { FsNode } from '../../context/FsTreeTypes'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
-import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
 import folderIcon from '../../assets/icons8-folder-96.png'
 import IconButton from './IconButton'
 
-type SidebarProps = {
-  onToggleSidebar: () => void
-}
-
-export default function Sidebar({ onToggleSidebar }: SidebarProps) {
+export default function Sidebar() {
   const fsTree = useContext(FsTreeContext)
 
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
@@ -34,19 +29,19 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
           <IconButton
             src={newFolderIcon}
             label="Create folder"
+            buttonSize={28}
+            iconSize={16}
+            background='white'
             onClick={() => handleCreateFsNode('folder')}
           />
 
           <IconButton
             src={newFileIcon}
             label="Create file"
+            buttonSize={28}
+            iconSize={16}
+            background='white'
             onClick={() => handleCreateFsNode('file')}
-          />
-
-          <IconButton
-            src={hideIcon}
-            label="Hide sidebar"
-            onClick={onToggleSidebar}
           />
         </div>
       </div>
@@ -86,9 +81,7 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
 
                       <span>{node.name}</span>
 
-                      {isSelectedFolder ? (
-                        <span style={{ opacity: 0.7 }}> (selected)</span>
-                      ) : null}
+                      {isSelectedFolder ? <span style={{ opacity: 0.7 }}> (selected)</span> : null}
                     </span>
                   </div>
                 </li>
