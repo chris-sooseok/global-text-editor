@@ -1,8 +1,16 @@
 import { useState, useContext } from 'react'
 import { FsTreeContext } from '../context/FsTreeContext'
-import type { FsNode } from '../context/fsNode'
+import type { FsNode } from '../context/FsTreeTypes'
+import folderIcon from '../assets/icons8-add-folder-96-black.png'
+import fileIcon from '../assets/icons8-add-file-96-black.png'
+import IconButton from './IconButton'
+import hideIcon from '../assets/icons8-hide-sidepanel-96.png'
 
-export default function Sidebar() {
+type SidebarProps = {
+  onToggleSidebar: () => void
+}
+
+export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   const fsTree = useContext(FsTreeContext)
 
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
@@ -19,10 +27,31 @@ export default function Sidebar() {
   }
 
   return (
+    
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div>
-        <div style={{ marginBottom: 8, fontWeight: 600 }}>Root nodes</div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <IconButton
+            src={folderIcon}
+            label="Create folder"
+            onClick={() => handleCreateFsNode('folder')}
+          />
 
+          <IconButton
+            src={fileIcon}
+            label="Create file"
+            onClick={() => handleCreateFsNode('file')}
+          />
+
+          <IconButton
+            src={hideIcon}
+            label="Hide sidebar"
+            onClick={onToggleSidebar}
+          />
+        </div>
+      </div>
+
+      <div>
         {!fsTree?.tree?.roots || fsTree.tree.roots.length === 0 ? (
           <div style={{ opacity: 0.7 }}>No items</div>
         ) : (
@@ -53,29 +82,13 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div style={{ fontSize: 13, opacity: 0.85 }}>
-        Creating under: {selectedParentId === null ? 'Root' : `Folder ID ${selectedParentId}`}
-        {selectedParentId !== null && (
-          <button type="button" style={{ marginLeft: 8 }} onClick={() => setSelectedParentId(null)}>
-            Clear
-          </button>
-        )}
-      </div>
-
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           placeholder="New folder/file name"
           value={fsNodeName}
           onChange={(e) => setFsNodeName(e.target.value)}
+          style={{ flex: 1 }}
         />
-
-        <button type="button" onClick={() => handleCreateFsNode('folder')}>
-          + Folder
-        </button>
-
-        <button type="button" onClick={() => handleCreateFsNode('file')}>
-          + File
-        </button>
       </div>
     </aside>
   )
