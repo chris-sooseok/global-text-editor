@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 export type IconButtonProps = {
   src: string
   label: string // used for aria-label
+  title?: string
   onClick?: () => void
   disabled?: boolean
   buttonSize?: number
@@ -15,6 +16,7 @@ export type IconButtonProps = {
 export default function IconButton({
   src,
   label,
+  title = label,
   disabled = false,
   buttonSize,
   iconSize,
@@ -24,6 +26,7 @@ export default function IconButton({
   return (
     <button
       type="button"
+      title={title}
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
