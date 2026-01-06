@@ -1,10 +1,11 @@
 import { useState, useContext } from 'react'
 import { FsTreeContext } from '../context/FsTreeContext'
 import type { FsNode } from '../context/FsTreeTypes'
-import folderIcon from '../assets/icons8-add-folder-96-black.png'
-import fileIcon from '../assets/icons8-add-file-96-black.png'
-import IconButton from './IconButton'
+import newFolderIcon from '../assets/icons8-add-folder-96-black.png'
+import newFileIcon from '../assets/icons8-add-file-96-black.png'
 import hideIcon from '../assets/icons8-hide-sidepanel-96.png'
+import folderIcon from '../assets/icons8-folder-96.png'
+import IconButton from './IconButton'
 
 type SidebarProps = {
   onToggleSidebar: () => void
@@ -27,18 +28,17 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
   }
 
   return (
-    
     <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <div style={{ display: 'flex', gap: 6 }}>
           <IconButton
-            src={folderIcon}
+            src={newFolderIcon}
             label="Create folder"
             onClick={() => handleCreateFsNode('folder')}
           />
 
           <IconButton
-            src={fileIcon}
+            src={newFileIcon}
             label="Create file"
             onClick={() => handleCreateFsNode('file')}
           />
@@ -72,8 +72,24 @@ export default function Sidebar({ onToggleSidebar }: SidebarProps) {
                       setSelectedParentId((prev) => (prev === node.id ? null : node.id))
                     }}
                   >
-                    {isFolder ? '📁' : '📄'} {node.name}
-                    {isSelectedFolder ? ' (selected)' : ''}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      {isFolder ? (
+                        <img
+                          src={folderIcon}
+                          alt=""
+                          aria-hidden="true"
+                          style={{ width: 20, height: 20, display: 'block' }}
+                        />
+                      ) : (
+                        <span aria-hidden="true">📄</span>
+                      )}
+
+                      <span>{node.name}</span>
+
+                      {isSelectedFolder ? (
+                        <span style={{ opacity: 0.7 }}> (selected)</span>
+                      ) : null}
+                    </span>
                   </div>
                 </li>
               )
