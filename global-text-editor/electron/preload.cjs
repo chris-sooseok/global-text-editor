@@ -16,6 +16,8 @@ async function invokeLogged(channel, payload) {
 contextBridge.exposeInMainWorld('api', {
   createFsNode: (type, parentId, name) =>
     invokeLogged('fsNodes:create', { type, parentId, name }),
+  deleteFsNode: (id) =>
+    invokeLogged('fsNodes:delete', { id }),
   fetchFsNodes: () =>
     invokeLogged('fsNodes:fetch', {})
 })
