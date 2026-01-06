@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
-const { getNextSortOrder } = require('./fsIpcHelper.cjs')
+const { getNextSortOrder } = require('./FsIpcHelper.cjs')
 const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
