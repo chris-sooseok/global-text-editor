@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
 import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
@@ -6,116 +5,127 @@ import FsTreeProvider from '../../context/FsTreeContext'
 import Sidebar from './Sidebar'
 
 function SidebarRenderer() {
+  const [sidebarWidth, setSidebarWidth] = useState<number>(250)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
 
-    const [sidebarWidth, setSidebarWidth] = useState<number>(250)
-    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
+  const COLLAPSED_WIDTH = 55
 
-    const COLLAPSED_WIDTH = 42 // thin strip that shows border + button
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(0)
 
-    const isDraggingRef = useRef(false)
-    const startXRef = useRef(0) // mouse X position when dragging
-    const startWidthRef = useRef(0) // sidebar width when dragging
+  function toggleSidebar() {
+    setSidebarCollapsed((prev) => !prev)
+  }
 
-    useEffect(() => {
-        function onMouseMove(e: MouseEvent) {
-            if (!isDraggingRef.current) return
-            if (sidebarCollapsed) return
+  const effectiveWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
 
-            const dx = e.clientX - startXRef.current
-            const nextWidth = startWidthRef.current + dx
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!isDraggingRef.current || sidebarCollapsed) return
 
-            const min = 220
-            const max = 700
-            setSidebarWidth(Math.max(min, Math.min(max, nextWidth)))
-        }
+      const draggingX = e.clientX - startXRef.current
+      const nextWidth = startWidthRef.current + draggingX
 
-        function onMouseUp() {
-            isDraggingRef.current = false
-            document.body.style.cursor = ''
-            document.body.style.userSelect = ''
-        }
-
-        window.addEventListener('mousemove', onMouseMove)
-        window.addEventListener('mouseup', onMouseUp)
-
-        return () => {
-            window.removeEventListener('mousemove', onMouseMove)
-            window.removeEventListener('mouseup', onMouseUp)
-        }
-    }, [sidebarCollapsed])
-
-    function onDragStart(e: React.MouseEvent<HTMLDivElement>) {
-        if (sidebarCollapsed) return
-
-        isDraggingRef.current = true
-        startXRef.current = e.clientX
-        startWidthRef.current = sidebarWidth
-
-        // makes it feel like a resizer
-        document.body.style.cursor = 'col-resize'
-        // prevents text from getting highlighted while dragging
-        document.body.style.userSelect = 'none'
+      const min = 220
+      const max = 500
+      setSidebarWidth(Math.max(min, Math.min(max, nextWidth)))
     }
 
-    function toggleSidebar() {
-        setSidebarCollapsed((prev) => !prev)
+    function onMouseUp() {
+      isDraggingRef.current = false
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
     }
 
-    const effectiveWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
 
-    return (
-        <FsTreeProvider api={window.api}>
-        <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [sidebarCollapsed])
+
+  function onDragStart(e: React.MouseEvent<HTMLDivElement>) {
+    if (sidebarCollapsed) return
+
+    isDraggingRef.current = true
+    startXRef.current = e.clientX
+    startWidthRef.current = sidebarWidth
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }
+
+  return (
+    <FsTreeProvider api={window.api}>
+      <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
+        <div
+          style={{
+            width: effectiveWidth,
+            position: 'relative',
+            borderRight: '3px solid rgba(0,0,0,0.15)',
+            flexShrink: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'width 180ms ease'
+          }}
+        >
+          {/* top bar above sidebar content */}
+          <div
+            style={{
+              height: 44,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              padding: '8px 12px',
+              flexShrink: 0,
+              borderBottom: '3px solid rgba(0,0,0,0.15)',
+            }}
+          >
+            <IconButton
+              src={hideIcon}
+              label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+              buttonSize={30}
+              iconSize={20}
+              background='transparent'
+              onClick={toggleSidebar}
+            />
+          </div>
+
+          {/* sidebar content */}
+          <div style={{ 
+                flex: 1, 
+                overflow: 'auto',
+                opacity: sidebarCollapsed ? 0 : 1,
+                transition: 'opacity 120ms ease',
+                pointerEvents: sidebarCollapsed ? 'none' : 'auto',
+               }}>
+            {sidebarCollapsed ? null : <Sidebar />}
+          </div>
+
+          {/* only if sidebar isn't collapsed, allow dragging */}
+          {!sidebarCollapsed && (
             <div
-                style={{
-                    width: effectiveWidth,
-                    position: 'relative',
-                    borderRight: '1px solid rgba(0,0,0,0.15)',
-                    flexShrink: 0,
-                    overflow: 'hidden',
-                }}
-            >
-                {sidebarCollapsed ? (
-                    // collapsed strip: ONLY toggle button is visible
-                    <div
-                    style={{
-                        height: '100%',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        paddingTop: 8,
-                    }}
-                    >
-                    <IconButton
-                        src={hideIcon}
-                        label="Show sidebar"
-                        onClick={toggleSidebar}
-                    />
-                    </div>
-                ) : (
-                    <Sidebar onToggleSidebar={toggleSidebar} />
-                )}
-
-                {!sidebarCollapsed && (
-                    <div
-                        onMouseDown={onDragStart}
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: -4,
-                            width: 8,
-                            height: '100%',
-                            cursor: 'col-resize',
-                        }}
-                    />
-                )}
-            </div>
-
-            <div style={{ flex: 1, overflow: 'auto' }}>
-            {/* main content */}
-            </div>
+              onMouseDown={onDragStart}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: -4,
+                width: 8,
+                height: '100%',
+                cursor: 'col-resize',
+              }}
+            />
+          )}
         </div>
-        </FsTreeProvider>
-    )
+
+        <div style={{ flex: 1, overflow: 'auto' }}>{/* main content */}</div>
+      </div>
+    </FsTreeProvider>
+  )
 }
 
 export default SidebarRenderer
