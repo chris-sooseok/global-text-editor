@@ -5,14 +5,14 @@ import FsTreeProvider from '../../context/FsTreeContext'
 import Sidebar from './Sidebar'
 
 function SidebarRenderer() {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(250)
+  const [sidebarWidth, setSidebarWidth] = useState<number>(250) // default width
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
 
   const COLLAPSED_WIDTH = 55
 
   const isDraggingRef = useRef(false)
-  const startXRef = useRef(0)
-  const startWidthRef = useRef(0)
+  const startXRef = useRef(0) // mouse X position when dragging
+  const startWidthRef = useRef(0) // current sidebar width when dragging
 
   function toggleSidebar() {
     setSidebarCollapsed((prev) => !prev)
@@ -22,11 +22,14 @@ function SidebarRenderer() {
 
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
+      // if true, don't allow dragging
+      // (not dragging OR sidebar collapsed)
       if (!isDraggingRef.current || sidebarCollapsed) return
 
       const draggingX = e.clientX - startXRef.current
       const nextWidth = startWidthRef.current + draggingX
 
+      // width limit
       const min = 220
       const max = 500
       setSidebarWidth(Math.max(min, Math.min(max, nextWidth)))
@@ -34,7 +37,10 @@ function SidebarRenderer() {
 
     function onMouseUp() {
       isDraggingRef.current = false
+
+      // reset cursor back to normal after dragging
       document.body.style.cursor = ''
+      // restore default selection behavior
       document.body.style.userSelect = ''
     }
 
@@ -48,11 +54,12 @@ function SidebarRenderer() {
   }, [sidebarCollapsed])
 
   function onDragStart(e: React.MouseEvent<HTMLDivElement>) {
+    // if true, don't allow dragging
     if (sidebarCollapsed) return
 
     isDraggingRef.current = true
-    startXRef.current = e.clientX
-    startWidthRef.current = sidebarWidth
+    startXRef.current = e.clientX // save the dragging start point
+    startWidthRef.current = sidebarWidth // save the current width
 
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
@@ -61,19 +68,20 @@ function SidebarRenderer() {
   return (
     <FsTreeProvider api={window.api}>
       <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
+        {/* Sidebar Container */}
         <div
           style={{
             width: effectiveWidth,
             position: 'relative',
-            borderRight: '3px solid rgba(0,0,0,0.15)',
+            borderRight: '2px solid rgba(0,0,0,0.15)',
             flexShrink: 0,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            transition: 'width 180ms ease'
+            transition: 'width 180ms ease',
           }}
         >
-          {/* top bar above sidebar content */}
+          {/* Topbar above sidebar content */}
           <div
             style={{
               height: 44,
@@ -82,7 +90,7 @@ function SidebarRenderer() {
               justifyContent: 'flex-end',
               padding: '8px 12px',
               flexShrink: 0,
-              borderBottom: '3px solid rgba(0,0,0,0.15)',
+              borderBottom: '2px solid rgba(0,0,0,0.15)',
             }}
           >
             <IconButton
@@ -90,23 +98,25 @@ function SidebarRenderer() {
               label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
               buttonSize={30}
               iconSize={20}
-              background='transparent'
+              background="transparent"
               onClick={toggleSidebar}
             />
           </div>
 
-          {/* sidebar content */}
-          <div style={{ 
-                flex: 1, 
-                overflow: 'auto',
-                opacity: sidebarCollapsed ? 0 : 1,
-                transition: 'opacity 120ms ease',
-                pointerEvents: sidebarCollapsed ? 'none' : 'auto',
-               }}>
+          {/* Sidebar content */}
+          <div
+            style={{
+              flex: 1,
+              overflow: 'auto',
+              opacity: sidebarCollapsed ? 0 : 1,
+              transition: 'opacity 120ms ease',
+              pointerEvents: sidebarCollapsed ? 'none' : 'auto',
+            }}
+          >
             {sidebarCollapsed ? null : <Sidebar />}
           </div>
 
-          {/* only if sidebar isn't collapsed, allow dragging */}
+          {/* only when not collapsed, allow dragging */}
           {!sidebarCollapsed && (
             <div
               onMouseDown={onDragStart}
@@ -122,7 +132,6 @@ function SidebarRenderer() {
           )}
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto' }}>{/* main content */}</div>
       </div>
     </FsTreeProvider>
   )

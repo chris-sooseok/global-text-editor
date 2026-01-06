@@ -1,4 +1,4 @@
-import type { NodeRow } from "../context/FsTreeTypes";
+import type { NodeRow } from "../context/FsTree";
 
 type CreateFsNodeRes =
   | { ok: true; node: NodeRow[] }
