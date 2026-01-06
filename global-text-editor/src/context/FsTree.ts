@@ -1,6 +1,6 @@
 
 import type { FsNode, FsNodeRow, FolderNode, FileNode } from './FsTreeTypes'
-import type { FetchFsNodeRes } from '../api/fsApi'
+import type { FetchFsNodeRes } from '../api/FsApi'
 
 type FsApi = Window["api"]
 

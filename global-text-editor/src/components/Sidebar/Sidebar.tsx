@@ -1,10 +1,10 @@
 import { useState, useContext } from 'react'
-import { FsTreeContext } from '../context/FsTreeContext'
-import type { FsNode } from '../context/FsTreeTypes'
-import newFolderIcon from '../assets/icons8-add-folder-96-black.png'
-import newFileIcon from '../assets/icons8-add-file-96-black.png'
-import hideIcon from '../assets/icons8-hide-sidepanel-96.png'
-import folderIcon from '../assets/icons8-folder-96.png'
+import { FsTreeContext } from '../../context/FsTreeContext'
+import type { FsNode } from '../../context/FsTreeTypes'
+import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
+import newFileIcon from '../../assets/icons8-add-file-96-black.png'
+import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
+import folderIcon from '../../assets/icons8-folder-96.png'
 import IconButton from './IconButton'
 
 type SidebarProps = {
