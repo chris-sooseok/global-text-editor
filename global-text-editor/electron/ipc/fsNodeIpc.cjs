@@ -6,6 +6,11 @@ const { randomUUID } = require('node:crypto')
 const db = connect_db()
 
 ipcMain.handle('fsNodes:create', (_event, payload) => {
+
+  if (payload.name.trim() == '') {
+    return { ok: false, message: 'Name must be provided'}
+  }
+
   try {
     const type = payload.type
     const parentId = payload.parentId ?? null
@@ -62,6 +67,9 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   } 
 })
 
+ipcMain.handle('fsNodes:delete', (_event, paylaod) => {
+
+})
 
 // fetch entire row of fsNodes to construct fsTree
 ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
