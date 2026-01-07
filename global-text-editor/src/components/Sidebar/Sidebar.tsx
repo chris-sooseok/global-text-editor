@@ -7,6 +7,7 @@ import {
   renderCreatePromptHelper,
   renderNodeHelper
 } from './SidebarHelper'
+import type { SelectedNodeType } from './SidebarHelper'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
@@ -14,6 +15,7 @@ import IconButton from './IconButton'
 export default function Sidebar() {
   const fsTree = useContext(FsTreeContext)
 
+  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(null)
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
   // allows unfolding multiple folders at once, use lazy rendering
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
@@ -75,9 +77,11 @@ export default function Sidebar() {
       node,
       depth,
       createType,
+      selectedNode,
       selectedParentId,
       expandedFolderIds,
       toggleFolderHandler,
+      setSelectedNode,
       setSelectedParentId,
       renderCreatePrompt,
       renderNode
@@ -91,7 +95,7 @@ export default function Sidebar() {
     if (promptInputRef.current) {
        promptInputRef.current.focus()
     }
-  }, [createType, selectedParentId])
+  }, [createType, setSelectedParentId])
 
   // click behavior:
   // - click anywhere closes the prompt (unless click is inside prompt or toolbar)
@@ -138,8 +142,8 @@ export default function Sidebar() {
             }
            
             {/* root prompt when no items */}
-            {createType && selectedParentId === null ? (
-              <ul style={{ margin: 0, paddingLeft: 10 }}>
+            {createType && setSelectedParentId === null ? (
+              <ul style={{ margin: 0, paddingLeft: 2 }}>
                 {renderCreatePrompt(0)}
               </ul>
             ) : null}
@@ -150,7 +154,7 @@ export default function Sidebar() {
             {roots.map((root) => renderNode(root, 0))}
 
             {/* root prompt when items */}
-            {createType && selectedParentId === null ? renderCreatePrompt(0) : null}
+            {createType && setSelectedParentId === null ? renderCreatePrompt(0) : null}
           </ul>
         )
     }
