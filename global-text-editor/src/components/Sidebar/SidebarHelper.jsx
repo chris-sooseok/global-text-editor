@@ -85,18 +85,36 @@ export function renderNodeHelper({
   node,
   depth,
   createType,
+  selectedNode,
   selectedParentId,
   expandedFolderIds,
   toggleFolderHandler,
+  setSelectedNode,
   setSelectedParentId,
   renderCreatePrompt,
   renderNode
 }) {
   // File Node Row
   if (node.type !== 'folder') {
+    const isSelectedFile = 
+      selectedNode?.type === 'file' && selectedNode?.nodeId === node.id
+    const isParentExpanded = expandedFolderIds.has(selectedNode?.parentId)
+
     return (
       <li key={node.id}>
-        <div style={{ paddingLeft: depth * 7 }}>
+        <div style={{ 
+          paddingLeft: depth * 7,
+          background: isSelectedFile ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+          borderRadius: 6,
+          paddingTop: 2,
+          paddingBottom: 2,  
+        }}
+        onClick={() => {
+          if (isSelectedFile && isParentExpanded) {
+             setSelectedNode({parentId: node.parentId, type: node.type, nodeId : node.id})
+          }
+        }}
+        >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <img
               src={fileIcon}
@@ -112,7 +130,8 @@ export function renderNodeHelper({
   }
 
   // Folder Node Row
-  const isSelectedFolder = selectedParentId === node.id
+  const isSelectedFolder = 
+    selectedNode?.type === 'folder' && selectedNode?.nodeId === node.id
   const isExpanded = expandedFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
@@ -134,7 +153,7 @@ export function renderNodeHelper({
         onClick={() => {
           // if unfolded folder is not highlighted, simply rehighlight it
           if (!isSelectedFolder && isExpanded) {
-            setSelectedParentId(node.id)
+            setSelectedNode({parentId: node.parentId, type: node.type, nodeId : node.id})
             return
           }
           
@@ -146,7 +165,12 @@ export function renderNodeHelper({
 
           // update highlight and toggle folder as we select
           toggleFolderHandler(node.id)
-          setSelectedParentId((prev) => (prev === node.id ? null : node.id))
+          setSelectedNode((prev) => {
+            const isSameFolder = prev?.type === node.type && prev?.nodeId === node.id
+            return isSameFolder
+              ? null
+              : { nodeId: node.id, type: node.type, parentId: node.parentId }
+          })
         }}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -169,7 +193,7 @@ export function renderNodeHelper({
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
-          {createType && selectedParentId === node.id ? renderCreatePrompt(depth + 1) : null}
+          {createType && selectedNode?.nodeId === node.id ? renderCreatePrompt(depth + 1) : null}
         </ul>
       )}
     </li>

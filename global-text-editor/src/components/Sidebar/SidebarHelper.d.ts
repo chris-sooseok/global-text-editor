@@ -1,5 +1,10 @@
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from "react"
 
+/** Used to control selectedNode highlight, and etc */
+export type SelectedNodeType =
+  | { parentId: number | null; type : 'folder' | 'file'; nodeId: number 
+  | null} | null
+
 /** Used in renderCreatePrompt to handle node create submission */
 export function submitCreatePromptHelper(args: {
   promptInputRef: RefObject<HTMLInputElement | null>
@@ -28,15 +33,18 @@ export function renderCreatePromptHelper(args: {
     cancelCreatePrompt: () => void
 }): ReactNode
 
+
 /** Used to visualize FsTree folder/file nodes */
 export function renderNodeHelper(args: {
     node: FsNode,
     depth: number
     createType: 'folder' | 'file' | null
+    selectedNode: SelectedNodeType
     selectedParentId: number | null
     expandedFolderIds: Set<number>
     toggleFolderHandler: (id: number) => void
-    setSelectedParentId: Dispatch<SetStateAction<number | null>>
+    setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+    setSelectedParentId: Dispatch<SetStateAction<>>
     renderCreatePrompt: (depth: number) => ReactNode
     renderNode: (node: FsNode, depth?: number) => ReactNode
 })
