@@ -1,13 +1,27 @@
+import type { Dispatch, ReactNode, RefObject, SetStateAction } from "react"
+import type { FsNode } from "../../context/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
+
+export type SelectedNodeType =
+  | { parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
 
 export async function submitCreatePromptHelper({
   promptInputRef,
   createType,
+  selectedNode,
   selectedParentId,
   setSelectedParentId,
   setCreateType,
-}) {
+}: {
+  promptInputRef: RefObject<HTMLInputElement | null>
+  createType: 'folder' | 'file' | null
+  selectedNode: SelectedNodeType
+  selectedParentId: number | null
+  //* Dispath is a function that tkaes one argument and returns void
+  setSelectedParentId: Dispatch<SetStateAction<number | null>>
+  setCreateType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
+}): Promise<void> {
   if (!createType) return
 
   const name = promptInputRef.current?.value ?? ''
@@ -17,7 +31,7 @@ export async function submitCreatePromptHelper({
   }
 
   // create under selected folder, or under root if none selected
-  const parentId = selectedParentId ?? null
+  const parentId = selectedNode.parentId
   const res = await window.api.createFsNode(createType, parentId, name)
 
   if (res.ok) {
@@ -31,7 +45,10 @@ export async function submitCreatePromptHelper({
   }
 }
 
-export function cancelCreatePromptHelper({setCreateType, promptInputRef}) {
+export function cancelCreatePromptHelper({setCreateType, promptInputRef}: {
+  setCreateType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+  promptInputRef: RefObject<HTMLInputElement | null>
+}): void {
   setCreateType(null)
   if (promptInputRef.current) {
     promptInputRef.current.value = ''
@@ -40,17 +57,30 @@ export function cancelCreatePromptHelper({setCreateType, promptInputRef}) {
 
 export function renderCreatePromptHelper({
   createType,
-  selectedParentId,
+  selectedNode,
   depth,
   promptRef,
   promptInputRef,
+  expandedFolderIds,
+  setSelectedNode,
   submitCreatePrompt,
   cancelCreatePrompt,
-}) {
+}: {
+    createType: 'folder' | 'file' | null
+    selectedNode: SelectedNodeType
+    depth: number
+    promptRef: RefObject<HTMLDivElement | null>
+    promptInputRef: RefObject<HTMLInputElement | null>
+    expandedFolderIds: Set<number>
+    setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+    submitCreatePrompt: () => Promise<void>
+    cancelCreatePrompt: () => void
+}): ReactNode  {
   if (!createType) return null
 
+
   return (
-    <li key={`__create_prompt__:${selectedParentId ?? 'root'}:${createType}`}>
+    <li key={`__create_prompt__:${selectedNode.parentId ?? 'root'}:${createType}`}>
       <div
         ref={promptRef}
         style={{
@@ -86,33 +116,52 @@ export function renderNodeHelper({
   depth,
   createType,
   selectedNode,
-  selectedParentId,
   expandedFolderIds,
-  toggleFolderHandler,
+  setExpandedFolderIds,
   setSelectedNode,
-  setSelectedParentId,
   renderCreatePrompt,
   renderNode
-}) {
+}: {
+      node: FsNode,
+      depth: number
+      createType: 'folder' | 'file' | null
+      selectedNode: SelectedNodeType
+      selectedParentId: number | null
+      expandedFolderIds: Set<number>
+      setExpandedFolderIds: Dispatch<SetStateAction<Set<number>>>
+      setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+      renderCreatePrompt: (depth: number) => ReactNode
+      renderNode: (node: FsNode, depth?: number) => ReactNode
+}): ReactNode {
   // File Node Row
+  console.log(selectedNode)
   if (node.type !== 'folder') {
-    const isSelectedFile = 
-      selectedNode?.type === 'file' && selectedNode?.nodeId === node.id
-    const isParentExpanded = expandedFolderIds.has(selectedNode?.parentId)
+    const isSelectedFile = selectedNode.nodeId === node.id
+    const isParentExpanded = expandedFolderIds.has(node.parentId)
 
     return (
       <li key={node.id}>
         <div style={{ 
           paddingLeft: depth * 7,
+          cursor: 'pointer',
+          fontWeight: isSelectedFile ? 700 : 400,
+          userSelect: 'none',
+
           background: isSelectedFile ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
           borderRadius: 6,
           paddingTop: 2,
           paddingBottom: 2,  
         }}
         onClick={() => {
-          if (isSelectedFile && isParentExpanded) {
-             setSelectedNode({parentId: node.parentId, type: node.type, nodeId : node.id})
+          // if already selected, return
+          if (isSelectedFile) {
+            return
           }
+
+          // if not selected, update seletedNode
+          console.log(isParentExpanded)
+               setSelectedNode({parentId: node.parentId, type: node.type, nodeId: node.id})
+          
         }}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -130,8 +179,7 @@ export function renderNodeHelper({
   }
 
   // Folder Node Row
-  const isSelectedFolder = 
-    selectedNode?.type === 'folder' && selectedNode?.nodeId === node.id
+  const isSelectedFolder = selectedNode?.nodeId === node.id
   const isExpanded = expandedFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
@@ -157,18 +205,18 @@ export function renderNodeHelper({
             return
           }
           
-          // Safe guard: this can't occur since select and toggle happen synchronously
-          if (isSelectedFolder && !isExpanded) {
-            toggleFolderHandler(node.id)
-            return
-          }
-
           // update highlight and toggle folder as we select
-          toggleFolderHandler(node.id)
-          setSelectedNode((prev) => {
-            const isSameFolder = prev?.type === node.type && prev?.nodeId === node.id
-            return isSameFolder
-              ? null
+          setExpandedFolderIds((prev) => {
+            const next = new Set(prev)
+            if (next.has(node.id)) next.delete(node.id)
+            else next.add(node.id)
+            console.log(next)
+            return next
+          })
+
+          setSelectedNode(() => {
+            return isSelectedFolder
+              ? { nodeId: null, type: null, parentId: null}
               : { nodeId: node.id, type: node.type, parentId: node.parentId }
           })
         }}
