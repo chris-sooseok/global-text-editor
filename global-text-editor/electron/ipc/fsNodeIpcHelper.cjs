@@ -1,5 +1,5 @@
 
-function getNextSortOrder(db, parentId) {
+function nextSortOrderHelper(db, parentId) {
   // MAX(sort_order) among siblings; if none, start at 0
   const row = db
     .prepare(`
@@ -12,4 +12,4 @@ function getNextSortOrder(db, parentId) {
   return Number(row.maxSort) + 1
 }
 
-module.exports = { getNextSortOrder }
+module.exports = { nextSortOrderHelper }

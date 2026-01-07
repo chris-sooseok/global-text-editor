@@ -4,12 +4,14 @@ import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
 import FsTreeProvider from '../../context/FsTreeContext'
 import Sidebar from './Sidebar'
 
+const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
+const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
+const SIDEBAR_MAX_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MAX_WIDTH)
+const COLLAPSED_WIDTH = Number(import.meta.env.VITE_COLLAPSED_WIDTH)
+
 function SidebarRenderer() {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(250) // default width
+  const [sidebarWidth, setSidebarWidth] = useState<number>(SIDEBAR_DEFAULT_WIDTH)
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
-
-  const COLLAPSED_WIDTH = 55
-
   const isDraggingRef = useRef(false)
   const startXRef = useRef(0) // mouse X position when dragging
   const startWidthRef = useRef(0) // current sidebar width when dragging
@@ -18,21 +20,18 @@ function SidebarRenderer() {
     setSidebarCollapsed((prev) => !prev)
   }
 
-  const effectiveWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
+  const appliedWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
 
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
       // if true, don't allow dragging
-      // (not dragging OR sidebar collapsed)
       if (!isDraggingRef.current || sidebarCollapsed) return
 
       const draggingX = e.clientX - startXRef.current
       const nextWidth = startWidthRef.current + draggingX
 
       // width limit
-      const min = 220
-      const max = 500
-      setSidebarWidth(Math.max(min, Math.min(max, nextWidth)))
+      setSidebarWidth(Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, nextWidth)))
     }
 
     function onMouseUp() {
@@ -44,6 +43,7 @@ function SidebarRenderer() {
       document.body.style.userSelect = ''
     }
 
+    // add event functions
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
 
@@ -51,7 +51,7 @@ function SidebarRenderer() {
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
     }
-  }, [sidebarCollapsed])
+  }, [])
 
   function onDragStart(e: React.MouseEvent<HTMLDivElement>) {
     // if true, don't allow dragging
@@ -71,7 +71,7 @@ function SidebarRenderer() {
         {/* Sidebar Container */}
         <div
           style={{
-            width: effectiveWidth,
+            width: appliedWidth,
             position: 'relative',
             borderRight: '2px solid rgba(0,0,0,0.15)',
             flexShrink: 0,
