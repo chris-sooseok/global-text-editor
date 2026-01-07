@@ -3,18 +3,20 @@ import { FsTree } from "./FsTree"
 import type { ReactNode } from "react"
 
 type FsTreeContextValue = {
-  tree: FsTree | null
+  fsTree: FsTree
 }
 
-const FsTreeContext = createContext<FsTreeContextValue | null>(null)
+const EMPTY_FSTREE = new FsTree()
+
+const FsTreeContext = createContext<FsTreeContextValue>({fsTree:EMPTY_FSTREE})
 
 type FsTreeProviderProps = {
-  api: any
+  api: Window['api']
   children: ReactNode
 }
 
 function FsTreeProvider({ api, children }: FsTreeProviderProps) {
-  const [fsTree, setFsTree] = useState<FsTree | null>(null)
+  const [fsTree, setFsTree] = useState<FsTree>(EMPTY_FSTREE)
 
   useEffect(() => {
     ;(async () => {
@@ -27,12 +29,7 @@ function FsTreeProvider({ api, children }: FsTreeProviderProps) {
     })()
   }, [api])
 
-  const value = useMemo<FsTreeContextValue>(
-    () => ({
-      tree: fsTree,
-    }),
-    [fsTree]
-  )
+  const value = {fsTree: fsTree}
 
   return <FsTreeContext.Provider value={value}>{children}</FsTreeContext.Provider>
 }

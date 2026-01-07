@@ -12,7 +12,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   }
 
   try {
-    const isRoot = payload.isRoot
+    const isRoot = payload.isRoot ? 1 : 0
     const type = payload.type
     const parentId = payload.parentId ?? null
     const name = payload.name
@@ -21,6 +21,8 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     let mimeType = null
     const now = Date.now()
     const nextSortOrder = nextSortOrderHelper(db, parentId)
+    
+    console.log(nextSortOrder)
     
     let info
 

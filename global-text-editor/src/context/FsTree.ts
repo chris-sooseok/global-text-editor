@@ -37,9 +37,11 @@ function makeFileNode(r: FsNodeRow): FileNode {
 
 class FsTree {
   roots: FsNode[]
+  nodes: Map<number, FsNode>
 
   constructor() {
     this.roots = []
+    this.nodes = new Map<number, FsNode>()
   }
 
   static async buildFsTree(api: Window["api"]): Promise<FsTree> {
@@ -79,6 +81,8 @@ class FsTree {
       
       parent.children.push(node)
     }
+
+    fsTree.nodes = fsNodeById
 
     return fsTree
   }
