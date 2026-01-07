@@ -3,8 +3,9 @@ export type FsNode = FolderNode | FileNode
 
 export type FsNodeRow = {
   id: number
+  isRoot: boolean
   type: "folder" | "file"
-  parentId: number | null
+  parentId: number
   name: string
   createdAt: number
   updatedAt: number
@@ -15,9 +16,10 @@ export type FsNodeRow = {
 }
 
 export type FolderNode = {
-  type: "folder"
   id: number
-  parentId: number | null
+  isRoot: boolean
+  type: "folder"
+  parentId: number
   name: string
   createdAt: number
   updatedAt: number
@@ -26,9 +28,10 @@ export type FolderNode = {
 }
 
 export type FileNode = {
-  type: "file"
   id: number
-  parentId: number | null
+  isRoot: boolean
+  type: "file"
+  parentId: number
   name: string
   storagePath: string
   sizeBytes: number
