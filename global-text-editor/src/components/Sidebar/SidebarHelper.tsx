@@ -3,86 +3,85 @@ import type { FsNode } from "../../context/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
 
-export type SelectedNodeType =
-  | { parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
+// define selectedNode type
+export type SelectedNodeType = {parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
+// used to define empty selectedNode state
+export const EMPTY_SELECTED_NODE = {parentId: null, type: null, nodeId: null}
 
-export async function submitCreatePromptHelper({
-  promptInputRef,
-  createType,
+export async function submitNewNodePromptHelper({
+  newNodePromptInputRef,
+  newNodeType,
   selectedNode,
-  selectedParentId,
-  setSelectedParentId,
-  setCreateType,
+  setNewNodeType,
 }: {
-  promptInputRef: RefObject<HTMLInputElement | null>
-  createType: 'folder' | 'file' | null
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>
+  newNodeType: 'folder' | 'file' | null
   selectedNode: SelectedNodeType
-  selectedParentId: number | null
   //* Dispath is a function that tkaes one argument and returns void
-  setSelectedParentId: Dispatch<SetStateAction<number | null>>
-  setCreateType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
 }): Promise<void> {
-  if (!createType) return
 
-  const name = promptInputRef.current?.value ?? ''
-  if (name.trim() === '') {
-    cancelCreatePromptHelper({setCreateType, promptInputRef})
-    return
-  }
+  try {
+    if (!newNodeType) return
 
-  // create under selected folder, or under root if none selected
-  const parentId = selectedNode.parentId
-  const res = await window.api.createFsNode(createType, parentId, name)
-
-  if (res.ok) {
-    setSelectedParentId(null)
-    setCreateType(null)
-    if (promptInputRef.current) {
-      promptInputRef.current.value = ''
+    const name = newNodePromptInputRef.current?.value ?? ''
+    // if name is not provided, cancel newNodePrompt
+    if (name.trim() === '') {
+      cancelNewNodePromptHelper({setNewNodeType: setNewNodeType, newNodePromptInputRef: newNodePromptInputRef})
+      return
     }
-  } else {
-    console.error(res.message)
+
+    // createFsNode
+    const parentId = selectedNode.parentId
+    const isRoot = selectedNode.parentId == null ? true : false
+    const res = await window.api.createFsNode(isRoot, newNodeType, parentId, name)
+
+    setNewNodeType(null)
+    if (newNodePromptInputRef.current) {
+      newNodePromptInputRef.current.value = ''
+    }
+
+    if (!res.ok) console.error(res.message)
+  } catch (err) {
+    console.error(err)
   }
+  
 }
 
-export function cancelCreatePromptHelper({setCreateType, promptInputRef}: {
-  setCreateType: Dispatch<SetStateAction<'folder' | 'file' | null>>
-  promptInputRef: RefObject<HTMLInputElement | null>
+/** canceling newNodePrompt cleans out newNodeType and its prompt input */
+export function cancelNewNodePromptHelper({setNewNodeType, newNodePromptInputRef}: {
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>
 }): void {
-  setCreateType(null)
-  if (promptInputRef.current) {
-    promptInputRef.current.value = ''
+  setNewNodeType(null)
+  if (newNodePromptInputRef.current) {
+    newNodePromptInputRef.current.value = ''
   }
 }
 
-export function renderCreatePromptHelper({
-  createType,
+export function renderNewNodePromptHelper({
+  newNodeType,
   selectedNode,
   depth,
-  promptRef,
-  promptInputRef,
-  expandedFolderIds,
-  setSelectedNode,
-  submitCreatePrompt,
-  cancelCreatePrompt,
+  newNodePromptRef,
+  newNodePromptInputRef,
+  submitNewNodePrompt,
+  cancelNewNodePrompt,
 }: {
-    createType: 'folder' | 'file' | null
+    newNodeType: 'folder' | 'file' | null
     selectedNode: SelectedNodeType
     depth: number
-    promptRef: RefObject<HTMLDivElement | null>
-    promptInputRef: RefObject<HTMLInputElement | null>
-    expandedFolderIds: Set<number>
-    setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
-    submitCreatePrompt: () => Promise<void>
-    cancelCreatePrompt: () => void
+    newNodePromptRef: RefObject<HTMLDivElement | null>
+    newNodePromptInputRef: RefObject<HTMLInputElement | null>
+    submitNewNodePrompt: () => Promise<void>
+    cancelNewNodePrompt: () => void
 }): ReactNode  {
-  if (!createType) return null
-
+  if (!newNodeType) return null
 
   return (
-    <li key={`__create_prompt__:${selectedNode.parentId ?? 'root'}:${createType}`}>
+    <li key={`__create_new_node_under__:${selectedNode.parentId ?? 'root'}:${newNodeType}`}>
       <div
-        ref={promptRef}
+        ref={newNodePromptRef}
         style={{
           paddingLeft: depth * 8,
           display: 'flex',
@@ -92,16 +91,16 @@ export function renderCreatePromptHelper({
       >
         {/* Prompt input box */}
         <input
-          ref={promptInputRef}
-          placeholder={createType === 'folder' ? 'New folder name' : 'New file name'}
+          ref={newNodePromptInputRef}
+          placeholder={newNodeType === 'folder' ? 'New folder name' : 'New file name'}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              void submitCreatePrompt()
+              void submitNewNodePrompt()
             }
             if (e.key === 'Escape') {
               e.preventDefault()
-              cancelCreatePrompt()
+              cancelNewNodePrompt()
             }
           }}
           style={{ flex: 1 }}
@@ -114,7 +113,7 @@ export function renderCreatePromptHelper({
 export function renderNodeHelper({
   node,
   depth,
-  createType,
+  newNodeType,
   selectedNode,
   expandedFolderIds,
   setExpandedFolderIds,
@@ -124,7 +123,7 @@ export function renderNodeHelper({
 }: {
       node: FsNode,
       depth: number
-      createType: 'folder' | 'file' | null
+      newNodeType: 'folder' | 'file' | null
       selectedNode: SelectedNodeType
       selectedParentId: number | null
       expandedFolderIds: Set<number>
@@ -216,7 +215,7 @@ export function renderNodeHelper({
 
           setSelectedNode(() => {
             return isSelectedFolder
-              ? { nodeId: null, type: null, parentId: null}
+              ? EMPTY_SELECTED_NODE
               : { nodeId: node.id, type: node.type, parentId: node.parentId }
           })
         }}
@@ -241,7 +240,7 @@ export function renderNodeHelper({
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
-          {createType && selectedNode?.nodeId === node.id ? renderCreatePrompt(depth + 1) : null}
+          {newNodeType && selectedNode?.nodeId === node.id ? renderCreatePrompt(depth + 1) : null}
         </ul>
       )}
     </li>

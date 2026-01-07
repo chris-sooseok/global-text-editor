@@ -2,77 +2,84 @@ import { useState, useContext, useEffect, useRef } from 'react'
 import { FsTreeContext } from '../../context/FsTreeContext'
 import type { FsNode } from '../../context/FsTreeTypes'
 import { 
-  submitCreatePromptHelper, 
-  cancelCreatePromptHelper, 
-  renderCreatePromptHelper,
-  renderNodeHelper
+  submitNewNodePromptHelper, 
+  cancelNewNodePromptHelper, 
+  renderNewNodePromptHelper,
+  renderNodeHelper,
+  EMPTY_SELECTED_NODE
 } from './SidebarHelper'
 import type { SelectedNodeType } from './SidebarHelper'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
 
-export default function Sidebar() {
-  const fsTree = useContext(FsTreeContext)
 
-  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>({parentId: null, type: null, nodeId: null})
+export default function Sidebar() {
+  const FsTree = useContext(FsTreeContext)
+
+  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(EMPTY_SELECTED_NODE)
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
   // allows unfolding multiple folders at once, use lazy rendering
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number | null>>(() => new Set())
-  // when not null, show the prompt (folder or file)
-  const [createType, setCreateType] = useState<'folder' | 'file' | null>(null)
-  // used to control outside-click boundary
-  const promptRef = useRef<HTMLDivElement | null>(null)
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
+  const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
+  // used to render newNodePromptInput and control outside-click boundary
+  const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   // used for new fsNode prompt input and focus control
-  const promptInputRef = useRef<HTMLInputElement | null>(null) 
+  const newNodePromptInputRef = useRef<HTMLInputElement | null>(null) 
 
-
-  // action when file/folder creation icon is clicked
-  function startCreate(type: 'folder' | 'file') {
-    setCreateType(type)
-
-    if (selectedNode.type == 'file' && selectedNode.parentId == null) {
-      setSelectedNode({parentId: null, type: null, nodeId: null})
-    } else if (selectedNode.type == 'file' && selectedNode.parentId != null ) {
-      if (fsTree?.tree?.nodes.has(selectedNode.parentId)) {
-          const parentNode: FsNode | undefined = fsTree.tree.nodes.get(selectedNode.parentId)
-          if (parentNode !== undefined) {
-              setSelectedNode({parentId: parentNode.parentId, type: null, nodeId: null})
-        }
-    } 
-    }
-    if (promptInputRef.current) {
-        promptInputRef.current.value = ''
+  /** 
+   * Updates newNodeType to selected type  
+   * Once the state changes, renderNewNodePrompt will re-evaludate
+   * whether to display <li> element that contains 
+   * newNodePromptRef and newNodePromptInputRef
+   * */
+  function createNewNode(type: 'folder' | 'file') {
+    // if new node type is already set, skip
+    if (newNodeType == type) return
+    
+    // set new node type and rase newNodePromptInput if any
+    setNewNodeType(type)
+    if (newNodePromptInputRef.current) {
+        newNodePromptInputRef.current.value = ''
     }
   }
 
-  // handle FsNode creation
-  async function submitCreatePrompt() {
-    await submitCreatePromptHelper({
-      promptInputRef,
-      createType,
-      selectedNode,
-      selectedParentId,
-      setSelectedParentId,
-      setCreateType,
+  /**
+   * Submits FsNode creation
+   */
+  async function submitNewNodePrompt() {
+    await submitNewNodePromptHelper({
+      newNodePromptInputRef, // new FsNode name and reset the input once submit
+      newNodeType, // new FsNode type
+      selectedNode, // new FsNode parentId and to decide isRoot
+      setNewNodeType, // reset the type once submit
     })
   }
 
-  function cancelCreatePrompt() {
-    cancelCreatePromptHelper({setCreateType, promptInputRef})
+  /**
+   * Wipes out NewNodeType and PromptInput, which will remove <li> element
+   * that displayed newNodePrompt
+   */
+  function cancelNewNodePrompt() {
+    cancelNewNodePromptHelper({
+      setNewNodeType: setNewNodeType, // erasing selected type
+      newNodePromptInputRef: newNodePromptInputRef // erasing prompt input
+    })
   }
 
-  function renderCreatePrompt(depth: number) {
-    return renderCreatePromptHelper({
-      createType,
-      selectedNode,
-      depth,
-      promptRef,
-      promptInputRef,
-      expandedFolderIds,
-      setSelectedNode,
-      submitCreatePrompt,
-      cancelCreatePrompt
+  /** 
+   * Render newNodePromptRef and newNodePromptInputRef under
+   * either root or child direcotry under <ul> element
+   */
+  function renderNewNodePrompt(depth: number) {
+    return renderNewNodePromptHelper({
+      newNodeType, // newNodeType
+      selectedNode, // recognize parent under new node
+      depth, // indentation
+      newNodePromptRef, // rendering newNodePrompt 
+      newNodePromptInputRef, // rendering newNodePromptInput
+      submitNewNodePrompt, // handle prompt submission
+      cancelNewNodePrompt // handle prompt cancel
     })
   }
 
@@ -80,25 +87,25 @@ export default function Sidebar() {
     return renderNodeHelper({
       node,
       depth,
-      createType,
+      newNodeType,
       selectedNode,
       selectedParentId,
       setExpandedFolderIds,
       expandedFolderIds,
       setSelectedNode,
-      renderCreatePrompt,
+      renderCreatePrompt: renderNewNodePrompt,
       renderNode
     })
   }
 
-  // focus the prompt input when it appears
+  // focus newNodePromptInputRef when newNodeType has some type
   useEffect(() => {
-    if (!createType) return
+    if (!newNodeType) return
     
-    if (promptInputRef.current) {
-       promptInputRef.current.focus()
+    if (newNodePromptInputRef.current) {
+       newNodePromptInputRef.current.focus()
     }
-  }, [createType, setSelectedParentId])
+  }, [newNodeType])
 
   // click behavior:
   // - click anywhere closes the prompt (unless click is inside prompt or toolbar)
@@ -108,16 +115,16 @@ export default function Sidebar() {
       const target = e.target as HTMLElement | null
       if (!target) return
 
-      const clickedInPrompt = !!(promptRef.current && promptRef.current.contains(target))
+      const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
       const clickedFolderRow = !!target.closest('[data-folder-row="true"]')
       const clickedToolbar = !!target.closest('[data-sidebar-toolbar="true"]')
 
       // click anywhere (outside prompt) => delete the prompt
       // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
-      if (createType && !clickedInPrompt && !clickedToolbar) {
-        setCreateType(null)
-        if (promptInputRef.current) {
-          promptInputRef.current.value = ''
+      if (newNodeType && !clickedInPrompt && !clickedToolbar) {
+        setNewNodeType(null)
+        if (newNodePromptInputRef.current) {
+          newNodePromptInputRef.current.value = ''
         }
       }
 
@@ -133,38 +140,8 @@ export default function Sidebar() {
     return () => {
       window.removeEventListener('mousedown', onMouseDown, true)
     }
-  }, [createType])
+  }, [newNodeType])
 
-  // render SidebarContent on DOM
-  function renderSidebarContent() {
-    return (<>
-      {roots.length === 0 ? (
-          <>
-            {!createType ?
-               <div style={{ opacity: 0.7 }}>No items</div> : null
-            }
-           
-            {/* root prompt when no items */}
-            {createType && selectedNode?.nodeId === null ? (
-              <ul style={{ margin: 0, paddingLeft: 2 }}>
-                {renderCreatePrompt(0)}
-              </ul>
-            ) : null}
-          </>
-        ) : (
-          <ul style={{ margin: 0, paddingLeft: 2 }}>
-            {/* display root node */}
-            {roots.map((root) => renderNode(root, 0))}
-
-            {/* root prompt when items */}
-            {createType && selectedNode?.nodeId  === null ? renderCreatePrompt(0) : null}
-          </ul>
-        )
-    }
-    </>)
-  }
-
-  const roots = fsTree?.tree?.roots ?? []
 
   return (
     <>
@@ -193,7 +170,7 @@ export default function Sidebar() {
               buttonSize={28}
               iconSize={16}
               background="white"
-              onClick={() => startCreate('folder')}
+              onClick={() => createNewNode('folder')}
             />
 
             <IconButton
@@ -202,13 +179,35 @@ export default function Sidebar() {
               buttonSize={28}
               iconSize={16}
               background="white"
-              onClick={() => startCreate('file')}
+              onClick={() => createNewNode('file')}
             />
           </div>
         </div>
 
         {/* Roots list */}
-        {renderSidebarContent()}
+        {FsTree.fsTree.roots.length === 0 ? (
+          <>
+            {!newNodeType ?
+               <div style={{ opacity: 0.7 }}>No items</div> : null
+            }
+           
+            {/* root prompt when no items */}
+            {newNodeType && selectedNode?.nodeId === null ? (
+              <ul style={{ margin: 0, paddingLeft: 2 }}>
+                {renderNewNodePrompt(0)}
+              </ul>
+            ) : null}
+          </>
+          ) : (
+            <ul style={{ margin: 0, paddingLeft: 2 }}>
+              {/* display root node */}
+              {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
+
+              {/* root prompt when items */}
+              {newNodeType && selectedNode?.nodeId  === null ? renderNewNodePrompt(0) : null}
+            </ul>
+          )
+        }
       </aside>
     </>
   )

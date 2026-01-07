@@ -12,6 +12,7 @@ declare global {
   interface Window {
     api: {
       createFsNode(
+        isRoot: boolean,
         type: string,
         parentId: number | null,
         name: string
