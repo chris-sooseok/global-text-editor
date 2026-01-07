@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS fsNode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    is_root BOOLEAN NOT NULL
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
-    parent_id INTEGER NOT NULL REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
+    parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
     name TEXT NOT NULL,
     storage_path TEXT, -- nullable for folder
     size_bytes INTEGER, -- nullable for folder

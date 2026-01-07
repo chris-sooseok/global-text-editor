@@ -12,6 +12,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   }
 
   try {
+    const isRoot = payload.isRoot
     const type = payload.type
     const parentId = payload.parentId ?? null
     const name = payload.name
@@ -26,10 +27,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     if (type === 'folder') {
       info = db
         .prepare(`
-          INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-          VALUES ('folder', ?, ?, NULL, NULL, NULL, ?, ?, ?)
+          INSERT INTO fsNode (is_root, type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+          VALUES (?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?)
         `)
-        .run(parentId, name, now, now, nextSortOrder)
+        .run(isRoot, type, parentId, name, now, now, nextSortOrder)
     } else if (type === 'file') {
       storagePath = randomUUID()
       sizeBytes = 0
@@ -37,10 +38,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
 
       info = db
         .prepare(`
-          INSERT INTO fsNode (type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-          VALUES ('file', ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO fsNode (is_root, type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `)
-        .run(parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
+        .run(isRoot, type, parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
     } else {
       return { ok: false, message: 'Invalid node type' }
     }
@@ -49,6 +50,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       ok: true,
       node: {
         id: Number(info.lastInsertRowid),
+        isRoot,
         type,
         parentId,
         name,
@@ -78,7 +80,9 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
       .prepare(`
         SELECT 
           id,
-          type, parent_id AS parentId,
+          is_root AS isRoot,
+          type, 
+          parent_id AS parentId,
           name,
           storage_path AS storagePath,
           size_bytes AS sizeBytes,
@@ -89,7 +93,7 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
         FROM fsNode
         -- sort ascending order
         -- sort based on sort_order within each parent group
-        ORDER BY COALESCE(parent_id, -1), sort_order
+        ORDER BY is_root, parent_id, sort_order
         `)
         .all()
 
