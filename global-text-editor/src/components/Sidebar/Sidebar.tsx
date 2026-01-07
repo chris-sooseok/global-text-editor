@@ -133,8 +133,10 @@ export default function Sidebar() {
     return (<>
       {roots.length === 0 ? (
           <>
-            <div style={{ opacity: 0.7 }}>No items</div>
-
+            {!createType ?
+               <div style={{ opacity: 0.7 }}>No items</div> : null
+            }
+           
             {/* root prompt when no items */}
             {createType && selectedParentId === null ? (
               <ul style={{ margin: 0, paddingLeft: 10 }}>

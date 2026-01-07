@@ -12,7 +12,7 @@ export async function submitCreatePromptHelper({
 
   const name = promptInputRef.current?.value ?? ''
   if (name.trim() === '') {
-    cancelCreatePromptHelper(setCreateType, promptInputRef)
+    cancelCreatePromptHelper({setCreateType, promptInputRef})
     return
   }
 
@@ -31,7 +31,7 @@ export async function submitCreatePromptHelper({
   }
 }
 
-export function cancelCreatePromptHelper(setCreateType, promptInputRef) {
+export function cancelCreatePromptHelper({setCreateType, promptInputRef}) {
   setCreateType(null)
   if (promptInputRef.current) {
     promptInputRef.current.value = ''
@@ -96,7 +96,7 @@ export function renderNodeHelper({
   if (node.type !== 'folder') {
     return (
       <li key={node.id}>
-        <div style={{ paddingLeft: depth * 6 }}>
+        <div style={{ paddingLeft: depth * 7 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <img
               src={fileIcon}
@@ -125,6 +125,11 @@ export function renderNodeHelper({
           cursor: 'pointer',
           fontWeight: isSelectedFolder ? 700 : 400,
           userSelect: 'none',
+
+          background: isSelectedFolder ? 'rgba(59, 130, 246, 0.18)' : 'transparent', // light blue
+          borderRadius: 6,
+          paddingTop: 2,
+          paddingBottom: 2,
         }}
         onClick={() => {
           // if unfolded folder is not highlighted, simply rehighlight it
@@ -136,6 +141,7 @@ export function renderNodeHelper({
           // Safe guard: this can't occur since select and toggle happen synchronously
           if (isSelectedFolder && !isExpanded) {
             toggleFolderHandler(node.id)
+            return
           }
 
           // update highlight and toggle folder as we select
