@@ -15,10 +15,10 @@ import IconButton from './IconButton'
 export default function Sidebar() {
   const fsTree = useContext(FsTreeContext)
 
-  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(null)
+  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>({parentId: null, type: null, nodeId: null})
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
   // allows unfolding multiple folders at once, use lazy rendering
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
+  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number | null>>(() => new Set())
   // when not null, show the prompt (folder or file)
   const [createType, setCreateType] = useState<'folder' | 'file' | null>(null)
   // used to control outside-click boundary
@@ -26,23 +26,24 @@ export default function Sidebar() {
   // used for new fsNode prompt input and focus control
   const promptInputRef = useRef<HTMLInputElement | null>(null) 
 
-  function toggleFolderHandler(folderId: number) {
-    // ? we dont mutate state value
-    setExpandedFolderIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(folderId)) next.delete(folderId)
-      else next.add(folderId)
-      return next
-    })
-  }
 
   // action when file/folder creation icon is clicked
   function startCreate(type: 'folder' | 'file') {
     setCreateType(type)
+
+    if (selectedNode.type == 'file' && selectedNode.parentId == null) {
+      setSelectedNode({parentId: null, type: null, nodeId: null})
+    } else if (selectedNode.type == 'file' && selectedNode.parentId != null ) {
+      if (fsTree?.tree?.nodes.has(selectedNode.parentId)) {
+          const parentNode: FsNode | undefined = fsTree.tree.nodes.get(selectedNode.parentId)
+          if (parentNode !== undefined) {
+              setSelectedNode({parentId: parentNode.parentId, type: null, nodeId: null})
+        }
+    } 
+    }
     if (promptInputRef.current) {
         promptInputRef.current.value = ''
     }
-   
   }
 
   // handle FsNode creation
@@ -50,6 +51,7 @@ export default function Sidebar() {
     await submitCreatePromptHelper({
       promptInputRef,
       createType,
+      selectedNode,
       selectedParentId,
       setSelectedParentId,
       setCreateType,
@@ -63,10 +65,12 @@ export default function Sidebar() {
   function renderCreatePrompt(depth: number) {
     return renderCreatePromptHelper({
       createType,
-      selectedParentId,
+      selectedNode,
       depth,
       promptRef,
       promptInputRef,
+      expandedFolderIds,
+      setSelectedNode,
       submitCreatePrompt,
       cancelCreatePrompt
     })
@@ -79,10 +83,9 @@ export default function Sidebar() {
       createType,
       selectedNode,
       selectedParentId,
+      setExpandedFolderIds,
       expandedFolderIds,
-      toggleFolderHandler,
       setSelectedNode,
-      setSelectedParentId,
       renderCreatePrompt,
       renderNode
     })
@@ -120,7 +123,7 @@ export default function Sidebar() {
 
       // click anywhere other than folder (and not inside prompt/toolbar) => remove folder highlight
       if (!clickedFolderRow && !clickedInPrompt && !clickedToolbar) {
-        setSelectedParentId(null)
+        setSelectedNode({ nodeId: null, type: null, parentId: null})
       }
     }
 
@@ -142,7 +145,7 @@ export default function Sidebar() {
             }
            
             {/* root prompt when no items */}
-            {createType && setSelectedParentId === null ? (
+            {createType && selectedNode?.nodeId === null ? (
               <ul style={{ margin: 0, paddingLeft: 2 }}>
                 {renderCreatePrompt(0)}
               </ul>
@@ -154,7 +157,7 @@ export default function Sidebar() {
             {roots.map((root) => renderNode(root, 0))}
 
             {/* root prompt when items */}
-            {createType && setSelectedParentId === null ? renderCreatePrompt(0) : null}
+            {createType && selectedNode?.nodeId  === null ? renderCreatePrompt(0) : null}
           </ul>
         )
     }
