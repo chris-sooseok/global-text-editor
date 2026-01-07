@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron')
 const { connect_db } = require('../db/index.cjs')
-const { getNextSortOrder } = require('./fsNodeIpcHelper.cjs')
+const { nextSortOrderHelper } = require('./fsNodeIpcHelper.cjs')
 const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
@@ -19,7 +19,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     let sizeBytes = null
     let mimeType = null
     const now = Date.now()
-    const nextSortOrder = getNextSortOrder(db, parentId)
+    const nextSortOrder = nextSortOrderHelper(db, parentId)
     
     let info
 
