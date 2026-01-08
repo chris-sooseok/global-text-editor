@@ -1,17 +1,12 @@
-import Sidebar from './pages/Sidebar'
-import FsTreeProvider from './context/FsTreeContext'
 
+import MainPage from './pages/MainPage'
 
 function App() {
   return (
       <>
-        <FsTreeProvider api={window.api}>
-          <Sidebar />
-        </FsTreeProvider>
+        <MainPage />
       </>
-      
   )
 }
-
 
 export default App
