@@ -111,55 +111,56 @@ export function renderNewNodePromptHelper({
 }
 
 export function renderNodeHelper({
+  // file/folder needed
   node,
   depth,
-  newNodeType,
   selectedNode,
+  setSelectedNode,
+  // only folder needed
+  renderNode,
+  newNodeType,
   expandedFolderIds,
   setExpandedFolderIds,
-  setSelectedNode,
-  renderCreatePrompt,
-  renderNode
+  renderNewNodePrompt,
 }: {
-      node: FsNode,
-      depth: number
-      newNodeType: 'folder' | 'file' | null
-      selectedNode: SelectedNodeType
-      selectedParentId: number | null
-      expandedFolderIds: Set<number>
-      setExpandedFolderIds: Dispatch<SetStateAction<Set<number>>>
-      setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
-      renderCreatePrompt: (depth: number) => ReactNode
-      renderNode: (node: FsNode, depth?: number) => ReactNode
+  node: FsNode
+  depth: number
+  selectedNode: SelectedNodeType
+  setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+  renderNode: (node: FsNode, depth?: number) => ReactNode
+  newNodeType: 'folder' | 'file' | null
+  expandedFolderIds: Set<number>
+  setExpandedFolderIds: Dispatch<SetStateAction<Set<number>>>
+  renderNewNodePrompt: (depth: number) => ReactNode
 }): ReactNode {
+  
   // File Node Row
-  console.log(selectedNode)
-  if (node.type !== 'folder') {
+  if (node.type == 'file') {
     const isSelectedFile = selectedNode.nodeId === node.id
-    const isParentExpanded = expandedFolderIds.has(node.parentId)
 
     return (
       <li key={node.id}>
-        <div style={{ 
-          paddingLeft: depth * 7,
-          cursor: 'pointer',
-          fontWeight: isSelectedFile ? 700 : 400,
-          userSelect: 'none',
+        <div 
+          node-row="true"
+          style={{ 
+            paddingLeft: depth * 7,
+            cursor: 'pointer',
+            fontWeight: isSelectedFile ? 700 : 400,
+            userSelect: 'none',
 
-          background: isSelectedFile ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
-          borderRadius: 6,
-          paddingTop: 2,
-          paddingBottom: 2,  
+            background: isSelectedFile ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+            borderRadius: 6,
+            paddingTop: 2,
+            paddingBottom: 2,  
         }}
         onClick={() => {
           // if already selected, return
           if (isSelectedFile) {
+            setSelectedNode(EMPTY_SELECTED_NODE)
             return
+          } else {
+            setSelectedNode({parentId: node.parentId, type: node.type, nodeId: node.id})
           }
-
-          // if not selected, update seletedNode
-          console.log(isParentExpanded)
-               setSelectedNode({parentId: node.parentId, type: node.type, nodeId: node.id})
           
         }}
         >
@@ -185,7 +186,7 @@ export function renderNodeHelper({
   return (
     <li key={node.id}>
       <div
-        data-folder-row="true"
+        node-row="true"
         style={{
           paddingLeft: depth * 5,
           cursor: 'pointer',
@@ -240,7 +241,7 @@ export function renderNodeHelper({
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
-          {newNodeType && selectedNode?.nodeId === node.id ? renderCreatePrompt(depth + 1) : null}
+          {newNodeType && selectedNode.nodeId === node.id ? renderNewNodePrompt(depth + 1) : null}
         </ul>
       )}
     </li>

@@ -19,13 +19,60 @@ export default function Sidebar() {
 
   const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(EMPTY_SELECTED_NODE)
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
-  // allows unfolding multiple folders at once, use lazy rendering
+  // during 
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   // used to render newNodePromptInput and control outside-click boundary
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   // used for new fsNode prompt input and focus control
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null) 
+
+    // focus newNodePromptInputRef when newNodeType has some type
+  useEffect(() => {
+    if (!newNodeType) return
+    
+    if (newNodePromptInputRef.current) {
+       newNodePromptInputRef.current.focus()
+    }
+  }, [newNodeType])
+
+  // click behavior:
+  // - click anywhere closes the prompt (unless click is inside prompt or toolbar)
+  // - click anywhere other than a folder removes folder highlight (selectedParentId)
+  /** Control mouse click behavior
+   * - while creating newNode, if mouse click anywhere outside newNodePrompt, delete the prompt
+   * - while selectedNode 
+   * */
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+
+      const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
+      const clickedNodeRow = !!target.closest('[node-row="true"]')
+      const clickedToolbar = !!target.closest('[sidebar-toolbar="true"]')
+      // click anywhere (outside prompt) => delete the prompt
+      // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
+      if (newNodeType && !clickedInPrompt && !clickedToolbar) {
+        setNewNodeType(null)
+        if (newNodePromptInputRef.current) {
+          newNodePromptInputRef.current.value = ''
+        }
+      }
+
+      // click outside node row and prompt => remove node highlight
+      if (!clickedNodeRow && !clickedInPrompt && !clickedToolbar) {
+        setSelectedNode(EMPTY_SELECTED_NODE)
+      }
+    }
+
+    // capture phase so it runs even if other handlers stopPropagation later
+    window.addEventListener('mousedown', onMouseDown, true)
+
+    return () => {
+      window.removeEventListener('mousedown', onMouseDown, true)
+    }
+  }, [newNodeType])
 
   /** 
    * Updates newNodeType to selected type  
@@ -83,65 +130,55 @@ export default function Sidebar() {
     })
   }
 
+  /**
+   * Render entire FsNode including roots and their children
+   */
   function renderNode(node: FsNode, depth = 0) {
     return renderNodeHelper({
-      node,
-      depth,
-      newNodeType,
-      selectedNode,
-      selectedParentId,
+      // file/folder needed
+      node, // each node being rendered
+      depth, // each node depth
+      selectedNode, // used to highlight the selectedNode
+      setSelectedNode, // used to set selectedNode
+      // only folder needed
+      renderNode, // recursively rendering fsNode
+      newNodeType, // used to render renderNewNodePrompt
+      expandedFolderIds, // keep track of folder node ids to expand
       setExpandedFolderIds,
-      expandedFolderIds,
-      setSelectedNode,
-      renderCreatePrompt: renderNewNodePrompt,
-      renderNode
+      renderNewNodePrompt, // rendering newNodePrompt under folders
     })
   }
 
-  // focus newNodePromptInputRef when newNodeType has some type
-  useEffect(() => {
-    if (!newNodeType) return
-    
-    if (newNodePromptInputRef.current) {
-       newNodePromptInputRef.current.focus()
-    }
-  }, [newNodeType])
+  function renderFsTree() {
+    return (
+      <>
+      {FsTree.fsTree.roots.length === 0 ? (
+          <>
+            {/* no items */}
+            {!newNodeType ?
+               <div style={{ opacity: 0.7 }}>No items</div> : null
+            }
+           
+            {/* root prompt when no items */}
+            {newNodeType && selectedNode?.nodeId === null ? (
+              <ul style={{ margin: 0, paddingLeft: 2 }}>
+                {renderNewNodePrompt(0)}
+              </ul>
+            ) : null}
+          </>
+          ) : (
+            <ul style={{ margin: 0, paddingLeft: 2 }}>
+              {/* display root node */}
+              {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
 
-  // click behavior:
-  // - click anywhere closes the prompt (unless click is inside prompt or toolbar)
-  // - click anywhere other than a folder removes folder highlight (selectedParentId)
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      const target = e.target as HTMLElement | null
-      if (!target) return
-
-      const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedFolderRow = !!target.closest('[data-folder-row="true"]')
-      const clickedToolbar = !!target.closest('[data-sidebar-toolbar="true"]')
-
-      // click anywhere (outside prompt) => delete the prompt
-      // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
-      if (newNodeType && !clickedInPrompt && !clickedToolbar) {
-        setNewNodeType(null)
-        if (newNodePromptInputRef.current) {
-          newNodePromptInputRef.current.value = ''
+              {/* root prompt when items */}
+              {newNodeType && selectedNode?.nodeId  === null ? renderNewNodePrompt(0) : null}
+            </ul>
+          )
         }
-      }
-
-      // click anywhere other than folder (and not inside prompt/toolbar) => remove folder highlight
-      if (!clickedFolderRow && !clickedInPrompt && !clickedToolbar) {
-        setSelectedNode({ nodeId: null, type: null, parentId: null})
-      }
-    }
-
-    // capture phase so it runs even if other handlers stopPropagation later
-    window.addEventListener('mousedown', onMouseDown, true)
-
-    return () => {
-      window.removeEventListener('mousedown', onMouseDown, true)
-    }
-  }, [newNodeType])
-
+      </>
+    )
+  }
 
   return (
     <>
@@ -149,7 +186,7 @@ export default function Sidebar() {
       <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Top-right icon buttons */}
         <div
-          data-sidebar-toolbar="true"
+          sidebar-toolbar="true"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -185,29 +222,7 @@ export default function Sidebar() {
         </div>
 
         {/* Roots list */}
-        {FsTree.fsTree.roots.length === 0 ? (
-          <>
-            {!newNodeType ?
-               <div style={{ opacity: 0.7 }}>No items</div> : null
-            }
-           
-            {/* root prompt when no items */}
-            {newNodeType && selectedNode?.nodeId === null ? (
-              <ul style={{ margin: 0, paddingLeft: 2 }}>
-                {renderNewNodePrompt(0)}
-              </ul>
-            ) : null}
-          </>
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: 2 }}>
-              {/* display root node */}
-              {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
-
-              {/* root prompt when items */}
-              {newNodeType && selectedNode?.nodeId  === null ? renderNewNodePrompt(0) : null}
-            </ul>
-          )
-        }
+        {renderFsTree()}
       </aside>
     </>
   )
