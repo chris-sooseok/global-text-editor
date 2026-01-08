@@ -1,12 +1,10 @@
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ButtonHTMLAttributes } from 'react'
 
-export type IconButtonProps = {
+export type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   src: string
   label: string // used for aria-label
   title?: string
-  onClick?: () => void
-  disabled?: boolean
   buttonSize?: number
   iconSize?: number
   background: string
@@ -21,10 +19,12 @@ export default function IconButton({
   buttonSize,
   iconSize,
   background,
-  onClick
+  onClick,
+  ...rest
 }: IconButtonProps) {
   return (
     <button
+      {...rest}
       type="button"
       title={title}
       aria-label={label}
