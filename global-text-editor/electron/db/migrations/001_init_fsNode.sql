@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS fsNode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    is_root BOOLEAN NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
     parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
     name TEXT NOT NULL,
@@ -10,7 +11,7 @@ CREATE TABLE IF NOT EXISTS fsNode (
     updated_at INTEGER NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
 
-    CHECK (
+    CHECK ( 
         -- folder restrictions
         (type = 'folder' AND storage_path IS NULL AND size_bytes IS NULL AND mime_type IS NULL)
         OR 
@@ -28,11 +29,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_storage_path_for_files
 ON fsNode(storage_path)
 WHERE type = 'file';
 
-
 -- enforce: every fsNode siblings must have unique sort_order
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_sort_order
--- COALESCE allows parend_id null values to be treated as -1 since sql doesn't regard null as a value
--- enforce: within the same parent directory, sort_order must be unique
+  -- COALESCE allows parend_id null values to be treated as -1 since sql doesn't regard null as a value
+  -- enforce: within the same parent directory, sort_order must be unique
 ON fsNode(COALESCE(parent_id, -1), sort_order); 
 
 -- enforce: any fsNode's parent must be a folder when insert

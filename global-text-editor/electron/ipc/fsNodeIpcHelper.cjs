@@ -1,9 +1,9 @@
 
-function getNextSortOrder(db, parentId) {
+function nextSortOrderHelper(db, parentId) {
   // MAX(sort_order) among siblings; if none, start at 0
   const row = db
     .prepare(`
-      SELECT COALESCE(MAX(sort_order), -1) AS maxSort
+      SELECT MAX(sort_order) AS maxSort
       FROM fsNode
       WHERE parent_id IS ?
     `)
@@ -12,4 +12,4 @@ function getNextSortOrder(db, parentId) {
   return Number(row.maxSort) + 1
 }
 
-module.exports = { getNextSortOrder }
+module.exports = { nextSortOrderHelper }

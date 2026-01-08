@@ -1,13 +1,12 @@
 
-import type { FsNode, FsNodeRow as FsNodeRow, FolderNode, FileNode } from './fsNode'
-import type { FetchFsNodeRes } from '../api/fsApi'
-
-type FsApi = Window["api"]
+import type { FsNode, FsNodeRow, FolderNode, FileNode } from './FsTreeTypes'
+import type { FetchFsNodeRes } from '../api/fsNodeApi'
 
 function makeFolderNode(r: FsNodeRow): FolderNode {
   return {
-    type: "folder",
     id: r.id,
+    isRoot: r.isRoot,
+    type: "folder",
     parentId: r.parentId,
     name: r.name,
     createdAt: r.createdAt,
@@ -22,8 +21,9 @@ function makeFileNode(r: FsNodeRow): FileNode {
   if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
 
   return {
-    type: "file",
     id: r.id,
+    isRoot: r.isRoot,
+    type: "file",
     parentId: r.parentId,
     name: r.name,
     storagePath: r.storagePath,
@@ -37,50 +37,72 @@ function makeFileNode(r: FsNodeRow): FileNode {
 
 class FsTree {
   roots: FsNode[]
+  nodes: Map<number, FsNode>
 
   constructor() {
     this.roots = []
+    this.nodes = new Map<number, FsNode>()
   }
 
-  static async buildFsTree(api: FsApi): Promise<FsTree> {
-    const tree = new FsTree()
-
+  static async buildFsTree(api: Window["api"]): Promise<FsTree> {
+    const fsTree = new FsTree()
+    
     const res: FetchFsNodeRes = await api.fetchFsNodes()
     if (!res.ok) throw new Error(res.message)
     
     // rows arrives in (parent, sort_order) order
     const fsNodeRows: FsNodeRow[] = res.rows
 
-    const fsNodeById = new Map<number, FsNode>()
-
     // construct FolderNode and FileNode objects
     for (const r of fsNodeRows) {
       const node: FsNode = r.type === 'folder' ? makeFolderNode(r) : makeFileNode(r)
-      fsNodeById.set(node.id, node)
+      fsTree.nodes.set(node.id, node)
     }
 
     // construct tree
-    for (const node of fsNodeById.values()) {
+    for (const node of fsTree.nodes.values()) {
 
       // if root, insert into roots
-      if (node.parentId == null) {
-        tree.roots.push(node)
+      if (node.isRoot) {
+        fsTree.roots.push(node)
         continue
       }
 
       // if not root
-      const parent = fsNodeById.get(node.parentId)
+      const parent = fsTree.nodes.get(node.parentId)
 
-      // safety 
+      // type check
       if (!parent || parent.type !== 'folder') {
-        tree.roots.push(node)
+        fsTree.roots.push(node)
         continue
       }
       
       parent.children.push(node)
     }
 
-    return tree
+    return fsTree
+  }
+
+  insertNewNode(node: FsNodeRow) {
+
+    const newNode: FsNode = node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
+
+    if (this.nodes.get(node.id) == undefined) {
+      this.nodes.set(node.id, newNode)
+    }
+
+    const parent = this.nodes.get(node.parentId)
+          // type check
+    if (!parent || parent.type !== 'folder') {
+      this.roots.push(newNode)
+      return
+    }
+      
+    parent.children.push(newNode)
+  }
+
+  getNode(id: number): number {
+    return id
   }
 }
 
