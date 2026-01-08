@@ -15,19 +15,23 @@ type FsTreeProviderProps = {
   children: ReactNode
 }
 
+
 function FsTreeProvider({ api, children }: FsTreeProviderProps) {
   const [fsTree, setFsTree] = useState<FsTree>(EMPTY_FSTREE)
 
   useEffect(() => {
-    ;(async () => {
+    async function loadFsTree() {
       try {
         const t = await FsTree.buildFsTree(api)
         setFsTree(t)
       } catch (err) {
         console.error(err)
       }
-    })()
-  }, [api])
+    }
+
+    void loadFsTree()
+
+}, [api])
 
   const value = {fsTree: fsTree}
 
