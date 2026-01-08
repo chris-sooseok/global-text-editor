@@ -1,7 +1,9 @@
-import type { Dispatch, ReactNode, RefObject, SetStateAction } from "react"
+import { useContext, type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FsNode } from "../../context/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
+import { FsTreeContext } from '../../context/FsTreeContext'
+import type { FsTree } from "../../context/FsTree"
 
 // define selectedNode type
 export type SelectedNodeType = {parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
@@ -12,13 +14,17 @@ export async function submitNewNodePromptHelper({
   newNodePromptInputRef,
   newNodeType,
   selectedNode,
+  setSelectedNode,
   setNewNodeType,
+  FsTree,
 }: {
   newNodePromptInputRef: RefObject<HTMLInputElement | null>
   newNodeType: 'folder' | 'file' | null
-  selectedNode: SelectedNodeType
+  selectedNode: SelectedNodeType,
+  setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
   //* Dispath is a function that tkaes one argument and returns void
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
+  FsTree: {fsTree: FsTree}
 }): Promise<void> {
 
   try {
@@ -37,13 +43,24 @@ export async function submitNewNodePromptHelper({
     const isRoot = selectedNode.nodeId == null ? true : false
     const res = await window.api.createFsNode(isRoot, newNodeType, parentId, name)
 
-    console.log(res)
     setNewNodeType(null)
     if (newNodePromptInputRef.current) {
       newNodePromptInputRef.current.value = ''
     }
 
-    if (!res.ok) console.error(res.message)
+    if (res.ok) {
+      // append new node to the FsTree
+      FsTree.fsTree.insertNewNode(res.node)
+      // highlight newly created node
+      setSelectedNode({
+        parentId: res.node.parentId,
+        type: res.node.type,
+        nodeId: res.node.id})
+
+    } else {
+      console.error(res.message)
+    }
+
   } catch (err) {
     console.error(err)
   }

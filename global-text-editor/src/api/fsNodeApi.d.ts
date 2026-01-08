@@ -1,7 +1,7 @@
 import type { NodeRow } from "../context/FsTree";
 
-type CreateFsNodeRes =
-  | { ok: true; node: NodeRow[] }
+export type CreateFsNodeRes =
+  | { ok: true; node: NodeRow }
   | { ok: false; message: string }
 
 export type FetchFsNodeRes =

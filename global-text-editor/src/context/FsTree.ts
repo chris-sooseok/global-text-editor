@@ -46,7 +46,7 @@ class FsTree {
 
   static async buildFsTree(api: Window["api"]): Promise<FsTree> {
     const fsTree = new FsTree()
-
+    
     const res: FetchFsNodeRes = await api.fetchFsNodes()
     if (!res.ok) throw new Error(res.message)
     
@@ -71,7 +71,7 @@ class FsTree {
       // if not root
       const parent = fsTree.nodes.get(node.parentId)
 
-      // safety 
+      // type check
       if (!parent || parent.type !== 'folder') {
         fsTree.roots.push(node)
         continue
@@ -81,6 +81,24 @@ class FsTree {
     }
 
     return fsTree
+  }
+
+  insertNewNode(node: FsNodeRow) {
+
+    const newNode: FsNode = node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
+
+    if (this.nodes.get(node.id) == undefined) {
+      this.nodes.set(node.id, newNode)
+    }
+
+    const parent = this.nodes.get(node.parentId)
+          // type check
+    if (!parent || parent.type !== 'folder') {
+      this.roots.push(newNode)
+      return
+    }
+      
+    parent.children.push(newNode)
   }
 
   getNode(id: number): number {

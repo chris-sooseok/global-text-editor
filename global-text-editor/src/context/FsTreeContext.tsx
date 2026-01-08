@@ -20,6 +20,7 @@ function FsTreeProvider({ api, children }: FsTreeProviderProps) {
   const [fsTree, setFsTree] = useState<FsTree>(EMPTY_FSTREE)
 
   useEffect(() => {
+    console.log('FsTreeProvider mounted, api:', api)
     async function loadFsTree() {
       try {
         const t = await FsTree.buildFsTree(api)

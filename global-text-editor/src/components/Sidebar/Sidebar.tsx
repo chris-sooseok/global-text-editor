@@ -104,7 +104,9 @@ export default function Sidebar() {
       newNodePromptInputRef, // new FsNode name and reset the input once submit
       newNodeType, // new FsNode type
       selectedNode, // new FsNode parentId and to decide isRoot
+      setSelectedNode, // used to highlight newly created node
       setNewNodeType, // reset the type once submit
+      FsTree
     })
   }
 
