@@ -21,6 +21,7 @@ export async function submitNewNodePromptHelper({
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
 }): Promise<void> {
 
+  console.log(selectedNode)
   try {
     if (!newNodeType) return
 
@@ -31,9 +32,10 @@ export async function submitNewNodePromptHelper({
       return
     }
 
-    // createFsNode
-    const parentId = selectedNode.parentId
-    const isRoot = selectedNode.parentId == null ? true : false
+    // new node should have selected folder's id
+    const parentId = selectedNode.nodeId
+    // if selected node id is null, this new node is a root node
+    const isRoot = selectedNode.nodeId == null ? true : false
     const res = await window.api.createFsNode(isRoot, newNodeType, parentId, name)
 
     setNewNodeType(null)
@@ -120,7 +122,7 @@ export function renderNodeHelper({
   renderNode,
   newNodeType,
   expandedFolderIds,
-  setExpandedFolderIds,
+  toggleFolder,
   renderNewNodePrompt,
 }: {
   node: FsNode
@@ -130,7 +132,7 @@ export function renderNodeHelper({
   renderNode: (node: FsNode, depth?: number) => ReactNode
   newNodeType: 'folder' | 'file' | null
   expandedFolderIds: Set<number>
-  setExpandedFolderIds: Dispatch<SetStateAction<Set<number>>>
+  toggleFolder: (nodeId: number) => void
   renderNewNodePrompt: (depth: number) => ReactNode
 }): ReactNode {
   
@@ -154,11 +156,11 @@ export function renderNodeHelper({
             paddingBottom: 2,  
         }}
         onClick={() => {
-          // if already selected, return
-          if (isSelectedFile) {
-            setSelectedNode(EMPTY_SELECTED_NODE)
-            return
-          } else {
+          // if file is already highlighted, return
+          if (isSelectedFile) return
+          
+          // if file is unhighlighted, highlight
+          if (!isSelectedFile){
             setSelectedNode({parentId: node.parentId, type: node.type, nodeId: node.id})
           }
           
@@ -199,26 +201,24 @@ export function renderNodeHelper({
           paddingBottom: 2,
         }}
         onClick={() => {
-          // if unfolded folder is not highlighted, simply rehighlight it
+          // if folder is unfolded, but not highlighted, simply rehighlight it
           if (!isSelectedFolder && isExpanded) {
             setSelectedNode({parentId: node.parentId, type: node.type, nodeId : node.id})
             return
           }
           
-          // update highlight and toggle folder as we select
-          setExpandedFolderIds((prev) => {
-            const next = new Set(prev)
-            if (next.has(node.id)) next.delete(node.id)
-            else next.add(node.id)
-            console.log(next)
-            return next
-          })
+          // if folder is unfolded, and highlighted, fold and unhighlight
+          if (isSelectedFolder && isExpanded) {
+            setSelectedNode(EMPTY_SELECTED_NODE)
+            toggleFolder(node.id)
+            return
+          }
 
-          setSelectedNode(() => {
-            return isSelectedFolder
-              ? EMPTY_SELECTED_NODE
-              : { nodeId: node.id, type: node.type, parentId: node.parentId }
-          })
+          // if folder is folded, and not highlighted, unfold and highlight
+          if (!isSelectedFolder && !isExpanded){
+            setSelectedNode({nodeId: node.id, type: node.type, parentId: node.parentId})
+            toggleFolder(node.id)
+          }
         }}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>

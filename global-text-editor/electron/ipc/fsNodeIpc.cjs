@@ -21,9 +21,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     let mimeType = null
     const now = Date.now()
     const nextSortOrder = nextSortOrderHelper(db, parentId)
-    
-    console.log(nextSortOrder)
-    
+        
     let info
 
     if (type === 'folder') {

@@ -18,8 +18,6 @@ export default function Sidebar() {
   const FsTree = useContext(FsTreeContext)
 
   const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(EMPTY_SELECTED_NODE)
-  const [selectedParentId, setSelectedParentId] = useState<number | null>(null)
-  // during 
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   // used to render newNodePromptInput and control outside-click boundary
@@ -36,12 +34,9 @@ export default function Sidebar() {
     }
   }, [newNodeType])
 
-  // click behavior:
-  // - click anywhere closes the prompt (unless click is inside prompt or toolbar)
-  // - click anywhere other than a folder removes folder highlight (selectedParentId)
-  /** Control mouse click behavior
-   * - while creating newNode, if mouse click anywhere outside newNodePrompt, delete the prompt
-   * - while selectedNode 
+
+  /** Global click behaviors aside from file/folder row clicks
+   * - While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt
    * */
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
@@ -49,20 +44,14 @@ export default function Sidebar() {
       if (!target) return
 
       const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedNodeRow = !!target.closest('[node-row="true"]')
-      const clickedToolbar = !!target.closest('[sidebar-toolbar="true"]')
-      // click anywhere (outside prompt) => delete the prompt
+      const clickedToolbar = !!target.closest('[new-node-creation-btn="true"]')
+      // click anywhere outside prompt => delete the prompt
       // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
       if (newNodeType && !clickedInPrompt && !clickedToolbar) {
         setNewNodeType(null)
         if (newNodePromptInputRef.current) {
           newNodePromptInputRef.current.value = ''
         }
-      }
-
-      // click outside node row and prompt => remove node highlight
-      if (!clickedNodeRow && !clickedInPrompt && !clickedToolbar) {
-        setSelectedNode(EMPTY_SELECTED_NODE)
       }
     }
 
@@ -89,6 +78,16 @@ export default function Sidebar() {
     if (newNodePromptInputRef.current) {
         newNodePromptInputRef.current.value = ''
     }
+  }
+
+  function toggleFolder(nodeId: number) {
+    setExpandedFolderIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(nodeId)) next.delete(nodeId)
+        else next.add(nodeId)
+        console.log(next)
+        return next
+    }) 
   }
 
   /**
@@ -144,7 +143,7 @@ export default function Sidebar() {
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
       expandedFolderIds, // keep track of folder node ids to expand
-      setExpandedFolderIds,
+      toggleFolder,
       renderNewNodePrompt, // rendering newNodePrompt under folders
     })
   }
@@ -186,7 +185,6 @@ export default function Sidebar() {
       <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Top-right icon buttons */}
         <div
-          sidebar-toolbar="true"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -200,8 +198,11 @@ export default function Sidebar() {
           </div>
 
           {/* right icons */}
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div 
+            style={{ display: 'flex', gap: 6 }}
+          >
             <IconButton
+              new-node-creation-btn="true"
               src={newFolderIcon}
               label="Create folder"
               buttonSize={28}
@@ -211,6 +212,7 @@ export default function Sidebar() {
             />
 
             <IconButton
+              new-node-creation-btn="true"
               src={newFileIcon}
               label="Create file"
               buttonSize={28}
