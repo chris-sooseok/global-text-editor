@@ -106,7 +106,8 @@ export default function Sidebar() {
       selectedNode, // new FsNode parentId and to decide isRoot
       setSelectedNode, // used to highlight newly created node
       setNewNodeType, // reset the type once submit
-      FsTree
+      FsTree,
+      toggleFolder
     })
   }
 
