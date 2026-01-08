@@ -1,8 +1,7 @@
-import { useContext, type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
+import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FsNode } from "../../context/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
-import { FsTreeContext } from '../../context/FsTreeContext'
 import type { FsTree } from "../../context/FsTree"
 
 // define selectedNode type
@@ -17,14 +16,16 @@ export async function submitNewNodePromptHelper({
   setSelectedNode,
   setNewNodeType,
   FsTree,
+  toggleFolder,
 }: {
   newNodePromptInputRef: RefObject<HTMLInputElement | null>
   newNodeType: 'folder' | 'file' | null
-  selectedNode: SelectedNodeType,
+  selectedNode: SelectedNodeType
   setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
   //* Dispath is a function that tkaes one argument and returns void
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
   FsTree: {fsTree: FsTree}
+  toggleFolder: (nodeId: number) => void 
 }): Promise<void> {
 
   try {
@@ -52,10 +53,16 @@ export async function submitNewNodePromptHelper({
       // append new node to the FsTree
       FsTree.fsTree.insertNewNode(res.node)
       // highlight newly created node
+      console.log(res.node.parentId, res.node.type, res.node.id)
       setSelectedNode({
         parentId: res.node.parentId,
         type: res.node.type,
-        nodeId: res.node.id})
+        nodeId: res.node.id
+      })
+
+      if (res.node.type == 'folder') {
+        toggleFolder(res.node.id)
+      }
 
     } else {
       console.error(res.message)
