@@ -25,7 +25,7 @@ export default function Sidebar() {
   // used for new fsNode prompt input and focus control
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null) 
 
-    // focus newNodePromptInputRef when newNodeType has some type
+  // Focus newNodePromptInputRef when newNodeType has some type
   useEffect(() => {
     if (!newNodeType) return
     
@@ -44,15 +44,22 @@ export default function Sidebar() {
       if (!target) return
 
       const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedToolbar = !!target.closest('[new-node-creation-btn="true"]')
+      const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
       // click anywhere outside prompt => delete the prompt
       // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
-      if (newNodeType && !clickedInPrompt && !clickedToolbar) {
+      if (newNodeType && !clickedInPrompt && !clickedIconButton) {
         setNewNodeType(null)
         if (newNodePromptInputRef.current) {
           newNodePromptInputRef.current.value = ''
         }
       }
+
+      // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
+      const clickedFolder = !!target.closest('[folder-node-row]')
+      if (!clickedFolder && selectedNode.type == 'folder' && !clickedIconButton && !newNodeType) {
+        setSelectedNode(EMPTY_SELECTED_NODE)
+      }
+
     }
 
     // capture phase so it runs even if other handlers stopPropagation later
@@ -61,7 +68,7 @@ export default function Sidebar() {
     return () => {
       window.removeEventListener('mousedown', onMouseDown, true)
     }
-  }, [newNodeType])
+  }, [newNodeType, selectedNode])
 
   /** 
    * Updates newNodeType to selected type  
@@ -85,7 +92,6 @@ export default function Sidebar() {
         const next = new Set(prev)
         if (next.has(nodeId)) next.delete(nodeId)
         else next.add(nodeId)
-        console.log(next)
         return next
     }) 
   }

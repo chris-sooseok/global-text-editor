@@ -21,7 +21,6 @@ export async function submitNewNodePromptHelper({
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
 }): Promise<void> {
 
-  console.log(selectedNode)
   try {
     if (!newNodeType) return
 
@@ -38,6 +37,7 @@ export async function submitNewNodePromptHelper({
     const isRoot = selectedNode.nodeId == null ? true : false
     const res = await window.api.createFsNode(isRoot, newNodeType, parentId, name)
 
+    console.log(res)
     setNewNodeType(null)
     if (newNodePromptInputRef.current) {
       newNodePromptInputRef.current.value = ''
@@ -143,7 +143,7 @@ export function renderNodeHelper({
     return (
       <li key={node.id}>
         <div 
-          node-row="true"
+          file-node-row="true"
           style={{ 
             paddingLeft: depth * 7,
             cursor: 'pointer',
@@ -188,7 +188,7 @@ export function renderNodeHelper({
   return (
     <li key={node.id}>
       <div
-        node-row="true"
+        folder-node-row="true"
         style={{
           paddingLeft: depth * 5,
           cursor: 'pointer',
