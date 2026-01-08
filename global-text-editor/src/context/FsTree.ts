@@ -53,25 +53,23 @@ class FsTree {
     // rows arrives in (parent, sort_order) order
     const fsNodeRows: FsNodeRow[] = res.rows
 
-    const fsNodeById = new Map<number, FsNode>()
-
     // construct FolderNode and FileNode objects
     for (const r of fsNodeRows) {
       const node: FsNode = r.type === 'folder' ? makeFolderNode(r) : makeFileNode(r)
-      fsNodeById.set(node.id, node)
+      fsTree.nodes.set(node.id, node)
     }
 
     // construct tree
-    for (const node of fsNodeById.values()) {
+    for (const node of fsTree.nodes.values()) {
 
       // if root, insert into roots
-      if (node.parentId == null) {
+      if (node.isRoot) {
         fsTree.roots.push(node)
         continue
       }
 
       // if not root
-      const parent = fsNodeById.get(node.parentId)
+      const parent = fsTree.nodes.get(node.parentId)
 
       // safety 
       if (!parent || parent.type !== 'folder') {
@@ -81,8 +79,6 @@ class FsTree {
       
       parent.children.push(node)
     }
-
-    fsTree.nodes = fsNodeById
 
     return fsTree
   }
