@@ -1,6 +1,6 @@
 
 import type { FsNode, FsNodeRow, FolderNode, FileNode } from './FsTreeTypes'
-import type { FetchFsNodeRes } from '../api/fsNodeApi'
+import type { FetchFsNodeRes } from '../../api/fsNodeApi'
 
 function makeFolderNode(r: FsNodeRow): FolderNode {
   return {
