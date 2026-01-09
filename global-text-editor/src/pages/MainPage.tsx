@@ -1,13 +1,24 @@
 import SidebarRenderer from '../components/Sidebar/SidebarRenderer'
-import FileContent from '../components/FileContent/FileContent'
+import TabGroupRenderer from '../components/TabGroup/TabGroupRenderer'
+import FsTreeProvider from '../context/FsTreeContext/FsTreeContext'
 
-function MainPage() {
-    return (
-        <>
-            <SidebarRenderer />
-            <FileContent />
-        </>
-    )
+export default function MainPage() {
+  return (
+    <FsTreeProvider api={window.api}>
+      <div
+        style={{
+          display: 'flex',
+          width: '100%',
+          height: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <SidebarRenderer />
+
+        <div style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+          <TabGroupRenderer />
+        </div>
+      </div>
+    </FsTreeProvider>
+  )
 }
-
-export default MainPage

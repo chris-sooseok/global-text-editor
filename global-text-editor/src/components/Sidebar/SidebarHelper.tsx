@@ -1,8 +1,8 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FsNode } from "../../context/FsTreeTypes"
+import type { FsNode, FsNodeRow} from "../../context/FsTreeContext/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
-import type { FsTree } from "../../context/FsTree"
+import type { FsTree } from  "../../context/FsTreeContext/FsTree"
 
 // define selectedNode type
 export type SelectedNodeType = {parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
@@ -13,19 +13,19 @@ export async function submitNewNodePromptHelper({
   newNodePromptInputRef,
   newNodeType,
   selectedNode,
-  setSelectedNode,
+  selectNodeHandler,
   setNewNodeType,
   FsTree,
-  toggleFolder,
+  toggleFolderHandler,
 }: {
   newNodePromptInputRef: RefObject<HTMLInputElement | null>
   newNodeType: 'folder' | 'file' | null
   selectedNode: SelectedNodeType
-  setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void
   //* Dispath is a function that tkaes one argument and returns void
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
   FsTree: {fsTree: FsTree}
-  toggleFolder: (nodeId: number) => void 
+  toggleFolderHandler: (nodeId: number) => void 
 }): Promise<void> {
 
   try {
@@ -50,18 +50,19 @@ export async function submitNewNodePromptHelper({
     }
 
     if (res.ok) {
+      const newNode: FsNodeRow = res.node
       // append new node to the FsTree
-      FsTree.fsTree.insertNewNode(res.node)
+      FsTree.fsTree.insertNewNode(newNode)
       // highlight newly created node
-      console.log(res.node.parentId, res.node.type, res.node.id)
-      setSelectedNode({
-        parentId: res.node.parentId,
-        type: res.node.type,
-        nodeId: res.node.id
+      
+      selectNodeHandler({
+        parentId: newNode.parentId,
+        type: newNode.type,
+        nodeId: newNode.id
       })
 
       if (res.node.type == 'folder') {
-        toggleFolder(res.node.id)
+        toggleFolderHandler(res.node.id)
       }
 
     } else {
@@ -141,22 +142,22 @@ export function renderNodeHelper({
   node,
   depth,
   selectedNode,
-  setSelectedNode,
+  selectNodeHandler,
   // only folder needed
   renderNode,
   newNodeType,
   expandedFolderIds,
-  toggleFolder,
+  toggleFolderHandler,
   renderNewNodePrompt,
 }: {
   node: FsNode
   depth: number
   selectedNode: SelectedNodeType
-  setSelectedNode: Dispatch<SetStateAction<SelectedNodeType>>
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void
   renderNode: (node: FsNode, depth?: number) => ReactNode
   newNodeType: 'folder' | 'file' | null
   expandedFolderIds: Set<number>
-  toggleFolder: (nodeId: number) => void
+  toggleFolderHandler: (nodeId: number) => void
   renderNewNodePrompt: (depth: number) => ReactNode
 }): ReactNode {
   
@@ -185,7 +186,7 @@ export function renderNodeHelper({
           
           // if file is unhighlighted, highlight
           if (!isSelectedFile){
-            setSelectedNode({parentId: node.parentId, type: node.type, nodeId: node.id})
+            selectNodeHandler({parentId: node.parentId, type: node.type, nodeId: node.id})
           }
           
         }}
@@ -227,21 +228,21 @@ export function renderNodeHelper({
         onClick={() => {
           // if folder is unfolded, but not highlighted, simply rehighlight it
           if (!isSelectedFolder && isExpanded) {
-            setSelectedNode({parentId: node.parentId, type: node.type, nodeId : node.id})
+            selectNodeHandler({parentId: node.parentId, type: node.type, nodeId : node.id})
             return
           }
           
           // if folder is unfolded, and highlighted, fold and unhighlight
           if (isSelectedFolder && isExpanded) {
-            setSelectedNode(EMPTY_SELECTED_NODE)
-            toggleFolder(node.id)
+            selectNodeHandler(EMPTY_SELECTED_NODE)
+            toggleFolderHandler(node.id)
             return
           }
 
           // if folder is folded, and not highlighted, unfold and highlight
           if (!isSelectedFolder && !isExpanded){
-            setSelectedNode({nodeId: node.id, type: node.type, parentId: node.parentId})
-            toggleFolder(node.id)
+            selectNodeHandler({nodeId: node.id, type: node.type, parentId: node.parentId})
+            toggleFolderHandler(node.id)
           }
         }}
       >

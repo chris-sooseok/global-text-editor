@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
 import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
-import FsTreeProvider from '../../context/FsTreeContext'
+import FsTreeProvider from '../../context/FsTreeContext/FsTreeContext'
 import Sidebar from './Sidebar'
 
 const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
@@ -66,74 +66,69 @@ function SidebarRenderer() {
   }
 
   return (
-    <FsTreeProvider api={window.api}>
-      <div style={{ display: 'flex', height: '100vh', width: '100vw' }}>
-        {/* Sidebar Container */}
-        <div
-          style={{
-            width: appliedWidth,
-            position: 'relative',
-            borderRight: '2px solid rgba(0,0,0,0.15)',
-            flexShrink: 0,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            transition: 'width 180ms ease',
-          }}
-        >
-          {/* Topbar above sidebar content */}
-          <div
-            style={{
-              height: 44,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              padding: '8px 12px',
-              flexShrink: 0,
-              borderBottom: '2px solid rgba(0,0,0,0.15)',
-            }}
-          >
-            <IconButton
-              src={hideIcon}
-              label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-              buttonSize={30}
-              iconSize={20}
-              background="transparent"
-              onClick={toggleSidebar}
-            />
-          </div>
-
-          {/* Sidebar content */}
-          <div
-            style={{
-              flex: 1,
-              overflow: 'auto',
-              opacity: sidebarCollapsed ? 0 : 1,
-              transition: 'opacity 120ms ease',
-              pointerEvents: sidebarCollapsed ? 'none' : 'auto',
-            }}
-          >
-            {sidebarCollapsed ? null : <Sidebar />}
-          </div>
-
-          {/* only when not collapsed, allow dragging */}
-          {!sidebarCollapsed && (
-            <div
-              onMouseDown={onDragStart}
-              style={{
-                position: 'absolute',
-                top: 0,
-                right: -4,
-                width: 8,
-                height: '100%',
-                cursor: 'col-resize',
-              }}
-            />
-          )}
-        </div>
-
+    <div
+      style={{
+        width: appliedWidth,
+        height: '100%',
+        position: 'relative',
+        borderRight: '2px solid rgba(0,0,0,0.15)',
+        flexShrink: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'width 180ms ease',
+      }}
+    >
+      {/* Topbar above sidebar content */}
+      <div
+        style={{
+          height: 44,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          padding: '8px 12px',
+          flexShrink: 0,
+          borderBottom: '2px solid rgba(0,0,0,0.15)',
+        }}
+      >
+        <IconButton
+          src={hideIcon}
+          label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          buttonSize={30}
+          iconSize={20}
+          background="transparent"
+          onClick={toggleSidebar}
+        />
       </div>
-    </FsTreeProvider>
+
+      {/* Sidebar content */}
+      <div
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          opacity: sidebarCollapsed ? 0 : 1,
+          transition: 'opacity 120ms ease',
+          pointerEvents: sidebarCollapsed ? 'none' : 'auto',
+        }}
+      >
+        {sidebarCollapsed ? null : <Sidebar />}
+      </div>
+
+      {/* only when not collapsed, allow dragging */}
+      {!sidebarCollapsed && (
+        <div
+          onMouseDown={onDragStart}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: -4,
+            width: 8,
+            height: '100%',
+            cursor: 'col-resize',
+          }}
+        />
+      )}
+    </div>
   )
 }
 
