@@ -36,8 +36,8 @@ function makeFileNode(r: FsNodeRow): FileNode {
 }
 
 class FsTree {
-  roots: FsNode[]
-  nodes: Map<number, FsNode>
+  roots: FsNode[] // root nodes with child nodes
+  nodes: Map<number, FsNode> // all fsNodes
 
   constructor() {
     this.roots = []
@@ -59,7 +59,7 @@ class FsTree {
       fsTree.nodes.set(node.id, node)
     }
 
-    // construct tree
+    // construct FsTree roots
     for (const node of fsTree.nodes.values()) {
 
       // if root, insert into roots
@@ -68,7 +68,6 @@ class FsTree {
         continue
       }
 
-      // if not root
       const parent = fsTree.nodes.get(node.parentId)
 
       // type check
@@ -83,27 +82,28 @@ class FsTree {
     return fsTree
   }
 
+  // With createFsNode res data, insert newly inserted node into FsTree
   insertNewNode(node: FsNodeRow) {
 
     const newNode: FsNode = node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
 
-    if (this.nodes.get(node.id) == undefined) {
-      this.nodes.set(node.id, newNode)
+    // if not in nodes, insert new node
+    if (this.nodes.get(newNode.id) == undefined) {
+      this.nodes.set(newNode.id, newNode)
     }
 
-    const parent = this.nodes.get(node.parentId)
-          // type check
+    const parent = this.nodes.get(newNode.parentId)
+    
+    // if no parent, it is a root node
     if (!parent || parent.type !== 'folder') {
       this.roots.push(newNode)
       return
     }
       
+    // if there is a parent node, insert it under the parent node
     parent.children.push(newNode)
   }
 
-  getNode(id: number): number {
-    return id
-  }
 }
 
 export { FsTree }
