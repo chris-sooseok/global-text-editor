@@ -13,34 +13,39 @@ import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
 
-const SELECTED_NODE_KEY = "selectedNode"
-const EXPANDED_FOLDERS_KEY = "expandedFolderIds" // localStorage key to persist expandedFolders
+const SELECTED_NODE_KEY = String(import.meta.env.VITE_SELECTED_NODE_KEY)
+const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
 
-export default function Sidebar() {
+function Sidebar() {
   const FsTree = useContext(FsTreeContext)
 
   const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(() => {
-    const json = localStorage.getItem(SELECTED_NODE_KEY)
-    if (!json) return EMPTY_SELECTED_NODE
+    const raw = localStorage.getItem(SELECTED_NODE_KEY)
+    if (!raw) return EMPTY_SELECTED_NODE
 
     try {
-      return JSON.parse(json) // localStorage stores strings, so we parse back into an object
-    } catch {
-      return EMPTY_SELECTED_NODE // if JSON is corrupted, fall back safely
+      const parsed: SelectedNodeType = JSON.parse(raw)
+      return parsed
+    } catch (err) {
+      console.error(err)
+      return EMPTY_SELECTED_NODE
     }
   })
 
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => {
-    const json = localStorage.getItem(EXPANDED_FOLDERS_KEY)
-    if (!json) return new Set<number>()
+  const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
+    const raw = localStorage.getItem(TOGGLED_FOLDERS_KEY)
+    if (!raw) return new Set<number>()
 
     try {
-      return new Set<number>(JSON.parse(json))
-    } catch {
+      const parsed: Array<number> = JSON.parse(raw)
+      return new Set<number>(parsed)
+    } catch (err) {
+      console.error(err)
       return new Set<number>()
     }
   })
 
+  // for newNode creation type
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   // used to render newNodePromptInput and control outside-click boundary
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
@@ -50,15 +55,13 @@ export default function Sidebar() {
   // Focus newNodePromptInputRef when newNodeType has some type
   useEffect(() => {
     if (!newNodeType) return
-    
     if (newNodePromptInputRef.current) {
        newNodePromptInputRef.current.focus()
     }
   }, [newNodeType])
 
   /** Global click behaviors aside from file/folder row clicks
-   * - While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt
-   * */
+   * - While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt */
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement | null
@@ -84,7 +87,6 @@ export default function Sidebar() {
 
     // capture phase so it runs even if other handlers stopPropagation later
     window.addEventListener('mousedown', onMouseDown, true)
-
     return () => {
       window.removeEventListener('mousedown', onMouseDown, true)
     }
@@ -109,26 +111,21 @@ export default function Sidebar() {
 
   function selectNodeHandler({parentId, type, nodeId}:SelectedNodeType ) {
     const nextSelectedNode: SelectedNodeType = { parentId, type, nodeId }
-
     setSelectedNode(nextSelectedNode)
-
     // localStorage only stores strings, so we stringify the object.
     localStorage.setItem(SELECTED_NODE_KEY, JSON.stringify(nextSelectedNode))
   }
 
   function toggleFolderHandler(nodeId: number) {
-    setExpandedFolderIds((prev) => {
+    setToggledFolderIds((prev) => {
       const next = new Set(prev) // create a new Set so React sees a new reference
       if (next.has(nodeId)) next.delete(nodeId)
       else next.add(nodeId)
-
       // localStorage can't store Set, so store as array of numbers
-      localStorage.setItem(EXPANDED_FOLDERS_KEY, JSON.stringify(Array.from(next)))
-
+      localStorage.setItem(TOGGLED_FOLDERS_KEY, JSON.stringify(Array.from(next)))
       return next
     })
   }
-
 
   /**
    * Submits FsNode creation
@@ -137,9 +134,9 @@ export default function Sidebar() {
     await submitNewNodePromptHelper({
       newNodePromptInputRef, // new FsNode name and reset the input once submit
       newNodeType, // new FsNode type
+      cancelNewNodePrompt,
       selectedNode, // new FsNode parentId and to decide isRoot
       selectNodeHandler, // used to highlight newly created node
-      setNewNodeType, // reset the type once submit
       FsTree,
       toggleFolderHandler
     })
@@ -151,8 +148,8 @@ export default function Sidebar() {
    */
   function cancelNewNodePrompt() {
     cancelNewNodePromptHelper({
-      setNewNodeType: setNewNodeType, // erasing selected type
-      newNodePromptInputRef: newNodePromptInputRef // erasing prompt input
+      setNewNodeType, // erasing selected type
+      newNodePromptInputRef // erasing prompt input
     })
   }
 
@@ -185,22 +182,20 @@ export default function Sidebar() {
       // only folder needed
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
-      expandedFolderIds, // keep track of folder node ids to expand
+      toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
     })
   }
 
   function renderFsTree() {
-    return (
-      <>
+    return (<>
       {FsTree.fsTree.roots.length === 0 ? (
           <>
             {/* no items */}
             {!newNodeType ?
                <div style={{ opacity: 0.7 }}>No items</div> : null
             }
-           
             {/* root prompt when no items */}
             {newNodeType && selectedNode?.nodeId === null ? (
               <ul style={{ margin: 0, paddingLeft: 2 }}>
@@ -212,14 +207,12 @@ export default function Sidebar() {
             <ul style={{ margin: 0, paddingLeft: 2 }}>
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
-
               {/* root prompt when items */}
               {newNodeType && selectedNode?.nodeId  === null ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
-      </>
-    )
+    </>)
   }
 
   return (
@@ -269,3 +262,5 @@ export default function Sidebar() {
     </>
   )
 }
+
+export default Sidebar

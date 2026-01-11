@@ -12,57 +12,61 @@ export const EMPTY_SELECTED_NODE = {parentId: null, type: null, nodeId: null}
 export async function submitNewNodePromptHelper({
   newNodePromptInputRef,
   newNodeType,
+  cancelNewNodePrompt,
   selectedNode,
   selectNodeHandler,
-  setNewNodeType,
   FsTree,
   toggleFolderHandler,
 }: {
   newNodePromptInputRef: RefObject<HTMLInputElement | null>
   newNodeType: 'folder' | 'file' | null
+  cancelNewNodePrompt: () => void
   selectedNode: SelectedNodeType
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void
-  //* Dispath is a function that tkaes one argument and returns void
-  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>> 
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void // Dispath is a function that tkaes one argument and returns void
   FsTree: {fsTree: FsTree}
   toggleFolderHandler: (nodeId: number) => void 
 }): Promise<void> {
 
   try {
-    if (!newNodeType) return
 
-    const name = newNodePromptInputRef.current?.value ?? ''
-    // if name is not provided, cancel newNodePrompt
-    if (name.trim() === '') {
-      cancelNewNodePromptHelper({setNewNodeType: setNewNodeType, newNodePromptInputRef: newNodePromptInputRef})
+    if (!newNodeType || !newNodePromptInputRef.current) {
+      cancelNewNodePrompt()
       return
     }
 
-    // new node should have selected folder's id
-    const parentId = selectedNode.nodeId
-    // if selected node id is null, this new node is a root node
-    const isRoot = selectedNode.nodeId == null ? true : false
-    const res = await window.api.createFsNode(isRoot, newNodeType, parentId, name)
-
-    setNewNodeType(null)
-    if (newNodePromptInputRef.current) {
-      newNodePromptInputRef.current.value = ''
+    // if name is not provided, cancel newNodePrompt
+    const name = newNodePromptInputRef.current.value
+    if (name.trim() === '') {
+      cancelNewNodePrompt()
+      return
     }
+
+    // check if new node has parent node, or is a root node
+    const parentId = selectedNode.nodeId
+    const isRoot = parentId == null ? true : false
+    const res = await window.api.createFsNode(
+      isRoot, newNodeType, parentId, name
+    )
+
+    // once submitted, cancel newNodePrompt
+    cancelNewNodePrompt()
 
     if (res.ok) {
       const newNode: FsNodeRow = res.node
+
       // append new node to the FsTree
       FsTree.fsTree.insertNewNode(newNode)
-      // highlight newly created node
       
+      // highlight newly created node
       selectNodeHandler({
         parentId: newNode.parentId,
         type: newNode.type,
         nodeId: newNode.id
       })
 
-      if (res.node.type == 'folder') {
-        toggleFolderHandler(res.node.id)
+      // if newNode is a folder, toggle the folder
+      if (newNode.type == 'folder') {
+        toggleFolderHandler(newNode.id)
       }
 
     } else {
@@ -70,6 +74,8 @@ export async function submitNewNodePromptHelper({
     }
 
   } catch (err) {
+    // if failure, cancel newNodePrompt
+    cancelNewNodePrompt()
     console.error(err)
   }
   
@@ -146,7 +152,7 @@ export function renderNodeHelper({
   // only folder needed
   renderNode,
   newNodeType,
-  expandedFolderIds,
+  toggledFolderIds,
   toggleFolderHandler,
   renderNewNodePrompt,
 }: {
@@ -156,7 +162,7 @@ export function renderNodeHelper({
   selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void
   renderNode: (node: FsNode, depth?: number) => ReactNode
   newNodeType: 'folder' | 'file' | null
-  expandedFolderIds: Set<number>
+  toggledFolderIds: Set<number>
   toggleFolderHandler: (nodeId: number) => void
   renderNewNodePrompt: (depth: number) => ReactNode
 }): ReactNode {
@@ -207,7 +213,7 @@ export function renderNodeHelper({
 
   // Folder Node Row
   const isSelectedFolder = selectedNode?.nodeId === node.id
-  const isExpanded = expandedFolderIds.has(node.id)
+  const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
   return (

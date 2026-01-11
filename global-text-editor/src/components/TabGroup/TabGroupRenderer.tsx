@@ -2,7 +2,7 @@
 import { useState } from "react"
 import TabGroup from "../TabGroup/TabGroup"
 
-const TAB_GROUPS_KEY = "tabGroups"
+const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
 
 function TabGroupRenderer() {
   const [tabGroups, setTabGroups] = useState<string[]>(() => {

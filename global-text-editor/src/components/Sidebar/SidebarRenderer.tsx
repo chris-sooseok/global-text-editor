@@ -1,27 +1,46 @@
 import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
 import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
-import FsTreeProvider from '../../context/FsTreeContext/FsTreeContext'
 import Sidebar from './Sidebar'
 
-const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
+const DEFAULT_SIDEBAR_WIDTH = Number(import.meta.env.VITE_DEFAULT_SIDEBAR_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
 const SIDEBAR_MAX_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MAX_WIDTH)
 const COLLAPSED_WIDTH = Number(import.meta.env.VITE_COLLAPSED_WIDTH)
 
+const SIDEBAR_WIDTH_KEY = String(import.meta.env.VITE_SIDEBAR_WIDTH_KEY)
+const SIDEBAR_COLLAPSED_KEY = String(import.meta.env.VITE_SIDEBAR_COLLAPSED_KEY)
+
 function SidebarRenderer() {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(SIDEBAR_DEFAULT_WIDTH)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    const raw = localStorage.getItem(SIDEBAR_WIDTH_KEY)
+    if (!raw) return DEFAULT_SIDEBAR_WIDTH
+    try {
+      const parsed: number = JSON.parse(raw)
+      return parsed
+    } catch (err) {
+      console.error(err)
+      return DEFAULT_SIDEBAR_WIDTH
+    }
+  })
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    const raw = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+    if (!raw) return false
+    try {
+      const parsed: boolean = JSON.parse(raw)
+      return parsed
+    } catch (err) {
+      console.error(err)
+      return false
+    }
+  })
+  // on setSidebarCollapsedHandler, get appliedWidth
+  const appliedWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
   const isDraggingRef = useRef(false)
   const startXRef = useRef(0) // mouse X position when dragging
   const startWidthRef = useRef(0) // current sidebar width when dragging
-
-  function toggleSidebar() {
-    setSidebarCollapsed((prev) => !prev)
-  }
-
-  const appliedWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
-
+  
+  // Sidebar Drag Control
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
       // if true, don't allow dragging
@@ -29,14 +48,14 @@ function SidebarRenderer() {
 
       const draggingX = e.clientX - startXRef.current
       const nextWidth = startWidthRef.current + draggingX
-
       // width limit
-      setSidebarWidth(Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, nextWidth)))
+      const clamped = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, nextWidth))
+  
+      setSidebarWidthHandler(clamped)
     }
 
     function onMouseUp() {
       isDraggingRef.current = false
-
       // reset cursor back to normal after dragging
       document.body.style.cursor = ''
       // restore default selection behavior
@@ -51,8 +70,22 @@ function SidebarRenderer() {
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
     }
-  }, [])
+  }, [sidebarCollapsed])
 
+  function setSidebarWidthHandler(width: number) {
+    setSidebarWidth(width)
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, JSON.stringify(width))
+  }
+
+  function setSidebarCollapsedHandler() {
+    setSidebarCollapsed((prev: boolean) => {
+      const next = !prev
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, JSON.stringify(next)) // store boolean as JSON string
+      return next
+    })
+  }
+
+  // initiate Sidebar width dragging
   function onDragStart(e: React.MouseEvent<HTMLDivElement>) {
     // if true, don't allow dragging
     if (sidebarCollapsed) return
@@ -97,7 +130,7 @@ function SidebarRenderer() {
           buttonSize={30}
           iconSize={20}
           background="transparent"
-          onClick={toggleSidebar}
+          onClick={setSidebarCollapsedHandler}
         />
       </div>
 
