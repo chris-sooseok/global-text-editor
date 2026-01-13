@@ -160,7 +160,7 @@ export function renderNodeHandler(
             userSelect: 'none',
             background: (!onlyFolderIsSelected && isSelectedFile 
             ? 'rgba(67, 102, 158, 0.18)' : 'transparent'),
-            borderRadius: 6,
+            borderRadius: 5,
             paddingTop: 2,
             paddingBottom: 2,  
         }}
@@ -188,14 +188,16 @@ export function renderNodeHandler(
   const isSelectedFolder = selectedFolder?.id === node.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
-  let highlightFolderBgd
+  let highlightFolderBgr
   if (!onlyFolderIsSelected && isSelectedFolder){
-    highlightFolderBgd = true
+    highlightFolderBgr = true
   }
    
   return (
-    <ul key={node.id} style={{
-       background: (highlightFolderBgd ? 'rgba(121, 125, 131, 0.09)' : 'transparent')
+    <li key={node.id} style={{
+       background: (highlightFolderBgr ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
+        borderRadius: 5,
+        overflow: 'hidden'
     }}>
       <div
         folder-node-row="true"
@@ -208,7 +210,7 @@ export function renderNodeHandler(
             (onlyFolderIsSelected && isSelectedFolder)
               ? 'rgba(67, 102, 158, 0.18)'
               : 'transparent',
-          borderRadius: 6,
+          borderRadius: 5,
           paddingTop: 2,
           paddingBottom: 2,
         }}
@@ -221,7 +223,8 @@ export function renderNodeHandler(
           toggleFolderHandler
         )}
       >
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
           <span aria-hidden="true" style={{ width: 12, display: 'inline-block' }}>
             {isExpanded ? '▾' : '▸'}
           </span>
@@ -229,9 +232,7 @@ export function renderNodeHandler(
             src={folderIcon}
             alt=""
             aria-hidden="true"
-            style={{ width: 18, height: 18, display: 'block',
-              background: (highlightFolderBgd ? 'rgba(129, 155, 198, 0.18)' : 'transparent')
-            }}
+            style={{ width: 18, height: 18, display: 'block'}}
           />
           <span>{node.name}</span>
         </span>
@@ -249,7 +250,7 @@ export function renderNodeHandler(
           {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
         </ul>
       )}
-    </ul>
+    </li>
   )
 }
 
