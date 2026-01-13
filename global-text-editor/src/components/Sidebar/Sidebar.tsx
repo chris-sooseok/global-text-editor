@@ -102,17 +102,16 @@ function Sidebar() {
       if (!target) return
       
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedFolder = !!target.closest('[folder-node-row]')
-      const clickedFile = !!target.closest('[file-node-row]')
+      const clickedFolder = !!target.closest('[folder-node-row]') 
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (!clickedFolder && selectedFolder.type == 'folder' && !clickedIconButton && !clickedFile) {
+      if (!clickedFolder && selectedFolder.type == 'folder' && !clickedIconButton) {
         selectNodeHandler(EMPTY_SELECTED_NODE)
       }
     }
 
     function onMouseDown(e: MouseEvent) {
       clickOnNewNodePrompt(e)
-      clickOnSelectedFolder(e)
+      clickOnSelectedNode(e)
     }
 
     // capture phase so it runs even if other handlers stopPropagation later

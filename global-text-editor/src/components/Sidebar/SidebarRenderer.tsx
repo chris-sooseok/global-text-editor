@@ -100,6 +100,7 @@ function SidebarRenderer() {
 
   return (
     <div
+      side-bar-container="true"
       style={{
         width: appliedWidth,
         height: '100%',
