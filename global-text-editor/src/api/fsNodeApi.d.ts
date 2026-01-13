@@ -15,7 +15,8 @@ declare global {
         isRoot: boolean,
         type: string,
         parentId: number | null,
-        name: string
+        name: string,
+        mimeType: string
       ): Promise< CreateFsNodeRes >
 
       deleteFsNode(

@@ -1,5 +1,5 @@
 
-function nextSortOrderHelper(db, parentId) {
+function getNextSortOrder(db, parentId) {
   // MAX(sort_order) among siblings; if none, start at 0
   const row = db
     .prepare(`
@@ -12,4 +12,12 @@ function nextSortOrderHelper(db, parentId) {
   return Number(row.maxSort) + 1
 }
 
-module.exports = { nextSortOrderHelper }
+
+function sanitizeFilename(name) {
+
+  // Prevent path traversal + illegal filename characters across OSes
+  // Keep it simple: replace slashes and other bad chars with "_"
+  return name.replace(/[\\/:"*?<>|\u0000-\u001F]/g, '_')
+}
+
+module.exports = { getNextSortOrder, sanitizeFilename }
