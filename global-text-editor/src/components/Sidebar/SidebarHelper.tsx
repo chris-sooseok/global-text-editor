@@ -8,7 +8,6 @@ import { computeMimeTypeFromName } from "./MimeType"
 // define selectedNode type
 export type SelectedNodeType = FsNode | null
 
-
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
@@ -140,7 +139,7 @@ export function renderNodeHandler(
 
   const fileIsSelected: boolean = selectedFile != null
   const folderIsSelected: boolean = selectedFolder != null
-
+  // if both some file and folder are selected, only highlight folder
   let onlyFolderIsSelected: boolean = false
   if (folderIsSelected && !fileIsSelected) {
     onlyFolderIsSelected = true
@@ -166,7 +165,7 @@ export function renderNodeHandler(
             paddingBottom: 2,  
         }}
         onClick={() => clickFileHelper(
-          node, 
+          node,
           isSelectedFile,
           selectNodeHandler
         )}
@@ -199,8 +198,12 @@ export function renderNodeHandler(
           cursor: 'pointer',
           fontWeight: (onlyFolderIsSelected && isSelectedFolder ? 700 : 400),
           userSelect: 'none',
-          background: (onlyFolderIsSelected && isSelectedFolder 
-            ? 'rgba(138, 139, 141, 0.18)' : 'transparent'), // light blue
+          background:
+            (onlyFolderIsSelected && isSelectedFolder)
+              ? 'rgba(67, 102, 158, 0.18)'
+              : (!onlyFolderIsSelected && isSelectedFolder)
+                ? 'rgba(138, 139, 141, 0.18)' // light grey
+                : 'transparent',
           borderRadius: 6,
           paddingTop: 2,
           paddingBottom: 2,
@@ -208,6 +211,7 @@ export function renderNodeHandler(
         onClick={() => clickFolderHelper(
           node,
           isSelectedFolder,
+          onlyFolderIsSelected,
           selectNodeHandler,
           isExpanded,
           toggleFolderHandler
@@ -257,26 +261,43 @@ function clickFileHelper(
 function clickFolderHelper(
   node: FsNode,
   isSelectedFolder: boolean,
+  onlyFolderIsSelected: boolean,
   selectNodeHandler:  (node: SelectedNodeType) => void,
   isExpanded: boolean,
   toggleFolderHandler: (nodeId: number) => void
 ): void {
-   if (!isSelectedFolder && isExpanded) {
-      selectNodeHandler(node)
-      return
-    }
-    
-    // if folder is unfolded, and highlighted, fold and unhighlight
-    if (isSelectedFolder && isExpanded) {
-      selectNodeHandler(null)
-      toggleFolderHandler(node.id)
-      return
-    }
 
-    // if folder is folded, and not highlighted, unfold and highlight
-    if (!isSelectedFolder && !isExpanded){
-      selectNodeHandler(node)
-      toggleFolderHandler(node.id)
-    }
+  // if folder is collapsed -> highlight & open
+  if (!isSelectedFolder && !isExpanded) {
+    selectNodeHandler(node)
+    toggleFolderHandler(node.id)
+    return
+  }
+
+  // both file and folder are null, but folder is open -> highlight folder
+  if (!onlyFolderIsSelected && !isSelectedFolder && isExpanded) {
+    selectNodeHandler(node)
+    return
+  }
+
+  // some file is selected and highlighted, -> highlight folder
+  if (!onlyFolderIsSelected && isSelectedFolder && isExpanded) {
+    selectNodeHandler(node)
+    return
+  }
+
+  // no file is selected, but this folder is not highlight, and open -> highlight folder
+  if (onlyFolderIsSelected && !isSelectedFolder && isExpanded) {
+    selectNodeHandler(node)
+    return
+  }
+    
+  // no file is selected, but this folder is highlight, and open -> unhighlight and fold
+  if (onlyFolderIsSelected && isSelectedFolder && isExpanded) {
+    selectNodeHandler(null)
+    toggleFolderHandler(node.id)
+    return
+  }
+
 }
 

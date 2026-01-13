@@ -64,7 +64,7 @@ function Sidebar() {
   // used for new fsNode prompt input and focus control
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
-  /** Global click behaviors */
+  /*** Global click behaviors ***/
   useEffect(() => {
 
     // Focus newNodePromptInputRef when newNodeType has some type
@@ -92,7 +92,7 @@ function Sidebar() {
       }
     }
 
-    // While
+    // While a selectedFolder is valid, clicking outside files, folders, toolbars should set selectedFolder null
     function clickOnSelectedFolder(e: MouseEvent) {
       // not applied while newNodePrompt is activated
       if (newNodeType) return 
@@ -104,7 +104,7 @@ function Sidebar() {
       const clickedFolder = !!target.closest('[folder-node-row]')
       const clickedFile = !!target.closest('[file-node-row]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (!clickedFolder && selectedFolder?.type == 'folder' && !clickedIconButton && !clickedFile) {
+      if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton && !clickedFile) {
         selectNodeHandler(null)
       }
     }
@@ -114,7 +114,6 @@ function Sidebar() {
       clickOnSelectedFolder(e)
     }
 
-    // capture phase so it runs even if other handlers stopPropagation later
     window.addEventListener('mousedown', onMouseDown, true)
     return () => {
       window.removeEventListener('mousedown', onMouseDown, true)
@@ -129,12 +128,15 @@ function Sidebar() {
   function selectNodeHandler(node: SelectedNodeType) {
     if (node?.type === 'file') {
       const nextSelectedFile: SelectedNodeType = node
+      // we don't null folder here since file selection keeps notion of who is parent
       setSelectedFile(nextSelectedFile)
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
+      // should null file so that this folder is highlight
       setSelectedFile(null)
       setSelectedFolder(nextSelectedFolder)
+      localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(null))
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(nextSelectedFolder))
     } else {
       // for clickOnSelectedNode effect
