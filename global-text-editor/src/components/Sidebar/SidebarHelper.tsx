@@ -3,29 +3,22 @@ import type { FsNode, FsNodeRow} from "../../context/FsTreeContext/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
 import type { FsTree } from  "../../context/FsTreeContext/FsTree"
+import { computeMimeTypeFromName } from "./MimeType"
 
 // define selectedNode type
 export type SelectedNodeType = {parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
 // used to define empty selectedNode state
 export const EMPTY_SELECTED_NODE = {parentId: null, type: null, nodeId: null}
 
-export async function submitNewNodePromptHelper({
-  newNodePromptInputRef,
-  newNodeType,
-  cancelNewNodePrompt,
-  selectedNode,
-  selectNodeHandler,
-  FsTree,
-  toggleFolderHandler,
-}: {
-  newNodePromptInputRef: RefObject<HTMLInputElement | null>
-  newNodeType: 'folder' | 'file' | null
-  cancelNewNodePrompt: () => void
-  selectedNode: SelectedNodeType
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void // Dispath is a function that tkaes one argument and returns void
-  FsTree: {fsTree: FsTree}
+export async function submitNewNodePromptHandler(
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+  newNodeType: 'folder' | 'file' | null,
+  cancelNewNodePrompt: () => void,
+  selectedNode: SelectedNodeType,
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
+  FsTree: {fsTree: FsTree},
   toggleFolderHandler: (nodeId: number) => void 
-}): Promise<void> {
+): Promise<void> {
 
   try {
 
@@ -36,7 +29,8 @@ export async function submitNewNodePromptHelper({
 
     // if name is not provided, cancel newNodePrompt
     const name = newNodePromptInputRef.current.value
-    if (name.trim() === '') {
+    const trimmed = name.trim()
+    if (trimmed=== '') {
       cancelNewNodePrompt()
       return
     }
@@ -44,8 +38,9 @@ export async function submitNewNodePromptHelper({
     // check if new node has parent node, or is a root node
     const parentId = selectedNode.nodeId
     const isRoot = parentId == null ? true : false
+    const mimeType = computeMimeTypeFromName(trimmed)
     const res = await window.api.createFsNode(
-      isRoot, newNodeType, parentId, name
+      isRoot, newNodeType, parentId, name, mimeType
     )
 
     // once submitted, cancel newNodePrompt
@@ -82,33 +77,25 @@ export async function submitNewNodePromptHelper({
 }
 
 /** canceling newNodePrompt cleans out newNodeType and its prompt input */
-export function cancelNewNodePromptHelper({setNewNodeType, newNodePromptInputRef}: {
-  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+export function cancelNewNodePromptHandler(
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>
-}): void {
+): void {
   setNewNodeType(null)
   if (newNodePromptInputRef.current) {
     newNodePromptInputRef.current.value = ''
   }
 }
 
-export function renderNewNodePromptHelper({
-  newNodeType,
-  selectedNode,
-  depth,
-  newNodePromptRef,
-  newNodePromptInputRef,
-  submitNewNodePrompt,
-  cancelNewNodePrompt,
-}: {
-    newNodeType: 'folder' | 'file' | null
-    selectedNode: SelectedNodeType
-    depth: number
-    newNodePromptRef: RefObject<HTMLDivElement | null>
-    newNodePromptInputRef: RefObject<HTMLInputElement | null>
-    submitNewNodePrompt: () => Promise<void>
+export function renderNewNodePromptHandler(
+    newNodeType: 'folder' | 'file' | null,
+    selectedNode: SelectedNodeType,
+    depth: number,
+    newNodePromptRef: RefObject<HTMLDivElement | null>,
+    newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+    submitNewNodePrompt: () => Promise<void>,
     cancelNewNodePrompt: () => void
-}): ReactNode  {
+): ReactNode  {
   if (!newNodeType) return null
 
   return (
@@ -143,29 +130,17 @@ export function renderNewNodePromptHelper({
   )
 }
 
-export function renderNodeHelper({
-  // file/folder needed
-  node,
-  depth,
-  selectedNode,
-  selectNodeHandler,
-  // only folder needed
-  renderNode,
-  newNodeType,
-  toggledFolderIds,
-  toggleFolderHandler,
-  renderNewNodePrompt,
-}: {
-  node: FsNode
-  depth: number
-  selectedNode: SelectedNodeType
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void
-  renderNode: (node: FsNode, depth?: number) => ReactNode
-  newNodeType: 'folder' | 'file' | null
-  toggledFolderIds: Set<number>
-  toggleFolderHandler: (nodeId: number) => void
+export function renderNodeHandler(
+  node: FsNode,
+  depth: number,
+  selectedNode: SelectedNodeType,
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  renderNode: (node: FsNode, depth?: number) => ReactNode,
+  newNodeType: 'folder' | 'file' | null,
+  toggledFolderIds: Set<number>,
+  toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode
-}): ReactNode {
+): ReactNode {
   
   // File Node Row
   if (node.type == 'file') {
@@ -212,7 +187,7 @@ export function renderNodeHelper({
   }
 
   // Folder Node Row
-  const isSelectedFolder = selectedNode?.nodeId === node.id
+  const isSelectedFolder = selectedNode.nodeId === node.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
@@ -272,9 +247,121 @@ export function renderNodeHelper({
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
-          {newNodeType && selectedNode.nodeId === node.id ? renderNewNodePrompt(depth + 1) : null}
+          {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
         </ul>
       )}
     </li>
   )
+}
+
+export function renderNodeHelper2(
+  node: FsNode,
+  depth: number,
+  selectedNode: SelectedNodeType,
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  renderNode: (node: FsNode, depth?: number) => ReactNode,
+  newNodeType: 'folder' | 'file' | null,
+  toggledFolderIds: Set<number>,
+  toggleFolderHandler: (nodeId: number) => void,
+  renderNewNodePrompt: (depth: number) => ReactNode
+): ReactNode {
+
+  const isSelectedNode: boolean = selectedNode.nodeId === node.id
+  let isExpanded: boolean = false
+  let children: FsNode[] = []
+
+
+  if (node.type == 'folder') {
+    isExpanded = toggledFolderIds.has(node.id)
+    children = node.children
+  }
+
+  return (
+    <li key={node.id}>
+        <div 
+          {...(node.type === 'folder' ? {'folder-node-row': 'true'} : {'file-node-row': 'true'})}
+          style={{ 
+            paddingLeft: (node.type === 'folder' ? depth * 5 : depth * 7),
+            cursor: 'pointer',
+            fontWeight: isSelectedNode ? 700 : 400,
+            userSelect: 'none',
+
+            background: isSelectedNode ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+            borderRadius: 6,
+            paddingTop: 2,
+            paddingBottom: 2,  
+        }}
+        onClick={() => clickOnNodeHelper(
+          node,
+          isSelectedNode,
+          selectNodeHandler,
+          isExpanded,
+          toggleFolderHandler
+        )}
+        >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {node.type === 'folder' && (
+              <span aria-hidden="true" style={{ width: 12, display: 'inline-block' }}>
+                {isExpanded ? '▾' : '▸'}
+              </span>
+            )}
+            <img
+              src={(node.type === 'folder' ? folderIcon : fileIcon)}
+              alt=""
+              aria-hidden="true"
+              style={{ width: 18, height: 18, display: 'block' }}
+            />
+            <span>{node.name}</span>
+          </span>
+        </div>
+
+        {/* recursively render children node */}
+        {isExpanded && (
+          <ul style={{ margin: 0, paddingLeft: 8 }}>
+            {children.map((child) => renderNode(child, depth + 1))}
+
+            {/* folder prompt */}
+            {newNodeType && (isSelectedNode) ? renderNewNodePrompt(depth + 1) : null}
+          </ul>
+        )}
+
+    </li> 
+  )
+}
+
+function clickOnNodeHelper(
+  node: FsNode, 
+  isSelectedNode: boolean,
+  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  isExpanded: boolean,
+  toggleFolderHandler: (nodeId: number) => void
+): void {
+  if (node.type === 'file') {
+      // if file is already highlighted, return
+      if (isSelectedNode) return
+      
+      // if file is unhighlighted, highlight
+      if (!isSelectedNode){
+        selectNodeHandler({parentId: node.parentId, type: node.type, nodeId: node.id})
+      }
+  } else {
+    // if folder is unfolded, but not highlighted, simply rehighlight it
+    if (!isSelectedNode && isExpanded) {
+      selectNodeHandler({parentId: node.parentId, type: node.type, nodeId : node.id})
+      return
+    }
+    
+    // if folder is unfolded, and highlighted, fold and unhighlight
+    if (isSelectedNode && isExpanded) {
+      selectNodeHandler(EMPTY_SELECTED_NODE)
+      toggleFolderHandler(node.id)
+      return
+    }
+
+    // if folder is folded, and not highlighted, unfold and highlight
+    if (!isSelectedNode && !isExpanded){
+      selectNodeHandler({nodeId: node.id, type: node.type, parentId: node.parentId})
+      toggleFolderHandler(node.id)
+    }
+  }
 }

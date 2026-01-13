@@ -16,7 +16,9 @@ function createWindow() {
   win.maximize()
 
   const isProd = app.isPackaged
+
   if (isProd) {
+    // getAppPath returns project root path
     win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
   } else {
     win.loadURL('http://localhost:5173')
