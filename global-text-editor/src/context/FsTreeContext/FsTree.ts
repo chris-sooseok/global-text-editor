@@ -2,7 +2,7 @@
 import type { FsNode, FsNodeRow, FolderNode, FileNode } from './FsTreeTypes'
 import type { FetchFsNodeRes } from '../../api/fsNodeApi'
 
-function makeFolderNode(r: FsNodeRow): FolderNode {
+export function makeFolderNode(r: FsNodeRow): FolderNode {
   return {
     id: r.id,
     isRoot: r.isRoot,
@@ -16,7 +16,7 @@ function makeFolderNode(r: FsNodeRow): FolderNode {
   }
 }
 
-function makeFileNode(r: FsNodeRow): FileNode {
+export function makeFileNode(r: FsNodeRow): FileNode {
   if (r.storagePath == null) throw new Error("FileNode requires storagePath")
   if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
 
@@ -83,7 +83,7 @@ class FsTree {
   }
 
   // With createFsNode res data, insert newly inserted node into FsTree
-  insertNewNode(node: FsNodeRow) {
+  insertNewNode(node: FsNodeRow): FsNode {
 
     const newNode: FsNode = node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
 
@@ -97,11 +97,12 @@ class FsTree {
     // if no parent, it is a root node
     if (!parent || parent.type !== 'folder') {
       this.roots.push(newNode)
-      return
+      return newNode
     }
       
     // if there is a parent node, insert it under the parent node
     parent.children.push(newNode)
+    return newNode
   }
 
 }

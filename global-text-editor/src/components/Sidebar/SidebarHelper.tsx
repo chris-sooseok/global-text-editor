@@ -6,16 +6,25 @@ import type { FsTree } from  "../../context/FsTreeContext/FsTree"
 import { computeMimeTypeFromName } from "./MimeType"
 
 // define selectedNode type
-export type SelectedNodeType = {parentId: number | null; type : 'folder' | 'file' | null; nodeId: number | null}
+export type SelectedNodeType = FsNode | EMPTY_SELECTED_NODE_TYPE
 // used to define empty selectedNode state
-export const EMPTY_SELECTED_NODE = {parentId: null, type: null, nodeId: null}
+export type EMPTY_SELECTED_NODE_TYPE = {
+  id: null,
+  type: null,
+  parentId: null,
+}
+export const EMPTY_SELECTED_NODE = {
+  id: null,
+  type: null,
+  parentId: null,
+}
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
   cancelNewNodePrompt: () => void,
   selectedNode: SelectedNodeType,
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
+  selectNodeHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
   FsTree: {fsTree: FsTree},
   toggleFolderHandler: (nodeId: number) => void 
 ): Promise<void> {
@@ -36,7 +45,7 @@ export async function submitNewNodePromptHandler(
     }
 
     // check if new node has parent node, or is a root node
-    const parentId = selectedNode.nodeId
+    const parentId = selectedNode.id
     const isRoot = parentId == null ? true : false
     const mimeType = computeMimeTypeFromName(trimmed)
     const res = await window.api.createFsNode(
@@ -50,14 +59,10 @@ export async function submitNewNodePromptHandler(
       const newNode: FsNodeRow = res.node
 
       // append new node to the FsTree
-      FsTree.fsTree.insertNewNode(newNode)
+      const newFsNode: FsNode = FsTree.fsTree.insertNewNode(newNode)
       
       // highlight newly created node
-      selectNodeHandler({
-        parentId: newNode.parentId,
-        type: newNode.type,
-        nodeId: newNode.id
-      })
+      selectNodeHandler(newFsNode)
 
       // if newNode is a folder, toggle the folder
       if (newNode.type == 'folder') {
@@ -79,8 +84,10 @@ export async function submitNewNodePromptHandler(
 /** canceling newNodePrompt cleans out newNodeType and its prompt input */
 export function cancelNewNodePromptHandler(
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>,
-  newNodePromptInputRef: RefObject<HTMLInputElement | null>
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+  fileStateRef: RefObject<SelectedNodeType>,
 ): void {
+  if (fileStateRef)
   setNewNodeType(null)
   if (newNodePromptInputRef.current) {
     newNodePromptInputRef.current.value = ''
@@ -134,7 +141,7 @@ export function renderNodeHandler(
   node: FsNode,
   depth: number,
   selectedNode: SelectedNodeType,
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  selectNodeHandler: (node: SelectedNodeType) => void,
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
@@ -144,7 +151,7 @@ export function renderNodeHandler(
   
   // File Node Row
   if (node.type == 'file') {
-    const isSelectedFile = selectedNode.nodeId === node.id
+    const isSelectedFile = selectedNode.id === node.id
 
     return (
       <li key={node.id}>
@@ -167,7 +174,7 @@ export function renderNodeHandler(
           
           // if file is unhighlighted, highlight
           if (!isSelectedFile){
-            selectNodeHandler({parentId: node.parentId, type: node.type, nodeId: node.id})
+            selectNodeHandler(node)
           }
           
         }}
@@ -187,7 +194,7 @@ export function renderNodeHandler(
   }
 
   // Folder Node Row
-  const isSelectedFolder = selectedNode.nodeId === node.id
+  const isSelectedFolder = selectedNode.id === node.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
@@ -209,7 +216,7 @@ export function renderNodeHandler(
         onClick={() => {
           // if folder is unfolded, but not highlighted, simply rehighlight it
           if (!isSelectedFolder && isExpanded) {
-            selectNodeHandler({parentId: node.parentId, type: node.type, nodeId : node.id})
+            selectNodeHandler(node)
             return
           }
           
@@ -222,7 +229,7 @@ export function renderNodeHandler(
 
           // if folder is folded, and not highlighted, unfold and highlight
           if (!isSelectedFolder && !isExpanded){
-            selectNodeHandler({nodeId: node.id, type: node.type, parentId: node.parentId})
+            selectNodeHandler(node)
             toggleFolderHandler(node.id)
           }
         }}
@@ -258,7 +265,8 @@ export function renderNodeHelper2(
   node: FsNode,
   depth: number,
   selectedNode: SelectedNodeType,
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  selectNodeHandler:  (node: SelectedNodeType) => void,
+  fileStateRef: RefObject<SelectedNodeType>,
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
@@ -266,10 +274,14 @@ export function renderNodeHelper2(
   renderNewNodePrompt: (depth: number) => ReactNode
 ): ReactNode {
 
-  const isSelectedNode: boolean = selectedNode.nodeId === node.id
+  const isSelectedNode: boolean = selectedNode.id === node.id
+  let isFileParentSelected: boolean = false
   let isExpanded: boolean = false
   let children: FsNode[] = []
 
+  if (newNodeType && fileStateRef.current.parentId === node.id) {
+    selectNodeHandler(node)
+  }
 
   if (node.type == 'folder') {
     isExpanded = toggledFolderIds.has(node.id)
@@ -332,7 +344,7 @@ export function renderNodeHelper2(
 function clickOnNodeHelper(
   node: FsNode, 
   isSelectedNode: boolean,
-  selectNodeHandler: ({parentId, type, nodeId}: SelectedNodeType) => void,
+  selectNodeHandler:  (node: SelectedNodeType) => void,
   isExpanded: boolean,
   toggleFolderHandler: (nodeId: number) => void
 ): void {
@@ -342,12 +354,12 @@ function clickOnNodeHelper(
       
       // if file is unhighlighted, highlight
       if (!isSelectedNode){
-        selectNodeHandler({parentId: node.parentId, type: node.type, nodeId: node.id})
+        selectNodeHandler(node)
       }
   } else {
     // if folder is unfolded, but not highlighted, simply rehighlight it
     if (!isSelectedNode && isExpanded) {
-      selectNodeHandler({parentId: node.parentId, type: node.type, nodeId : node.id})
+      selectNodeHandler(node)
       return
     }
     
@@ -360,7 +372,7 @@ function clickOnNodeHelper(
 
     // if folder is folded, and not highlighted, unfold and highlight
     if (!isSelectedNode && !isExpanded){
-      selectNodeHandler({nodeId: node.id, type: node.type, parentId: node.parentId})
+      selectNodeHandler(node)
       toggleFolderHandler(node.id)
     }
   }
