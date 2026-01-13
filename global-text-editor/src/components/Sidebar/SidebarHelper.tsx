@@ -6,18 +6,8 @@ import type { FsTree } from  "../../context/FsTreeContext/FsTree"
 import { computeMimeTypeFromName } from "./MimeType"
 
 // define selectedNode type
-export type SelectedNodeType = FsNode | EMPTY_SELECTED_NODE_TYPE
-// used to define empty selectedNode state
-export type EMPTY_SELECTED_NODE_TYPE = {
-  id: null,
-  type: null,
-  parentId: null,
-}
-export const EMPTY_SELECTED_NODE = {
-  id: null,
-  type: null,
-  parentId: null,
-}
+export type SelectedNodeType = FsNode | null
+
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -45,7 +35,7 @@ export async function submitNewNodePromptHandler(
     }
 
     // new node can only be created under selectedFolder or root
-    const parentId = selectedFolder.id
+    const parentId = selectedFolder?.id ?? null
     const isRoot = parentId == null ? true : false
     const mimeType = computeMimeTypeFromName(trimmed)
     const res = await window.api.createFsNode(
@@ -104,7 +94,7 @@ export function renderNewNodePromptHandler(
   if (!newNodeType) return null
 
   return (
-    <li key={`__create_new_node_under__:${selectedFolder.id ?? 'root'}:${newNodeType}`}>
+    <li key={`__create_new_node_under__:${selectedFolder?.id ?? 'root'}:${newNodeType}`}>
       <div
         ref={newNodePromptRef}
         style={{
@@ -150,7 +140,7 @@ export function renderNodeHandler(
   
   // File Node Row
   if (node.type == 'file') {
-    const isSelectedFile = selectedFile.id === node.id
+    const isSelectedFile = selectedFile?.id === node.id
 
     return (
       <li key={node.id}>
@@ -188,7 +178,7 @@ export function renderNodeHandler(
   }
 
   // Folder Node Row
-  const isSelectedFolder = selectedFolder.id === node.id
+  const isSelectedFolder = selectedFolder?.id === node.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
 
@@ -269,7 +259,7 @@ function clickFolderHelper(
     
     // if folder is unfolded, and highlighted, fold and unhighlight
     if (isSelectedFolder && isExpanded) {
-      selectNodeHandler(EMPTY_SELECTED_NODE)
+      selectNodeHandler(null)
       toggleFolderHandler(node.id)
       return
     }

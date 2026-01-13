@@ -5,8 +5,7 @@ import {
   submitNewNodePromptHandler, 
   cancelNewNodePromptHandler, 
   renderNewNodePromptHandler,
-  renderNodeHandler,
-  EMPTY_SELECTED_NODE
+  renderNodeHandler
 } from './SidebarHelper'
 import type { SelectedNodeType } from './SidebarHelper'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
@@ -21,27 +20,27 @@ function Sidebar() {
   const FsTree = useContext(FsTreeContext)
   const [selectedFile, setSelectedFile ] = useState<SelectedNodeType>(() => {
     const raw = localStorage.getItem(SELECTED_FILE_KEY)
-    if (!raw) return EMPTY_SELECTED_NODE
+    if (!raw) return null
 
     try {
       const parsed: SelectedNodeType = JSON.parse(raw)
       return parsed
     } catch(err) {
       console.error(err)
-      return EMPTY_SELECTED_NODE
+      return null
     }
   })
   
   const [selectedFolder, setSelectedFolder ] = useState<SelectedNodeType>(() => {
     const raw = localStorage.getItem(SELECTED_FOLDER_KEY)
-    if (!raw) return EMPTY_SELECTED_NODE
+    if (!raw) return null
 
     try {
       const parsed: SelectedNodeType = JSON.parse(raw)
       return parsed
     } catch(err) {
       console.error(err)
-      return EMPTY_SELECTED_NODE
+      return null
     }
   })
 
@@ -104,14 +103,14 @@ function Sidebar() {
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
       const clickedFolder = !!target.closest('[folder-node-row]') 
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (!clickedFolder && selectedFolder.type == 'folder' && !clickedIconButton) {
-        selectNodeHandler(EMPTY_SELECTED_NODE)
+      if (!clickedFolder && selectedFolder?.type == 'folder' && !clickedIconButton) {
+        selectNodeHandler(null)
       }
     }
 
     function onMouseDown(e: MouseEvent) {
       clickOnNewNodePrompt(e)
-      clickOnSelectedNode(e)
+      clickOnSelectedFolder(e)
     }
 
     // capture phase so it runs even if other handlers stopPropagation later
@@ -127,18 +126,18 @@ function Sidebar() {
    * Also this is used to unhighlight folder for global click behavior
    * */ 
   function selectNodeHandler(node: SelectedNodeType) {
-    if (node.type === 'file') {
+    if (node?.type === 'file') {
       const nextSelectedFile: SelectedNodeType = node
       setSelectedFile(nextSelectedFile)
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
-    } else if (node.type === 'folder') {
+    } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       setSelectedFolder(nextSelectedFolder)
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(nextSelectedFolder))
     } else {
       // for clickOnSelectedNode effect
-      setSelectedFolder(EMPTY_SELECTED_NODE)
-      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(EMPTY_SELECTED_NODE))
+      setSelectedFolder(null)
+      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
     }
   }
 
@@ -160,7 +159,7 @@ function Sidebar() {
    * If there should be no active file selected (e.g. file is deleted)
    */
   function unhighlightFile() {
-    setSelectedFile(EMPTY_SELECTED_NODE)
+    setSelectedFile(null)
   }
 
   /*** New Prompt Behavior for new FsNode creation ***/
@@ -256,7 +255,7 @@ function Sidebar() {
                <div style={{ opacity: 0.7 }}>No items</div> : null
             }
             {/* root prompt when no items */}
-            {newNodeType && selectedFolder.id === null ? (
+            {newNodeType && selectedFolder === null ? (
               <ul style={{ margin: 0, paddingLeft: 2 }}>
                 {renderNewNodePrompt(0)}
               </ul>
@@ -267,7 +266,7 @@ function Sidebar() {
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
-              {newNodeType && selectedFolder.id  === null ? renderNewNodePrompt(0) : null}
+              {newNodeType && selectedFolder  === null ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
