@@ -255,10 +255,10 @@ function Sidebar() {
   }
 
   function renderFsTree() {
-      let highlightFolderBgd
-      if (selectedFolder === null){
-        highlightFolderBgd = true
-      }
+    let highlightFolderBgr
+    if (selectedFolder === null){
+      highlightFolderBgr = true
+    }
 
     return (<>
       {FsTree.fsTree.roots.length === 0 ? (
@@ -275,7 +275,13 @@ function Sidebar() {
             ) : null}
           </>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 2, background: (highlightFolderBgd ? 'rgba(121, 125, 131, 0.09)' : 'transparent') }}>
+            <ul style={{ 
+              margin: 0,
+              paddingLeft: 2,
+              background: (highlightFolderBgr ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
+              borderRadius: 5,
+              overflow: 'hidden',
+            }}>
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
