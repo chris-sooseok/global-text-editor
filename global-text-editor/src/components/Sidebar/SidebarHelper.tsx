@@ -188,9 +188,15 @@ export function renderNodeHandler(
   const isSelectedFolder = selectedFolder?.id === node.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
-
+  let highlightFolderBgd
+  if (!onlyFolderIsSelected && isSelectedFolder){
+    highlightFolderBgd = true
+  }
+   
   return (
-    <li key={node.id}>
+    <ul key={node.id} style={{
+       background: (highlightFolderBgd ? 'rgba(121, 125, 131, 0.09)' : 'transparent')
+    }}>
       <div
         folder-node-row="true"
         style={{
@@ -201,9 +207,7 @@ export function renderNodeHandler(
           background:
             (onlyFolderIsSelected && isSelectedFolder)
               ? 'rgba(67, 102, 158, 0.18)'
-              : (!onlyFolderIsSelected && isSelectedFolder)
-                ? 'rgba(138, 139, 141, 0.18)' // light grey
-                : 'transparent',
+              : 'transparent',
           borderRadius: 6,
           paddingTop: 2,
           paddingBottom: 2,
@@ -225,7 +229,9 @@ export function renderNodeHandler(
             src={folderIcon}
             alt=""
             aria-hidden="true"
-            style={{ width: 18, height: 18, display: 'block' }}
+            style={{ width: 18, height: 18, display: 'block',
+              background: (highlightFolderBgd ? 'rgba(129, 155, 198, 0.18)' : 'transparent')
+            }}
           />
           <span>{node.name}</span>
         </span>
@@ -233,14 +239,17 @@ export function renderNodeHandler(
 
       {/* recursively render children node */}
       {isExpanded && (
-        <ul style={{ margin: 0, paddingLeft: 8 }}>
+        <ul style={{ 
+          margin: 0, 
+          paddingLeft: 6,
+          }}>
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
           {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
         </ul>
       )}
-    </li>
+    </ul>
   )
 }
 

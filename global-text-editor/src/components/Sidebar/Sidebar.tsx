@@ -130,7 +130,11 @@ function Sidebar() {
       const nextSelectedFile: SelectedNodeType = node
       // we don't null folder here since file selection keeps notion of who is parent
       setSelectedFile(nextSelectedFile)
+      if (nextSelectedFile.parentId){
+          setSelectedFolder(FsTree.fsTree.nodes.get(nextSelectedFile.parentId) ?? null)
+      }
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
+      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(FsTree.fsTree.nodes.get(nextSelectedFile.parentId) ?? null))
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       // should null file so that this folder is highlight
@@ -251,6 +255,11 @@ function Sidebar() {
   }
 
   function renderFsTree() {
+      let highlightFolderBgd
+      if (selectedFolder === null){
+        highlightFolderBgd = true
+      }
+
     return (<>
       {FsTree.fsTree.roots.length === 0 ? (
           <>
@@ -266,7 +275,7 @@ function Sidebar() {
             ) : null}
           </>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 2 }}>
+            <ul style={{ margin: 0, paddingLeft: 2, background: (highlightFolderBgd ? 'rgba(121, 125, 131, 0.09)' : 'transparent') }}>
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
