@@ -6,6 +6,7 @@ import {
   cancelNewNodePromptHandler, 
   renderNewNodePromptHandler,
   renderNodeHandler,
+  renderNodeHandler2,
   EMPTY_SELECTED_NODE
 } from './SidebarHelper'
 import type { SelectedNodeType } from './SidebarHelper'
@@ -51,7 +52,7 @@ function Sidebar() {
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   // used for new fsNode prompt input and focus control
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
-  const fileStateRef = useRef<SelectedNodeType>(EMPTY_SELECTED_NODE)
+  // const fileStateRef = useRef<SelectedNodeType>(EMPTY_SELECTED_NODE)
 
   // Focus newNodePromptInputRef when newNodeType has some type
   useEffect(() => {
@@ -198,7 +199,6 @@ function Sidebar() {
     cancelNewNodePromptHandler(
       setNewNodeType, // erasing selected type
       newNodePromptInputRef, // erasing prompt input
-      fileStateRef
     )
   }
 

@@ -85,9 +85,7 @@ export async function submitNewNodePromptHandler(
 export function cancelNewNodePromptHandler(
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
-  fileStateRef: RefObject<SelectedNodeType>,
 ): void {
-  if (fileStateRef)
   setNewNodeType(null)
   if (newNodePromptInputRef.current) {
     newNodePromptInputRef.current.value = ''
@@ -261,12 +259,11 @@ export function renderNodeHandler(
   )
 }
 
-export function renderNodeHelper2(
+export function renderNodeHandler2(
   node: FsNode,
   depth: number,
   selectedNode: SelectedNodeType,
   selectNodeHandler:  (node: SelectedNodeType) => void,
-  fileStateRef: RefObject<SelectedNodeType>,
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
@@ -275,13 +272,13 @@ export function renderNodeHelper2(
 ): ReactNode {
 
   const isSelectedNode: boolean = selectedNode.id === node.id
-  let isFileParentSelected: boolean = false
+  const isSelectedFilesParent =
+  node.type === 'folder' &&
+  selectedNode.type === 'file' &&
+  selectedNode.parentId === node.id
   let isExpanded: boolean = false
   let children: FsNode[] = []
 
-  if (newNodeType && fileStateRef.current.parentId === node.id) {
-    selectNodeHandler(node)
-  }
 
   if (node.type == 'folder') {
     isExpanded = toggledFolderIds.has(node.id)
@@ -333,7 +330,9 @@ export function renderNodeHelper2(
             {children.map((child) => renderNode(child, depth + 1))}
 
             {/* folder prompt */}
-            {newNodeType && (isSelectedNode) ? renderNewNodePrompt(depth + 1) : null}
+            {newNodeType && (isSelectedNode || isSelectedFilesParent)
+              ? renderNewNodePrompt(depth + 1)
+              : null}
           </ul>
         )}
 
