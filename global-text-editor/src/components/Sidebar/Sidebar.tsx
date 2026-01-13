@@ -59,8 +59,30 @@ function Sidebar() {
     if (newNodePromptInputRef.current) {
        newNodePromptInputRef.current.focus()
     }
+    // // if currently selected node is a file while newNodeType is updated
+    // // archieve file state and temporarily update selectedNode to its parent
+    // if (selectedNode.type === 'file') {
+    //   fileStateRef.current.nodeId = selectedNode.nodeId
+    //   fileStateRef.current.parentId = selectedNode.parentId
+    //   fileStateRef.current.type = selectedNode.type
+    //   if (selectedNode.parentId) {
+    //      const parentNode = FsTree.fsTree.nodes.get(selectedNode.parentId)
+    //      if (parentNode) {
+    //         selectNodeHandler({
+    //           nodeId: parentNode.id,
+    //           type: parentNode.type, 
+    //           parentId: parentNode.parentId
+    //         })
+    //     }
+    //   }else{
+    //     selectNodeHandler(EMPTY_SELECTED_NODE)
+    //   }
+    // }
+  }, [newNodeType, selectedNode])
 
-  }, [newNodeType])
+  function updateFileStateRef() {
+
+  }
 
   // useEffect(() => {
   //   const newNodeInput = newNodePromptInputRef.current
@@ -135,8 +157,8 @@ function Sidebar() {
     }
   }
 
-  function selectNodeHandler({parentId, type, nodeId}:SelectedNodeType ) {
-    const nextSelectedNode: SelectedNodeType = { parentId, type, nodeId }
+  function selectNodeHandler(node: SelectedNodeType) {
+    const nextSelectedNode: SelectedNodeType = node
     setSelectedNode(nextSelectedNode)
     // localStorage only stores strings, so we stringify the object.
     localStorage.setItem(SELECTED_NODE_KEY, JSON.stringify(nextSelectedNode))
@@ -175,7 +197,8 @@ function Sidebar() {
   function cancelNewNodePrompt() {
     cancelNewNodePromptHandler(
       setNewNodeType, // erasing selected type
-      newNodePromptInputRef // erasing prompt input
+      newNodePromptInputRef, // erasing prompt input
+      fileStateRef
     )
   }
 
@@ -223,7 +246,7 @@ function Sidebar() {
                <div style={{ opacity: 0.7 }}>No items</div> : null
             }
             {/* root prompt when no items */}
-            {newNodeType && selectedNode?.nodeId === null ? (
+            {newNodeType && selectedNode.id === null ? (
               <ul style={{ margin: 0, paddingLeft: 2 }}>
                 {renderNewNodePrompt(0)}
               </ul>
@@ -234,7 +257,7 @@ function Sidebar() {
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
-              {newNodeType && selectedNode.nodeId  === null ? renderNewNodePrompt(0) : null}
+              {newNodeType && selectedNode.id  === null ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
