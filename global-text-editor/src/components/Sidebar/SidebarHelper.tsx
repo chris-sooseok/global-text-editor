@@ -137,6 +137,14 @@ export function renderNodeHandler(
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode
 ): ReactNode {
+
+  const fileIsSelected: boolean = selectedFile != null
+  const folderIsSelected: boolean = selectedFolder != null
+
+  let onlyFolderIsSelected: boolean = false
+  if (folderIsSelected && !fileIsSelected) {
+    onlyFolderIsSelected = true
+  } 
   
   // File Node Row
   if (node.type == 'file') {
@@ -149,10 +157,10 @@ export function renderNodeHandler(
           style={{ 
             paddingLeft: depth * 7,
             cursor: 'pointer',
-            fontWeight: isSelectedFile ? 700 : 400,
+            fontWeight: (!onlyFolderIsSelected && isSelectedFile ? 700 : 400),
             userSelect: 'none',
-
-            background: isSelectedFile ? 'rgba(67, 102, 158, 0.18)' : 'transparent',
+            background: (!onlyFolderIsSelected && isSelectedFile 
+            ? 'rgba(67, 102, 158, 0.18)' : 'transparent'),
             borderRadius: 6,
             paddingTop: 2,
             paddingBottom: 2,  
@@ -189,9 +197,10 @@ export function renderNodeHandler(
         style={{
           paddingLeft: depth * 5,
           cursor: 'pointer',
-          fontWeight: isSelectedFolder ? 700 : 400,
+          fontWeight: (onlyFolderIsSelected && isSelectedFolder ? 700 : 400),
           userSelect: 'none',
-          background: isSelectedFolder ? 'rgba(138, 139, 141, 0.18)' : 'transparent', // light blue
+          background: (onlyFolderIsSelected && isSelectedFolder 
+            ? 'rgba(138, 139, 141, 0.18)' : 'transparent'), // light blue
           borderRadius: 6,
           paddingTop: 2,
           paddingBottom: 2,

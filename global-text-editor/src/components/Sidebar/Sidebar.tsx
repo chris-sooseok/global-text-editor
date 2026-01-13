@@ -101,9 +101,10 @@ function Sidebar() {
       if (!target) return
       
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedFolder = !!target.closest('[folder-node-row]') 
+      const clickedFolder = !!target.closest('[folder-node-row]')
+      const clickedFile = !!target.closest('[file-node-row]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (!clickedFolder && selectedFolder?.type == 'folder' && !clickedIconButton) {
+      if (!clickedFolder && selectedFolder?.type == 'folder' && !clickedIconButton && !clickedFile) {
         selectNodeHandler(null)
       }
     }
@@ -132,6 +133,7 @@ function Sidebar() {
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
+      setSelectedFile(null)
       setSelectedFolder(nextSelectedFolder)
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(nextSelectedFolder))
     } else {
