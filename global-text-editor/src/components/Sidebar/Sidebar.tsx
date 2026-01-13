@@ -128,13 +128,14 @@ function Sidebar() {
   function selectNodeHandler(node: SelectedNodeType) {
     if (node?.type === 'file') {
       const nextSelectedFile: SelectedNodeType = node
-      // we don't null folder here since file selection keeps notion of who is parent
+      // when file is selected, update selectedFolder to its parent
       setSelectedFile(nextSelectedFile)
       if (nextSelectedFile.parentId){
-          setSelectedFolder(FsTree.fsTree.nodes.get(nextSelectedFile.parentId) ?? null)
+          const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+          setSelectedFolder(parentNode)
+          localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
       }
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
-      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(FsTree.fsTree.nodes.get(nextSelectedFile.parentId) ?? null))
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       // should null file so that this folder is highlight
@@ -251,6 +252,8 @@ function Sidebar() {
       toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
+      FsTree,
+      setSelectedFolder
     )
   }
 

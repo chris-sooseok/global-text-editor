@@ -7,6 +7,7 @@ import { computeMimeTypeFromName } from "./MimeType"
 
 // define selectedNode type
 export type SelectedNodeType = FsNode | null
+const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -134,7 +135,9 @@ export function renderNodeHandler(
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
   toggleFolderHandler: (nodeId: number) => void,
-  renderNewNodePrompt: (depth: number) => ReactNode
+  renderNewNodePrompt: (depth: number) => ReactNode,
+  FsTree: {fsTree: FsTree},
+  setSelectedFolder: (node: SelectedNodeType) => void,
 ): ReactNode {
 
   const fileIsSelected: boolean = selectedFile != null
@@ -159,7 +162,7 @@ export function renderNodeHandler(
             fontWeight: (!onlyFolderIsSelected && isSelectedFile ? 700 : 400),
             userSelect: 'none',
             background: (!onlyFolderIsSelected && isSelectedFile 
-            ? 'rgba(67, 102, 158, 0.18)' : 'transparent'),
+            ? 'rgba(30, 91, 189, 0.18)' : 'transparent'),
             borderRadius: 5,
             paddingTop: 2,
             paddingBottom: 2,  
@@ -167,7 +170,10 @@ export function renderNodeHandler(
         onClick={() => clickFileHelper(
           node,
           isSelectedFile,
-          selectNodeHandler
+          selectedFolder,
+          selectNodeHandler,
+          setSelectedFolder,
+          FsTree,
         )}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -257,10 +263,20 @@ export function renderNodeHandler(
 function clickFileHelper(
   node: FsNode,
   isSelectedFile: boolean,
+  selectedFolder: SelectedNodeType,
   selectNodeHandler:  (node: SelectedNodeType) => void,
+  setSelectedFolder:  (node: SelectedNodeType) => void,
+  FsTree: {fsTree: FsTree},
 ): void {
-  // if file is already highlighted, return
-  if (isSelectedFile) return
+  // if file is already highlighted, no need to highlight
+  // but make sure to update selectedFolder to its parent
+  if (isSelectedFile && selectedFolder?.id != node.parentId) {
+    if (node.parentId){
+      const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+      setSelectedFolder(parentNode)
+      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
+    }
+  }
   
   // if file is unhighlighted, highlight
   if (!isSelectedFile){
