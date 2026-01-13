@@ -69,13 +69,12 @@ class FsTree {
       }
 
       const parent = fsTree.nodes.get(node.parentId)
-
       // type check
       if (!parent || parent.type !== 'folder') {
         fsTree.roots.push(node)
         continue
       }
-      
+   
       parent.children.push(node)
     }
 
