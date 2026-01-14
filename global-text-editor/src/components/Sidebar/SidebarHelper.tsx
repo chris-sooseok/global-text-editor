@@ -14,7 +14,7 @@ export async function submitNewNodePromptHandler(
   newNodeType: 'folder' | 'file' | null,
   cancelNewNodePrompt: () => void,
   selectedFolder: SelectedNodeType,
-  selectFileHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
+  selectNodeHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
   FsTree: {fsTree: FsTree},
   toggleFolderHandler: (nodeId: number) => void 
 ): Promise<void> {
@@ -52,7 +52,7 @@ export async function submitNewNodePromptHandler(
       const newFsNode: FsNode = FsTree.fsTree.insertNewNode(newNode)
       
       // highlight newly created node
-      selectFileHandler(newFsNode)
+      selectNodeHandler(newFsNode)
 
       // if newNode is a folder, toggle the folder
       if (newNode.type == 'folder') {
