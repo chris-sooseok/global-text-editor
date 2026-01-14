@@ -169,14 +169,16 @@ export function renderNodeHandler(
             paddingTop: 2,
             paddingBottom: 2,  
         }}
-        onClick={() => onClickFile (
-          node,
-          isSelectedFile,
-          selectedFolder,
-          selectNodeHandler,
-          setSelectedFolder,
-          FsTree,
-        )}
+        onClick={() =>
+          onClickFile(
+                node,
+                isSelectedFile,
+                selectedFolder,
+                selectNodeHandler,
+                setSelectedFolder,
+                FsTree,
+              )
+        }
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <img
@@ -264,6 +266,7 @@ function onClickFile (
   setSelectedFolder:  (node: SelectedNodeType) => void, // update selectedFolder
   FsTree: {fsTree: FsTree}, // to get parent Node
 ): void {
+
   // if file is already highlighted, no need to highlight
   // but make sure to update selectedFolder to its parent when
   // selectedFolder is null due to global click behavior
