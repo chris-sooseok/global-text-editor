@@ -113,7 +113,7 @@ export function renderNewNodePromptHandler(
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              submitNewNodePrompt()
+              void submitNewNodePrompt()
             }
             if (e.key === 'Escape') {
               e.preventDefault()
@@ -157,6 +157,7 @@ export function renderNodeHandler(
       <li key={node.id}>
         <div 
           file-node-row="true"
+          {...(node.parentId === null ? { 'root-file-node-row': 'true' } : {})}
           style={{ 
             paddingLeft: depth * 8,
             cursor: 'pointer',
