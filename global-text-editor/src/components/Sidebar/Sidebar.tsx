@@ -60,7 +60,7 @@ function Sidebar() {
     }
   })
 
-  const [rootIsFileSelected, setRootFileSelected] = useState(false)
+  const [rootFileSelected, setRootFileSelected] = useState(false)
 
   /** Used for new node creation
    * newNodeType should be set to some type only when prompt is to be displayed
@@ -90,7 +90,9 @@ function Sidebar() {
       const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
       if (!clickedInPrompt && !clickedIconButton) {
-        setNewNodeType(null)
+        e.preventDefault()
+        e.stopPropagation() // disable clicking on other file/folder
+        cancelNewNodePrompt()
         if (newNodePromptInputRef.current) {
           newNodePromptInputRef.current.value = ''
         }
@@ -99,7 +101,7 @@ function Sidebar() {
     }
 
     // While a selectedFolder is valid, clicking outside files, folders, toolbars should set selectedFolder null
-    function clickOnSelectedFolder(e: MouseEvent) {
+    function clickOnSelectedFolderAndRootFile(e: MouseEvent) {
       // not applied while newNodePrompt is activated
       if (newNodeType) return 
 
@@ -111,118 +113,120 @@ function Sidebar() {
       const clickedFile = !!target.closest('[file-node-row="true"]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
       if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton && !clickedFile) {
+        e.preventDefault()
         selectNodeHandler(null)
-        return
       }
 
       const clickedRootFile = !!target.closest('[root-file-node-row="true"]')
+      // selectNodeHandler already takes care of setting rootFileSelected when
+      // a root file is created or selected, but this below still needed since clicking outside 
+      // root-file-node will set it false, and you may reselect the same file
       if (clickedRootFile) {
-        setRootFileSelected(true)
-        console.log('root file selected')
+        // set true only when false
+        if (!rootFileSelected) {
+          setRootFileSelected(true)
+          console.log('root file is selected')
+        }
       } else {
-        if (rootIsFileSelected){
+        // set false only when true
+        if (rootFileSelected){
           setRootFileSelected(false)
           console.log('root file is nullified')
         }
       }
-      
     }
 
-    function onMouseDown(e: MouseEvent) {
-      clickOnNewNodePrompt(e)
-      clickOnSelectedFolder(e)
-    }
-
-    window.addEventListener('mousedown', onMouseDown, true)
+    window.addEventListener('click', clickOnNewNodePrompt, true)
+    window.addEventListener('click', clickOnSelectedFolderAndRootFile, true)
     return () => {
-      window.removeEventListener('mousedown', onMouseDown, true)
+      window.removeEventListener('click', clickOnNewNodePrompt, true)
+      window.removeEventListener('click', clickOnSelectedFolderAndRootFile, true)
     }
-  }, [newNodeType, selectedFolder, rootIsFileSelected])
+  }, [newNodeType, selectedFolder, rootFileSelected])
 
   useEffect(() => {
-    function clickOnDeleteNode(e: KeyboardEvent) {
+    function keydownOnDeleteNode(e: KeyboardEvent) {
 
       const clickedBackspace = e.key === 'Backspace' || e.key === 'Delete'
       if (!clickedBackspace) return
 
-      // if both null, or during prompt activation
+      // if both null, or during prompt activation, no deletion can happen
       if ((!selectedFile && !selectedFolder) || newNodeType) {
         return
       } 
-
-      let msg
     
-      if (rootIsFileSelected &&
-        selectedFile?.parentId === null &&
+      let ok
+      // root file is selected, its parent should be null, and selectedFolder should be null
+      if (rootFileSelected && selectedFile?.parentId === null &&
         !selectedFolder
       ) {
-        msg = `Confirm to delete ${selectedFile?.name}?`
-        e.preventDefault()
-        console.log('root file deletion')
-        const ok = window.confirm(msg)
+        ok = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
         return
       }
       
-      if (!rootIsFileSelected &&
-        selectedFile &&
-        selectedFile.parentId === selectedFolder?.id
+      // file is selected, its parentId must be equal to folder id
+      if (!rootFileSelected && selectedFile?.parentId === selectedFolder?.id
       ) {
-        msg = `Confirm to delete ${selectedFile?.name}?`
-        e.preventDefault()
-         console.log('file deletion')
-        const ok = window.confirm(msg)
+        const ok = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
         return
       }
 
+      // folder is selected, then file should be null
       if (selectedFolder && !selectedFile) {
-        msg = `Confirm to delete ${selectedFolder?.name}`
-        e.preventDefault()
-        console.log('folder deletion')
-        const ok = window.confirm(msg)
+        const ok = window.confirm(`Confirm to delete ${selectedFolder?.name}`)
         return
       }
     }
 
-    window.addEventListener('keydown', clickOnDeleteNode, true)
+    window.addEventListener('keydown', keydownOnDeleteNode, true)
     return () => {
-      window.removeEventListener('keydown', clickOnDeleteNode, true)
+      window.removeEventListener('keydown', keydownOnDeleteNode, true)
     }
-  }, [selectedFile, selectedFolder, rootIsFileSelected])
+  }, [newNodeType, selectedFile, selectedFolder, rootFileSelected])
 
   /*** General Sidebar Behaviors ***/
   /** 
    * Based on node selected (file or folder), highlight them
-   * Also this is used to unhighlight folder for global click behavior */ 
+   * Also this is used to unhighlight folder for global click behavior: else case */ 
   function selectNodeHandler(node: SelectedNodeType) {
     if (node?.type === 'file') {
+      // if root file is selected, set true
       const nextSelectedFile: SelectedNodeType = node
-      // when file is selected, update selectedFolder to its parent
-      if (nextSelectedFile.parentId){
-          if (nextSelectedFile.parentId != selectedFolder?.id){
-            const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
-            setSelectedFolder(parentNode)
-            localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
-          }
-      }else{
-        // if parent is null
-        setSelectedFolder(null)
-        localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
+      selectFile(nextSelectedFile)
+      
+      // when a root file is created or selected
+      if (!nextSelectedFile.parentId) { 
+        if (!rootFileSelected) setRootFileSelected(true)
+        // set folder null
+        selectFolder(null)
       }
-      setSelectedFile(node)
-      localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
+
+      // when normal file is selected, update selectedFolder to its parent
+      if (nextSelectedFile.parentId != selectedFolder?.id){
+        const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+        selectFolder(parentNode)
+      }
+      
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       // when folder is selected, nullify file so that folder is highlighted
-      setSelectedFile(null)
-      localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(null))
-      setSelectedFolder(nextSelectedFolder)
-      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(nextSelectedFolder))
+      selectFile(null)
+      selectFolder(nextSelectedFolder)
     } else {
       // for clickOnSelectedFolder useEffect
       // unhighlight folder
-      setSelectedFolder(null)
-      localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
+      selectFolder(null)
     }
+  }
+
+  function selectFile(file: SelectedNodeType){
+    setSelectedFile(file)
+    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+  }
+
+  function selectFolder(folder: SelectedNodeType) {
+    setSelectedFolder(folder)
+    localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
   }
 
   /** Control folders that are folded or expanded */
