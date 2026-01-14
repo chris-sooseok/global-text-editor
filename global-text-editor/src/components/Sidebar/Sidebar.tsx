@@ -134,6 +134,9 @@ function Sidebar() {
           const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
           setSelectedFolder(parentNode)
           localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
+      }else{
+          setSelectedFolder(null)
+          localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
       }
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
     } else if (node?.type === 'folder') {

@@ -157,7 +157,7 @@ export function renderNodeHandler(
         <div 
           file-node-row="true"
           style={{ 
-            paddingLeft: depth * 7,
+            paddingLeft: depth * 8,
             cursor: 'pointer',
             fontWeight: (!onlyFolderIsSelected && isSelectedFile ? 700 : 400),
             userSelect: 'none',
