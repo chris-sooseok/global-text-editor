@@ -35,6 +35,10 @@ export function makeFileNode(r: FsNodeRow): FileNode {
   }
 }
 
+function isFolderNode(node: FsNode): node is FolderNode {
+  return node.type === 'folder'
+}
+
 class FsTree {
   roots: FsNode[] // root nodes with child nodes
   nodes: Map<number, FsNode> // all fsNodes
@@ -82,7 +86,7 @@ class FsTree {
   }
 
   // With createFsNode res data, insert newly inserted node into FsTree
-  insertNewNode(node: FsNodeRow): FsNode {
+  insertFsNode(node: FsNodeRow): FsNode {
 
     const newNode: FsNode = node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
 
@@ -103,6 +107,67 @@ class FsTree {
     parent.children.push(newNode)
     return newNode
   }
+
+  removeFsNode(node: FsNode): void {
+
+    const nodeToRemove = this.nodes.get(node.id)
+    if (!nodeToRemove) return
+
+    // root file
+    if (nodeToRemove.type === 'file' && nodeToRemove.isRoot){
+      this.roots = this.roots.filter((n) => n.id !== nodeToRemove.id)
+      return
+    }
+
+    // normal file
+    if (nodeToRemove.type === 'file' && !nodeToRemove.isRoot) {
+      this.nodes.delete(nodeToRemove.id)
+      const parent = this.nodes.get(nodeToRemove.parentId)
+      if (parent){
+        if (isFolderNode(parent)){
+          parent.children.filter((n) => n.id !== nodeToRemove.id)
+          return
+        }
+      }
+    }
+
+    // root folder
+
+
+    // root folder
+    // if (nodeToRemove.type === 'folder' && )
+    // // 2) Remove the top node from either roots[] or parent.children[]
+    // if (nodeToRemove.parentId === null) {
+    //   // root node
+    //   this.roots = this.roots.filter((r) => r.id !== nodeToRemove.id)
+    // } else {
+    //   // non-root: remove from parent's children
+    //   const parent = this.nodes.get(nodeToRemove.parentId)
+    //   if (parent && Array.isArray(parent.children)) {
+    //     parent.children = parent.children.filter((c) => c.id !== nodeToRemove.id)
+    //   }
+    // }
+
+    // 3) Delete this node (and its descendants) from the nodes map
+    const stack: FsNode[] = [nodeToRemove]
+
+    while (stack.length > 0) {
+      const cur = stack.pop()
+      if (!cur) continue
+
+      // If this is a folder, push its children to delete them too
+      if (cur.type === 'folder' && Array.isArray(cur.children)) {
+        for (const child of cur.children) {
+          stack.push(child)
+        }
+      }
+
+      // Remove from the global id->node map
+      this.nodes.delete(cur.id)
+    }
+  }
+
+  
 
 }
 

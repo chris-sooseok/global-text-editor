@@ -6,8 +6,8 @@ import {
   cancelNewNodePromptHandler, 
   renderNewNodePromptHandler,
   renderNodeHandler
-} from './SidebarHelper'
-import type { SelectedNodeType } from './SidebarHelper'
+} from './SidebarHandler'
+import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
@@ -125,13 +125,11 @@ function Sidebar() {
         // set true only when false
         if (!rootFileSelected) {
           setRootFileSelected(true)
-          console.log('root file is selected')
         }
       } else {
         // set false only when true
         if (rootFileSelected){
           setRootFileSelected(false)
-          console.log('root file is nullified')
         }
       }
     }
@@ -145,37 +143,36 @@ function Sidebar() {
   }, [newNodeType, selectedFolder, rootFileSelected])
 
   useEffect(() => {
-    function keydownOnDeleteNode(e: KeyboardEvent) {
 
+    function keydownOnDeleteNode(e: KeyboardEvent) {
       const clickedBackspace = e.key === 'Backspace' || e.key === 'Delete'
       if (!clickedBackspace) return
-
       // if both null, or during prompt activation, no deletion can happen
-      if ((!selectedFile && !selectedFolder) || newNodeType) {
-        return
-      } 
+      if ((!selectedFile && !selectedFolder) || newNodeType) return
     
-      let ok
+      let res
       // root file is selected, its parent should be null, and selectedFolder should be null
       if (rootFileSelected && selectedFile?.parentId === null &&
         !selectedFolder
       ) {
-        ok = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
-        return
+        res = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
       }
-      
+
       // file is selected, its parentId must be equal to folder id
       if (!rootFileSelected && selectedFile?.parentId === selectedFolder?.id
       ) {
-        const ok = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
-        return
+        res = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
       }
 
       // folder is selected, then file should be null
       if (selectedFolder && !selectedFile) {
-        const ok = window.confirm(`Confirm to delete ${selectedFolder?.name}`)
-        return
+        res = window.confirm(`Confirm to delete ${selectedFolder?.name}`)
       }
+
+      // if (ok) {
+
+      // }
+
     }
 
     window.addEventListener('keydown', keydownOnDeleteNode, true)
@@ -195,7 +192,7 @@ function Sidebar() {
       selectFile(nextSelectedFile)
       
       // when a root file is created or selected
-      if (!nextSelectedFile.parentId) { 
+      if (nextSelectedFile.parentId) { 
         if (!rootFileSelected) setRootFileSelected(true)
         // set folder null
         selectFolder(null)
@@ -206,7 +203,7 @@ function Sidebar() {
         const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
         selectFolder(parentNode)
       }
-      
+
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       // when folder is selected, nullify file so that folder is highlighted
