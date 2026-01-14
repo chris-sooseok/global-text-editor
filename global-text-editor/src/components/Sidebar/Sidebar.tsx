@@ -306,7 +306,7 @@ function Sidebar() {
 
   return (
     <>
-      {/* Sidebar Content */}
+      {/* Sidebar safe */}
       <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {/* Top-right icon buttons */}
         <div
