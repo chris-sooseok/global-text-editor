@@ -13,11 +13,13 @@ function getNextSortOrder(db, parentId) {
 }
 
 
+// Used to create clean filename
 function sanitizeFilename(name) {
 
   // Prevent path traversal + illegal filename characters across OSes
   // Keep it simple: replace slashes and other bad chars with "_"
   return name.replace(/[\\/:"*?<>|\u0000-\u001F]/g, '_')
 }
+
 
 module.exports = { getNextSortOrder, sanitizeFilename }

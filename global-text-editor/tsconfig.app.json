@@ -27,5 +27,5 @@
     "noUncheckedSideEffectImports": true
   },
 
-  "include": ["src"] /* only checks files in /src */
+  "include": ["src", "src/components/Sidebar/MimeType.ts"] /* only checks files in /src */
 }
