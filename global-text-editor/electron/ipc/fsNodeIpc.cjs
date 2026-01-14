@@ -31,7 +31,12 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       sizeBytes = 0
       const uuid = randomUUID()
       const safeName = sanitizeFilename(name)
-      storagePath = path.posix.join('files', uuid, safeName)
+
+      const compactUUID = uuid.replace(/-/g, '') // 32 hex chars
+      const bucket = parseInt(compactUUID.slice(0, 8), 16) % 10 // 0..9
+
+      const filename = `${uuid}-${safeName}`
+      storagePath = path.posix.join('files', bucket, filename)
 
       const absPath = path.join(app.getPath('userData'), storagePath)
       

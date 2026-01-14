@@ -92,3 +92,8 @@ These are separate OS processes, so they can't just call each other's functions 
 `DOM updates` lives in renderer 
 
 We don't call `ipcRenderer` directly in renderder because the renderer shouldn't do `require('electron)` directly as it exposes the full Node.js access to the renderer
+
+
+# More details on Electron userData 
+When you store some data using localStorage, eletron stores this data in userData directory
+

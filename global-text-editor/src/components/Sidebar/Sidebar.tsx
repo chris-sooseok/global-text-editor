@@ -18,6 +18,8 @@ const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
 
 function Sidebar() {
   const FsTree = useContext(FsTreeContext)
+
+  /**  Separate states for selected file and folder to control highlight behaviors */
   const [selectedFile, setSelectedFile ] = useState<SelectedNodeType>(() => {
     const raw = localStorage.getItem(SELECTED_FILE_KEY)
     if (!raw) return null
@@ -44,6 +46,7 @@ function Sidebar() {
     }
   })
 
+  /** control folder toggle */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     const raw = localStorage.getItem(TOGGLED_FOLDERS_KEY)
     if (!raw) return new Set<number>()
@@ -57,11 +60,12 @@ function Sidebar() {
     }
   })
 
-  // for newNode creation type
+  /** Used for new node creation
+   * newNodeType should be set to some type only when prompt is to be displayed
+   * Unless some node is to be created, they all should be set to null
+   */
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
-  // used to render newNodePromptInput and control outside-click boundary
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
-  // used for new fsNode prompt input and focus control
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** Global click behaviors ***/
@@ -69,6 +73,7 @@ function Sidebar() {
 
     // Focus newNodePromptInputRef when newNodeType has some type
     if (newNodeType) {
+      console.log(newNodeType)
       if (newNodePromptInputRef.current) {
        newNodePromptInputRef.current.focus()
       }
@@ -183,8 +188,13 @@ function Sidebar() {
    * under the current selectedFolder
    * */
   function createNewNode(type: 'folder' | 'file') {
-    // if new node type is already set, skip
-    if (newNodeType == type) return
+    // if new node type is already set, highlight prompt again
+    if (newNodeType == type) {
+      if (newNodePromptInputRef.current) {
+        newNodePromptInputRef.current.focus()
+      }
+      return
+    }
     
     // set new node type and rase newNodePromptInput if any
     setNewNodeType(type)
