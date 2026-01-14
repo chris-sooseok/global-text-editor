@@ -12,37 +12,38 @@ const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
-  cancelNewNodePrompt: () => void,
   selectedFolder: SelectedNodeType,
-  selectNodeHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
   FsTree: {fsTree: FsTree},
+  cancelNewNodePrompt: () => void,
+  selectNodeHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
   toggleFolderHandler: (nodeId: number) => void 
 ): Promise<void> {
 
+  if (!newNodeType || !newNodePromptInputRef.current) {
+    cancelNewNodePrompt()
+    return
+  }
+
+  // if name is not provided, cancel newNodePrompt
+  const name = newNodePromptInputRef.current.value
+  const trimmed = name.trim()
+  if (trimmed=== '') {
+    cancelNewNodePrompt()
+    return
+  }
+
   try {
 
-    if (!newNodeType || !newNodePromptInputRef.current) {
-      cancelNewNodePrompt()
-      return
-    }
-
-    // if name is not provided, cancel newNodePrompt
-    const name = newNodePromptInputRef.current.value
-    const trimmed = name.trim()
-    if (trimmed=== '') {
-      cancelNewNodePrompt()
-      return
-    }
-
-    // new node can only be created under selectedFolder or root
+    // folder where new node is to be created under
     const parentId = selectedFolder?.id ?? null
-    const isRoot = parentId == null ? true : false
+    const isRoot = parentId === null ? true : false
     const mimeType = computeMimeTypeFromName(trimmed)
     const res = await window.api.createFsNode(
       isRoot, newNodeType, parentId, name, mimeType
     )
 
     // once submitted, cancel newNodePrompt
+    //* Here we can consider error message later for naming, instad just canceling
     cancelNewNodePrompt()
 
     if (res.ok) {
@@ -54,7 +55,7 @@ export async function submitNewNodePromptHandler(
       // highlight newly created node
       selectNodeHandler(newFsNode)
 
-      // if newNode is a folder, toggle the folder
+      // if it is a folder, expand
       if (newNode.type == 'folder') {
         toggleFolderHandler(newNode.id)
       }
@@ -71,7 +72,7 @@ export async function submitNewNodePromptHandler(
   
 }
 
-/** canceling newNodePrompt cleans out newNodeType and its prompt input */
+//* When cancel to happen, consider also adding error msgs
 export function cancelNewNodePromptHandler(
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -107,18 +108,18 @@ export function renderNewNodePromptHandler(
         {/* Prompt input box */}
         <input
           ref={newNodePromptInputRef}
-          placeholder={newNodeType === 'folder' ? 'New folder name' : 'New file name'}
+          placeholder={newNodeType === 'folder' ? 'Folder name' : 'File name'}
+          style={{ flex: 1 }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              void submitNewNodePrompt()
+              submitNewNodePrompt()
             }
             if (e.key === 'Escape') {
               e.preventDefault()
               cancelNewNodePrompt()
             }
           }}
-          style={{ flex: 1 }}
         />
       </div>
     </li>
@@ -131,26 +132,26 @@ export function renderNodeHandler(
   selectedFile: SelectedNodeType,
   selectedFolder: SelectedNodeType,
   selectNodeHandler:  (node: SelectedNodeType) => void,
+  // only file
+  FsTree: {fsTree: FsTree},
+  setSelectedFolder: (node: SelectedNodeType) => void,
+  // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
-  FsTree: {fsTree: FsTree},
-  setSelectedFolder: (node: SelectedNodeType) => void,
+  
 ): ReactNode {
 
   const fileIsSelected: boolean = selectedFile != null
   const folderIsSelected: boolean = selectedFolder != null
   // if both some file and folder are selected, only highlight folder
-  let onlyFolderIsSelected: boolean = false
-  if (folderIsSelected && !fileIsSelected) {
-    onlyFolderIsSelected = true
-  } 
+  let onlyFolderIsSelected: boolean = (folderIsSelected && !fileIsSelected ? true : false)
   
   // File Node Row
-  if (node.type == 'file') {
-    const isSelectedFile = selectedFile?.id === node.id
+  if (node.type === 'file') {
+    const isSelectedFile = node.id === selectedFile?.id
 
     return (
       <li key={node.id}>
@@ -162,12 +163,12 @@ export function renderNodeHandler(
             fontWeight: (!onlyFolderIsSelected && isSelectedFile ? 700 : 400),
             userSelect: 'none',
             background: (!onlyFolderIsSelected && isSelectedFile 
-            ? 'rgba(30, 91, 189, 0.18)' : 'transparent'),
+              ? 'rgba(30, 91, 189, 0.18)' : 'transparent'),
             borderRadius: 5,
             paddingTop: 2,
             paddingBottom: 2,  
         }}
-        onClick={() => clickFileHelper(
+        onClick={() => onClickFile (
           node,
           isSelectedFile,
           selectedFolder,
@@ -191,19 +192,16 @@ export function renderNodeHandler(
   }
 
   // Folder Node Row
-  const isSelectedFolder = selectedFolder?.id === node.id
+  const isSelectedFolder = node.id === selectedFolder?.id
   const isExpanded = toggledFolderIds.has(node.id)
   const children = Array.isArray(node.children) ? node.children : []
-  let highlightFolderBgr
-  if (!onlyFolderIsSelected && isSelectedFolder){
-    highlightFolderBgr = true
-  }
-   
+  const highlightFolderBgr = (!onlyFolderIsSelected && isSelectedFolder ? true : false)
+
   return (
     <li key={node.id} style={{
-       background: (highlightFolderBgr ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
-        borderRadius: 5,
-        overflow: 'hidden'
+      background: (highlightFolderBgr ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
+      borderRadius: 5,
+      overflow: 'hidden'
     }}>
       <div
         folder-node-row="true"
@@ -220,12 +218,12 @@ export function renderNodeHandler(
           paddingTop: 2,
           paddingBottom: 2,
         }}
-        onClick={() => clickFolderHelper(
+        onClick={() => onClickFolder(
           node,
           isSelectedFolder,
+          isExpanded,
           onlyFolderIsSelected,
           selectNodeHandler,
-          isExpanded,
           toggleFolderHandler
         )}
       >
@@ -246,10 +244,7 @@ export function renderNodeHandler(
 
       {/* recursively render children node */}
       {isExpanded && (
-        <ul style={{ 
-          margin: 0, 
-          paddingLeft: 6,
-          }}>
+        <ul style={{ margin: 0, paddingLeft: 6 }}>
           {children.map((child) => renderNode(child, depth + 1))}
 
           {/* folder prompt */}
@@ -260,23 +255,24 @@ export function renderNodeHandler(
   )
 }
 
-function clickFileHelper(
+function onClickFile (
   node: FsNode,
   isSelectedFile: boolean,
-  selectedFolder: SelectedNodeType,
+  selectedFolder: SelectedNodeType, // check if selectedFile.parentId matches this
   selectNodeHandler:  (node: SelectedNodeType) => void,
-  setSelectedFolder:  (node: SelectedNodeType) => void,
-  FsTree: {fsTree: FsTree},
+  setSelectedFolder:  (node: SelectedNodeType) => void, // update selectedFolder
+  FsTree: {fsTree: FsTree}, // to get parent Node
 ): void {
   // if file is already highlighted, no need to highlight
-  // but make sure to update selectedFolder to its parent
-  if (isSelectedFile && selectedFolder?.id != node.parentId) {
-    if (node.parentId){
+  // but make sure to update selectedFolder to its parent when
+  // selectedFolder is null due to global click behavior
+  if (isSelectedFile && node.parentId != selectedFolder?.id) {
       const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
       setSelectedFolder(parentNode)
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
-    }
+      return
   }
+
   
   // if file is unhighlighted, highlight
   if (!isSelectedFile){
@@ -284,12 +280,12 @@ function clickFileHelper(
   }
 }
 
-function clickFolderHelper(
+function onClickFolder(
   node: FsNode,
   isSelectedFolder: boolean,
+  isExpanded: boolean,
   onlyFolderIsSelected: boolean,
   selectNodeHandler:  (node: SelectedNodeType) => void,
-  isExpanded: boolean,
   toggleFolderHandler: (nodeId: number) => void
 ): void {
 

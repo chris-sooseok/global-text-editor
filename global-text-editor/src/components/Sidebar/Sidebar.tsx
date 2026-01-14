@@ -62,8 +62,7 @@ function Sidebar() {
 
   /** Used for new node creation
    * newNodeType should be set to some type only when prompt is to be displayed
-   * Unless some node is to be created, they all should be set to null
-   */
+   * Unless some node is to be created, they all should be set to null */
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
@@ -73,7 +72,6 @@ function Sidebar() {
 
     // Focus newNodePromptInputRef when newNodeType has some type
     if (newNodeType) {
-      console.log(newNodeType)
       if (newNodePromptInputRef.current) {
        newNodePromptInputRef.current.focus()
       }
@@ -95,6 +93,7 @@ function Sidebar() {
           newNodePromptInputRef.current.value = ''
         }
       }
+      return
     }
 
     // While a selectedFolder is valid, clicking outside files, folders, toolbars should set selectedFolder null
@@ -106,12 +105,13 @@ function Sidebar() {
       if (!target) return
       
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedFolder = !!target.closest('[folder-node-row]')
-      const clickedFile = !!target.closest('[file-node-row]')
+      const clickedFolder = !!target.closest('[folder-node-row="true"]')
+      const clickedFile = !!target.closest('[file-node-row="true"]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
       if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton && !clickedFile) {
         selectNodeHandler(null)
       }
+      return
     }
 
     function onMouseDown(e: MouseEvent) {
@@ -128,39 +128,40 @@ function Sidebar() {
   /*** General Sidebar Behaviors ***/
   /** 
    * Based on node selected (file or folder), highlight them
-   * Also this is used to unhighlight folder for global click behavior
-   * */ 
+   * Also this is used to unhighlight folder for global click behavior */ 
   function selectNodeHandler(node: SelectedNodeType) {
     if (node?.type === 'file') {
       const nextSelectedFile: SelectedNodeType = node
       // when file is selected, update selectedFolder to its parent
-      setSelectedFile(nextSelectedFile)
       if (nextSelectedFile.parentId){
-          const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
-          setSelectedFolder(parentNode)
-          localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
+          if (nextSelectedFile.parentId != selectedFolder?.id){
+            const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+            setSelectedFolder(parentNode)
+            localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(parentNode))
+          }
       }else{
-          setSelectedFolder(null)
-          localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
+        // if parent is null
+        setSelectedFolder(null)
+        localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
       }
+      setSelectedFile(node)
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(nextSelectedFile))
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
-      // should null file so that this folder is highlight
+      // when folder is selected, nullify file so that folder is highlighted
       setSelectedFile(null)
-      setSelectedFolder(nextSelectedFolder)
       localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(null))
+      setSelectedFolder(nextSelectedFolder)
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(nextSelectedFolder))
     } else {
-      // for clickOnSelectedNode effect
+      // for clickOnSelectedFolder useEffect
+      // unhighlight folder
       setSelectedFolder(null)
       localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(null))
     }
   }
 
-  /**
-   * Keep tracks of folder node ids on whether to expand folders or not
-   */
+  /** Control folders that are folded or expanded */
   function toggleFolderHandler(nodeId: number) {
     setToggledFolderIds((prev) => {
       const next = new Set(prev) // create a new Set so React sees a new reference
@@ -172,31 +173,28 @@ function Sidebar() {
     })
   }
 
-  /**
-   * If there should be no active file selected (e.g. file is deleted)
-   */
+  /** If there should be no active file selected (e.g. file is deleted) */
   function unhighlightFile() {
     setSelectedFile(null)
   }
 
-  /*** New Prompt Behavior for new FsNode creation ***/
+  /** New Prompt Behavior for creating new FsNode */
   /** 
    * Updates newNodeType to the selected type
    * Once it changes, useEffect focues newNodePromptInputRef
    * and renderNewNodePrompt will re-evaludate
    * which <li> element to display newNodePromptRef and newNodePromptInputRef
-   * under the current selectedFolder
-   * */
+   * under the current selectedFolder */
   function createNewNode(type: 'folder' | 'file') {
     // if new node type is already set, highlight prompt again
-    if (newNodeType == type) {
+    if (newNodeType === type) {
       if (newNodePromptInputRef.current) {
         newNodePromptInputRef.current.focus()
       }
       return
     }
     
-    // set new node type and rase newNodePromptInput if any
+    // set new node type and delete prompt input if any
     setNewNodeType(type)
     if (newNodePromptInputRef.current) {
         newNodePromptInputRef.current.value = ''
@@ -206,24 +204,24 @@ function Sidebar() {
   /**
    * Create a new FsNode
    * Once submitted, it updates FsTree
-   * and the new node to be highlighted
-   */
+   * and the new node to be highlighted */
   async function submitNewNodePrompt() {
     await submitNewNodePromptHandler(
-      newNodePromptInputRef, // new FsNode name and reset the input once submit
-      newNodeType, // new FsNode type
-      cancelNewNodePrompt,
-      selectedFolder, // new FsNode parentId and to decide isRoot
-      selectNodeHandler, // used to highlight newly created node
-      FsTree,
+      // both file/folder
+      newNodePromptInputRef,
+      newNodeType, 
+      selectedFolder, // identify folder under whose new node to be created
+      FsTree, // update the tree
+      cancelNewNodePrompt, 
+      selectNodeHandler, // selected newly created node
+      // only folder
       toggleFolderHandler
     )
   }
 
   /**
    * Cancel newNodePrompt
-   * This should be used whenever new node prompt to be cancelled
-   */
+   * This should be used whenever new node prompt to be cancelled */
   function cancelNewNodePrompt() {
     cancelNewNodePromptHandler(
       setNewNodeType, // erasing selected type
@@ -232,49 +230,47 @@ function Sidebar() {
   }
 
   /** 
-   * Render newNodePromptRef and newNodePromptInputRef under
-   * the current selectedFolder inside <ul> element
-   */
+   * Render <li> element that contains prompt refs which is to 
+   * be inserted under the current selectedFolder inside <ul> element */
   function renderNewNodePrompt(depth: number) {
     return renderNewNodePromptHandler(
-      newNodeType, // newNodeType
-      selectedFolder, // recognize parent under new node
-      depth, // indentation
-      newNodePromptRef, // rendering newNodePrompt 
-      newNodePromptInputRef, // rendering newNodePromptInput
-      submitNewNodePrompt, // handle prompt submission
-      cancelNewNodePrompt // handle prompt cancel
+      newNodeType, // prompt type
+      selectedFolder, // parent where to render prompt under
+      depth, // indent
+      newNodePromptRef,
+      newNodePromptInputRef,
+      submitNewNodePrompt, // prompt submission
+      cancelNewNodePrompt // prompt cancel
     )
   }
 
   /*** FsTree and DOM display behaviors ***/
-  /**
-   * Render entire FsNode including roots and their children
-   */
+
+  /** Render entire node in FsTree, including roots and their children */
   function renderNode(node: FsNode, depth = 0) {
     return renderNodeHandler(
-      // file/folder needed
-      node, // each node being rendered
+      // both file/folder
+      node, // each node being renderer
       depth, // each node depth
       selectedFile,
       selectedFolder,
       selectNodeHandler, // used to set selectedNode
-      // only folder needed
+      // only file
+      FsTree,
+      setSelectedFolder,
+      // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
       toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
-      FsTree,
-      setSelectedFolder
+      
     )
   }
 
+  /** Render FsTree */
   function renderFsTree() {
-    let highlightFolderBgr
-    if (selectedFolder === null){
-      highlightFolderBgr = true
-    }
+    const highlightFsTree = (selectedFolder ? false : true)
 
     return (<>
       {FsTree.fsTree.roots.length === 0 ? (
@@ -294,14 +290,14 @@ function Sidebar() {
             <ul style={{ 
               margin: 0,
               paddingLeft: 2,
-              background: (highlightFolderBgr ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
+              background: (highlightFsTree ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
               borderRadius: 5,
               overflow: 'hidden',
             }}>
               {/* display root node */}
               {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
-              {newNodeType && selectedFolder  === null ? renderNewNodePrompt(0) : null}
+              {newNodeType && !selectedFolder ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
