@@ -12,6 +12,11 @@ Then, when creating physical files, consider creating shards using hash function
 - update node
 - move node
 
+# FsNode naming convention
+It allos any type of name
+But when files are to be created under actual file system
+The name will be escaped to be a safe name
+
 # Sidebar current weakness
 whenever states in Sidebaer (e.g. selectedParentId, createType) the Sidebar has to re-render and re-run FsTree rendering logics. This means, every DOM element of FsTree, computation of recursion, and function definition have to happen on every state change.
 
