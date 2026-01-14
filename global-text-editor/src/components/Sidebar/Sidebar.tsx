@@ -60,6 +60,8 @@ function Sidebar() {
     }
   })
 
+  const [rootIsFileSelected, setRootFileSelected] = useState(false)
+
   /** Used for new node creation
    * newNodeType should be set to some type only when prompt is to be displayed
    * Unless some node is to be created, they all should be set to null */
@@ -110,8 +112,20 @@ function Sidebar() {
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
       if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton && !clickedFile) {
         selectNodeHandler(null)
+        return
       }
-      return
+
+      const clickedRootFile = !!target.closest('[root-file-node-row="true"]')
+      if (clickedRootFile) {
+        setRootFileSelected(true)
+        console.log('root file selected')
+      } else {
+        if (rootIsFileSelected){
+          setRootFileSelected(false)
+          console.log('root file is nullified')
+        }
+      }
+      
     }
 
     function onMouseDown(e: MouseEvent) {
@@ -123,7 +137,57 @@ function Sidebar() {
     return () => {
       window.removeEventListener('mousedown', onMouseDown, true)
     }
-  }, [newNodeType, selectedFolder])
+  }, [newNodeType, selectedFolder, rootIsFileSelected])
+
+  useEffect(() => {
+    function clickOnDeleteNode(e: KeyboardEvent) {
+
+      const clickedBackspace = e.key === 'Backspace' || e.key === 'Delete'
+      if (!clickedBackspace) return
+
+      // if both null, or during prompt activation
+      if ((!selectedFile && !selectedFolder) || newNodeType) {
+        return
+      } 
+
+      let msg
+    
+      if (rootIsFileSelected &&
+        selectedFile?.parentId === null &&
+        !selectedFolder
+      ) {
+        msg = `Confirm to delete ${selectedFile?.name}?`
+        e.preventDefault()
+        console.log('root file deletion')
+        const ok = window.confirm(msg)
+        return
+      }
+      
+      if (!rootIsFileSelected &&
+        selectedFile &&
+        selectedFile.parentId === selectedFolder?.id
+      ) {
+        msg = `Confirm to delete ${selectedFile?.name}?`
+        e.preventDefault()
+         console.log('file deletion')
+        const ok = window.confirm(msg)
+        return
+      }
+
+      if (selectedFolder && !selectedFile) {
+        msg = `Confirm to delete ${selectedFolder?.name}`
+        e.preventDefault()
+        console.log('folder deletion')
+        const ok = window.confirm(msg)
+        return
+      }
+    }
+
+    window.addEventListener('keydown', clickOnDeleteNode, true)
+    return () => {
+      window.removeEventListener('keydown', clickOnDeleteNode, true)
+    }
+  }, [selectedFile, selectedFolder, rootIsFileSelected])
 
   /*** General Sidebar Behaviors ***/
   /** 
