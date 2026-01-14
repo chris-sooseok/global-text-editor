@@ -1,7 +1,16 @@
-# FsNode schema idea and logics
-Folder directories will be abstract and handled by DB only
-However, for files, we will create physical files via OS
+
+# File and Folder Logics
+Currently, same names for files and folders under same directory are allowd.
+This is enabled since only fsNode id is the primary key that keeps the unique row in FsNode table.
+
+Folder directories will be abstracted and handled by DB only.
+However, for files, we will create physical files via OS.
 Then, when creating physical files, consider creating shards using hash function to prevent folders from being chunked by too many files
+
+# Sidebar to implement
+- delete node
+- update node
+- move node
 
 # Sidebar current weakness
 whenever states in Sidebaer (e.g. selectedParentId, createType) the Sidebar has to re-render and re-run FsTree rendering logics. This means, every DOM element of FsTree, computation of recursion, and function definition have to happen on every state change.
