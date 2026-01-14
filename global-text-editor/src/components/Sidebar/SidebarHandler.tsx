@@ -50,7 +50,7 @@ export async function submitNewNodePromptHandler(
       const newNode: FsNodeRow = res.node
 
       // append new node to the FsTree
-      const newFsNode: FsNode = FsTree.fsTree.insertNewNode(newNode)
+      const newFsNode: FsNode = FsTree.fsTree.insertFsNode(newNode)
       
       // highlight newly created node
       selectNodeHandler(newFsNode)
