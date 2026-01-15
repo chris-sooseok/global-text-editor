@@ -247,7 +247,7 @@ function Sidebar() {
    * Render <li> element that contains prompt refs which is to 
    * be inserted under the current selectedFolder inside <ul> element */
   function renderNewNodePrompt(depth: number) {
-    return renderNewNodePromptHandler(
+    return renderNewNodePromptHandler( 
       newNodeType, // prompt type
       selectedFolder, // parent where to render prompt under
       depth, // indent
@@ -261,7 +261,7 @@ function Sidebar() {
   /** Advanced Operation supports */
 
   function renameNodeHandler(renamingNode: FsNode) {
-    
+
   }
 
   function cancelRenamingNode() {
