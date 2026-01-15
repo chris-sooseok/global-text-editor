@@ -120,7 +120,7 @@ export function renderNewNodePromptHandler(
               cancelNewNodePrompt()
             }
           }}
-          
+
         />
       </div>
     </li>
@@ -143,11 +143,12 @@ export function renderNodeHandler(
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
   // renaming
-  renamingNodeId: number | null,
-  renamingValue: string,
-  renameInputRef: RefObject<HTMLInputElement | null>,
-  setRenamingValue: Dispatch<SetStateAction<string>>,
-  setRenamingNodeId: Dispatch<SetStateAction<number | null>>,
+  // renamingNodeId: number | null,
+  // renamingValue: string,
+  // renameInputRef: RefObject<HTMLInputElement | null>,
+  // setRenamingValue: Dispatch<SetStateAction<string>>,
+  // setRenamingNodeId: Dispatch<SetStateAction<number | null>>,
+  // cancelRenamingNode: () => void,
 ): ReactNode {
 
   const fileIsSelected: boolean = selectedFile != null
@@ -162,6 +163,7 @@ export function renderNodeHandler(
     return (
       <li key={node.id}>
         <div 
+          tabIndex={0}
           file-node-row="true"
           {...(node.parentId === null ? { 'root-file-node-row': 'true' } : {})}
           style={{ 
@@ -173,7 +175,8 @@ export function renderNodeHandler(
               ? 'rgba(30, 91, 189, 0.18)' : 'transparent'),
             borderRadius: 5,
             paddingTop: 2,
-            paddingBottom: 2,  
+            paddingBottom: 2,
+            outline: 'none'
         }}
         onClick={() =>
           onClickFile(
@@ -185,6 +188,11 @@ export function renderNodeHandler(
                 FsTree,
               )
         }
+        onKeyDown={(e) => {
+          if (e.key === 'Backspace') {
+            keydownOnDeleteNode(node)
+          }
+        }}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <img
@@ -193,16 +201,16 @@ export function renderNodeHandler(
               aria-hidden="true"
               style={{ width: 18, height: 18, display: 'block' }}
             />
-            {renamingNodeId === node.id ? (
+            {/* {renamingNodeId === node.id ? (
               <input
                 ref={renameInputRef}
                 value={renamingValue}
                 onChange={(e) => setRenamingValue(e.target.value)} // live update as you type
                 onBlur={() => setRenamingNodeId(null)} // exit rename mode when user clicks away (you can change later)
               />
-            ) : (
+            ) : ( */}
               <span>{node.name}</span>
-            )}
+            {/* )} */}
           </span>
         </div>
       </li>
@@ -222,6 +230,7 @@ export function renderNodeHandler(
       overflow: 'hidden'
     }}>
       <div
+        tabIndex={0}
         folder-node-row="true"
         style={{
           paddingLeft: depth * 5,
@@ -235,6 +244,7 @@ export function renderNodeHandler(
           borderRadius: 5,
           paddingTop: 2,
           paddingBottom: 2,
+          outline: 'none'
         }}
         onClick={() => onClickFolder(
           node,
@@ -244,6 +254,11 @@ export function renderNodeHandler(
           selectNodeHandler,
           toggleFolderHandler
         )}
+        onKeyDown={(e) => {
+          if (e.key === 'Backspace') {
+            keydownOnDeleteNode(node)
+          }
+        }}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
           }}>
@@ -256,16 +271,24 @@ export function renderNodeHandler(
             aria-hidden="true"
             style={{ width: 18, height: 18, display: 'block'}}
           />
-          {renamingNodeId === node.id ? (
+          {/* {renamingNodeId === node.id ? (
             <input
               ref={renameInputRef}
               value={renamingValue}
-              onChange={(e) => setRenamingValue(e.target.value)} // live update as you type
+              onChange={(e) =>{
+                console.log('hell yea')
+                setRenamingValue(e.target.value) // live update as you type
+              }}
               onBlur={() => setRenamingNodeId(null)} // exit rename mode when clicks away
+              onKeyDown={(e) => {
+                if (e.key === 'Escape'){
+                  cancelRenamingNode()
+                }
+              }}
             />
-          ) : (
+          ) : ( */}
             <span>{node.name}</span>
-          )}
+          {/* )} */}
         </span>
       </div>
 
@@ -351,3 +374,8 @@ function onClickFolder(
 
 }
 
+
+function keydownOnDeleteNode(deletingNode: FsNode) {
+  const ok = window.confirm(`Confirm to delete \n ${deletingNode.name}`)
+  console.log(ok)
+}

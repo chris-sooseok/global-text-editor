@@ -67,13 +67,11 @@ function Sidebar() {
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
-  /** used to allow keydown for root files */
-  const [rootFileSelected, setRootFileSelected] = useState(false)
-
+  
   /** used to allow update node names */
-  const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
-  const [renamingValue, setRenamingValue] = useState<string>('')
-  const renameInputRef = useRef<HTMLInputElement | null>(null)
+  // const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
+  // const [renamingValue, setRenamingValue] = useState<string>('')
+  // const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** Global click behaviors ***/
   useEffect(() => {
@@ -122,22 +120,6 @@ function Sidebar() {
         e.preventDefault()
         selectNodeHandler(null)
       }
-
-      const clickedRootFile = !!target.closest('[root-file-node-row="true"]')
-      // selectNodeHandler already takes care of setting rootFileSelected when
-      // a root file is created or selected, but this below still needed since clicking outside 
-      // root-file-node will set it false, and you may reselect the same file
-      if (clickedRootFile) {
-        // set true only when false
-        if (!rootFileSelected) {
-          setRootFileSelected(true)
-        }
-      } else {
-        // set false only when true
-        if (rootFileSelected){
-          setRootFileSelected(false)
-        }
-      }
     }
 
     window.addEventListener('click', clickOnNewNodePrompt, true)
@@ -146,84 +128,12 @@ function Sidebar() {
       window.removeEventListener('click', clickOnNewNodePrompt, true)
       window.removeEventListener('click', clickOnSelectedFolderAndRootFile, true)
     }
-  }, [newNodeType, selectedFolder, rootFileSelected])
-
-  useEffect(() => {
-
-    function keydownOnDeleteNode(e: KeyboardEvent) {
-      const clickedBackspace = e.key === 'Backspace' || e.key === 'Delete'
-      if (!clickedBackspace) return
-      // if both null, or during prompt activation, no deletion can happen
-      if ((!selectedFile && !selectedFolder) || newNodeType) return
-      if (renamingNodeId) return
-      let res
-      // root file is selected, its parent should be null, and selectedFolder should be null
-      if (rootFileSelected && selectedFile?.parentId === null &&
-        !selectedFolder
-      ) {
-        res = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
-      }
-
-      // file is selected, its parentId must be equal to folder id
-      if (!rootFileSelected && selectedFile?.parentId === selectedFolder?.id
-      ) {
-        res = window.confirm(`Confirm to delete ${selectedFile?.name}?`)
-      }
-
-      // folder is selected, then file should be null
-      if (selectedFolder && !selectedFile) {
-        res = window.confirm(`Confirm to delete ${selectedFolder?.name}`)
-      }
-    }
-
-    function keydownOnUpdateName(e: KeyboardEvent) {
-      const clickedEnter = e.key === 'Enter'
-      if (!clickedEnter) return
-      // if both null, or during prompt activation, no update can happen
-      if ((!selectedFile && !selectedFolder) || newNodeType) return
-
-      let renamingNode: { id: number; name: string } | null = null
-
-      // root file is selected, its parent should be null, and selectedFolder should be null
-      if (rootFileSelected && selectedFile?.parentId === null &&
-        !selectedFolder
-      ) {
-        renamingNode = { id: selectedFile.id, name: selectedFile.name }
-      }
-
-      // file is selected, its parentId must be equal to folder id
-      if (!rootFileSelected && selectedFile && selectedFile?.parentId === selectedFolder?.id
-      ) {
-        renamingNode = { id: selectedFile.id, name: selectedFile.name }
-      }
-
-      // folder is selected, then file should be null
-      if (selectedFolder && !selectedFile) {
-        renamingNode = { id: selectedFolder.id, name: selectedFolder.name }
-      }
-
-      if (!renamingNode) return
-
-      e.preventDefault()
-      setRenamingNodeId(renamingNode.id)
-      setRenamingValue(renamingNode.name)
-    }
-
-    window.addEventListener('keydown', keydownOnDeleteNode, true)
-    window.addEventListener('keydown', keydownOnUpdateName, true)
-    return () => {
-      window.removeEventListener('keydown', keydownOnDeleteNode, true)
-      window.removeEventListener('keydown', keydownOnUpdateName, true)
-    }
-  }, [newNodeType, selectedFile, selectedFolder, rootFileSelected, renamingNodeId])
+  }, [
+    newNodeType,
+    selectedFolder,
+  ])
 
 
-  useEffect(() => {
-    if (renamingNodeId !== null) {
-      renameInputRef.current?.focus()
-      renameInputRef.current?.select()
-    }
-  }, [renamingNodeId])
 
   /*** General Sidebar Behaviors ***/
   /** 
@@ -236,10 +146,14 @@ function Sidebar() {
       selectFile(nextSelectedFile)
       
       // when a root file is created or selected
-      if (nextSelectedFile.parentId) { 
-        if (!rootFileSelected) setRootFileSelected(true)
-        // set folder null
-        selectFolder(null)
+      if (!nextSelectedFile.parentId) { 
+        // if (!rootFileSelected) {
+        //   setRootFileSelected(true)
+        //   // set folder null
+        // } 
+        if (!selectedFolder) {
+          selectFolder(null)
+        }
       }
 
       // when normal file is selected, update selectedFolder to its parent
@@ -269,6 +183,7 @@ function Sidebar() {
     setSelectedFolder(folder)
     localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
   }
+
 
   /** Control folders that are folded or expanded */
   function toggleFolderHandler(nodeId: number) {
@@ -374,11 +289,12 @@ function Sidebar() {
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
       // renaming
-      renamingNodeId,
-      renamingValue,
-      renameInputRef,
-      setRenamingValue,
-      setRenamingNodeId,
+      // renamingNodeId,
+      // renamingValue,
+      // renameInputRef,
+      // setRenamingValue,
+      // setRenamingNodeId,
+      // cancelRenamingNode,
     )
   }
 
