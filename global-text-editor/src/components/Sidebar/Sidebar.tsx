@@ -300,7 +300,6 @@ function Sidebar() {
       renamingNodeId,
       renameInputRef,
       setRenamingNodeId,
-      renameNodeHandler,
       cancelRenamingNode,
     )
   }

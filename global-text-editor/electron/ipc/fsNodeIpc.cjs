@@ -1,7 +1,6 @@
 const { ipcMain, app } = require('electron')
 const { connect_db } = require('../db/index.cjs')
-const { getNextSortOrder, sanitizeFilename } = require('./fsNodeIpcHelper.cjs')
-const { randomUUID } = require('node:crypto')
+const { getNextSortOrder } = require('./fsNodeIpcHelper.cjs')
 const path = require('node:path')
 const fs = require('node:fs')
 
@@ -17,34 +16,46 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     const isRoot = payload.isRoot ? 1 : 0
     const type = payload.type
     const parentId = payload.parentId ?? null
-    const name = payload.name    
-    let storagePath = null
+    const name = payload.name
     let sizeBytes = null
     let mimeType = null
+
+    let storagePath = null
+    let absPath = null
+    let createdOnDisk = false
 
     const now = Date.now()
     const nextSortOrder = getNextSortOrder(db, parentId)
     let info
 
-    if (type === 'file') {
+    let parentStoragePath = 'dir'
+
+    if (parentId !== null) {
+      const parent = db
+        .prepare(`SELECT id, type, storage_path FROM fsNode WHERE id = ?`)
+        .get(parentId)
+
+      parentStoragePath = parent.storage_path
+    }
+
+    storagePath = path.posix.join(parentStoragePath, name)
+
+
+    absPath = path.join(app.getPath('userData'), ...storagePath.split('/'))
+
+    fs.mkdirSync(path.dirname(absPath), { recursive: true})
+
+    if (type ==='file') {
       mimeType = payload.mimeType
       sizeBytes = 0
-      const uuid = randomUUID()
-      const safeName = sanitizeFilename(name)
 
-      const compactUUID = uuid.replace(/-/g, '') // 32 hex chars
-      const bucket = parseInt(compactUUID.slice(0, 8), 16) % 10 // 0..9
+      fs.writeFileSync(absPath, '', {flag: 'wx'})
+      createdOnDisk = true
+    }
 
-      const filename = `${uuid}-${safeName}`
-      storagePath = path.posix.join('dir', String(bucket), filename)
-
-      const absPath = path.join(app.getPath('userData'), storagePath)
-      
-      // Ensure parent directory exists
-      fs.mkdirSync(path.dirname(absPath), { recursive: true })
-
-      // Create empty file (wx = fail if exists)
-      fs.writeFileSync(absPath, '', { flag: 'wx' })
+    if (type === 'folder') {
+      fs.mkdirSync(absPath)
+      createdOnDisk = true
     }
 
     info = db
@@ -72,6 +83,16 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     }
 
   } catch (err) {
+
+    // best-effort cleanup if we already created something on disk
+    try {
+      if (createdOnDisk && absPath) {
+        fs.rmSync(absPath, { recursive: true, force: true })
+      }
+    } catch (_) {
+      // ignore cleanup failure
+    }
+
     console.error('[fsNodes:create] failed:', err)
     return { ok: false, message: 'Failed to create node' }
   } 
