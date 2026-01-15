@@ -1,23 +1,13 @@
 CREATE TABLE IF NOT EXISTS fsNode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    is_root BOOLEAN NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
     parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
     name TEXT NOT NULL,
-    storage_path TEXT NOT NULL,
-    size_bytes INTEGER, -- nullable for folder
+    storage_path TEXT,
     mime_type TEXT, -- nullable for folder
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-
-    CHECK ( 
-        -- folder restrictions
-        (type = 'folder' AND size_bytes IS NULL AND mime_type IS NULL)
-        OR 
-        -- file restrictions
-        (type = 'file' AND size_bytes >= 0 AND mime_type IS NOT NULL)
-    )
+    sort_order INTEGER NOT NULL DEFAULT 0
 );
 
 

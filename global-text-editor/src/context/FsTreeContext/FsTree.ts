@@ -5,7 +5,6 @@ import type { FetchFsNodeRes } from '../../api/fsNodeApi'
 export function makeFolderNode(r: FsNodeRow): FolderNode {
   return {
     id: r.id,
-    isRoot: r.isRoot,
     type: "folder",
     parentId: r.parentId,
     name: r.name,
@@ -17,17 +16,13 @@ export function makeFolderNode(r: FsNodeRow): FolderNode {
 }
 
 export function makeFileNode(r: FsNodeRow): FileNode {
-  if (r.storagePath == null) throw new Error("FileNode requires storagePath")
-  if (r.sizeBytes == null) throw new Error("FileNode requires sizeBytes")
 
   return {
     id: r.id,
-    isRoot: r.isRoot,
     type: "file",
     parentId: r.parentId,
     name: r.name,
-    storagePath: r.storagePath,
-    sizeBytes: r.sizeBytes,
+    storagePath: r.storagePath ?? null,
     mimeType: r.mimeType ?? null,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
@@ -67,7 +62,7 @@ class FsTree {
     for (const node of fsTree.nodes.values()) {
 
       // if root, insert into roots
-      if (node.isRoot) {
+      if (node.parentId === null) {
         fsTree.roots.push(node)
         continue
       }
@@ -114,13 +109,13 @@ class FsTree {
     if (!nodeToRemove) return
 
     // root file
-    if (nodeToRemove.type === 'file' && nodeToRemove.isRoot){
+    if (nodeToRemove.type === 'file' && nodeToRemove.parentId === null){
       this.roots = this.roots.filter((n) => n.id !== nodeToRemove.id)
       return
     }
 
     // normal file
-    if (nodeToRemove.type === 'file' && !nodeToRemove.isRoot) {
+    if (nodeToRemove.type === 'file' && !nodeToRemove.parentId === null) {
       this.nodes.delete(nodeToRemove.id)
       const parent = this.nodes.get(nodeToRemove.parentId)
       if (parent){
