@@ -18,9 +18,9 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     const type = payload.type
     const parentId = payload.parentId ?? null
     const name = payload.name    
-    let storagePath
-    let sizeBytes
-    let mimeType
+    let storagePath = null
+    let sizeBytes = null
+    let mimeType = null
 
     const now = Date.now()
     const nextSortOrder = getNextSortOrder(db, parentId)
@@ -36,7 +36,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       const bucket = parseInt(compactUUID.slice(0, 8), 16) % 10 // 0..9
 
       const filename = `${uuid}-${safeName}`
-      storagePath = path.posix.join('files', String(bucket), filename)
+      storagePath = path.posix.join('dir', String(bucket), filename)
 
       const absPath = path.join(app.getPath('userData'), storagePath)
       
@@ -45,24 +45,14 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
 
       // Create empty file (wx = fail if exists)
       fs.writeFileSync(absPath, '', { flag: 'wx' })
-
-      info = db
-        .prepare(`
-          INSERT INTO fsNode (is_root, type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `)
-        .run(isRoot, type, parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
-
-    } else if (type === 'folder') {
-         info = db
-        .prepare(`
-          INSERT INTO fsNode (is_root, type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
-          VALUES (?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?)
-        `)
-        .run(isRoot, type, parentId, name, now, now, nextSortOrder)
-    } else {
-      return { ok: false, message: 'Invalid node type' }
     }
+
+    info = db
+    .prepare(`
+      INSERT INTO fsNode (is_root, type, parent_id, name, storage_path, size_bytes, mime_type, created_at, updated_at, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .run(isRoot, type, parentId, name, storagePath, sizeBytes, mimeType, now, now, nextSortOrder)
 
     return {
       ok: true,
@@ -87,8 +77,22 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   } 
 })
 
-ipcMain.handle('fsNodes:delete', (_event, paylaod) => {
+ipcMain.handle('fsNodes:delete', (_event, payload) => {
 
+  const id = payload.id
+  const type = payload.type
+  try {
+    if (type === 'file') {
+
+    }
+
+    info = db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
+
+    return {ok: true}
+    
+  } catch (err) {
+    return {ok: false}
+  }
 })
 
 // fetch entire row of fsNodes to construct fsTree

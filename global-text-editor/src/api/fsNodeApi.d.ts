@@ -20,8 +20,13 @@ declare global {
       ): Promise< CreateFsNodeRes >
 
       deleteFsNode(
-        id: number
+        id: number,
+        type: string,
       ) : Promise < DeleteFsNodeRes >
+
+      renameFsNode(
+        id: number,
+      )
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
     }
