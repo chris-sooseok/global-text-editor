@@ -60,14 +60,20 @@ function Sidebar() {
     }
   })
 
-  const [rootFileSelected, setRootFileSelected] = useState(false)
-
   /** Used for new node creation
    * newNodeType should be set to some type only when prompt is to be displayed
    * Unless some node is to be created, they all should be set to null */
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
+
+  /** used to allow keydown for root files */
+  const [rootFileSelected, setRootFileSelected] = useState(false)
+
+  /** used to allow update node names */
+  const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
+  const [renamingValue, setRenamingValue] = useState<string>('')
+  const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** Global click behaviors ***/
   useEffect(() => {
@@ -149,7 +155,7 @@ function Sidebar() {
       if (!clickedBackspace) return
       // if both null, or during prompt activation, no deletion can happen
       if ((!selectedFile && !selectedFolder) || newNodeType) return
-    
+      if (renamingNodeId) return
       let res
       // root file is selected, its parent should be null, and selectedFolder should be null
       if (rootFileSelected && selectedFile?.parentId === null &&
@@ -168,18 +174,56 @@ function Sidebar() {
       if (selectedFolder && !selectedFile) {
         res = window.confirm(`Confirm to delete ${selectedFolder?.name}`)
       }
+    }
 
-      // if (ok) {
+    function keydownOnUpdateName(e: KeyboardEvent) {
+      const clickedEnter = e.key === 'Enter'
+      if (!clickedEnter) return
+      // if both null, or during prompt activation, no update can happen
+      if ((!selectedFile && !selectedFolder) || newNodeType) return
 
-      // }
+      let renamingNode: { id: number; name: string } | null = null
 
+      // root file is selected, its parent should be null, and selectedFolder should be null
+      if (rootFileSelected && selectedFile?.parentId === null &&
+        !selectedFolder
+      ) {
+        renamingNode = { id: selectedFile.id, name: selectedFile.name }
+      }
+
+      // file is selected, its parentId must be equal to folder id
+      if (!rootFileSelected && selectedFile && selectedFile?.parentId === selectedFolder?.id
+      ) {
+        renamingNode = { id: selectedFile.id, name: selectedFile.name }
+      }
+
+      // folder is selected, then file should be null
+      if (selectedFolder && !selectedFile) {
+        renamingNode = { id: selectedFolder.id, name: selectedFolder.name }
+      }
+
+      if (!renamingNode) return
+
+      e.preventDefault()
+      setRenamingNodeId(renamingNode.id)
+      setRenamingValue(renamingNode.name)
     }
 
     window.addEventListener('keydown', keydownOnDeleteNode, true)
+    window.addEventListener('keydown', keydownOnUpdateName, true)
     return () => {
       window.removeEventListener('keydown', keydownOnDeleteNode, true)
+      window.removeEventListener('keydown', keydownOnUpdateName, true)
     }
-  }, [newNodeType, selectedFile, selectedFolder, rootFileSelected])
+  }, [newNodeType, selectedFile, selectedFolder, rootFileSelected, renamingNodeId])
+
+
+  useEffect(() => {
+    if (renamingNodeId !== null) {
+      renameInputRef.current?.focus()
+      renameInputRef.current?.select()
+    }
+  }, [renamingNodeId])
 
   /*** General Sidebar Behaviors ***/
   /** 
@@ -329,7 +373,12 @@ function Sidebar() {
       toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
-      
+      // renaming
+      renamingNodeId,
+      renamingValue,
+      renameInputRef,
+      setRenamingValue,
+      setRenamingNodeId,
     )
   }
 
