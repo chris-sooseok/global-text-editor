@@ -5,7 +5,9 @@ import {
   submitNewNodePromptHandler, 
   cancelNewNodePromptHandler, 
   renderNewNodePromptHandler,
-  renderNodeHandler
+  renderNodeHandler,
+  renameNodeHandler,
+  deleteNodeHandler
 } from './SidebarHandler'
 import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
@@ -23,7 +25,6 @@ function Sidebar() {
   const [selectedFile, setSelectedFile ] = useState<SelectedNodeType>(() => {
     const raw = localStorage.getItem(SELECTED_FILE_KEY)
     if (!raw) return null
-
     try {
       const parsed: SelectedNodeType = JSON.parse(raw)
       return parsed
@@ -36,7 +37,6 @@ function Sidebar() {
   const [selectedFolder, setSelectedFolder ] = useState<SelectedNodeType>(() => {
     const raw = localStorage.getItem(SELECTED_FOLDER_KEY)
     if (!raw) return null
-
     try {
       const parsed: SelectedNodeType = JSON.parse(raw)
       return parsed
@@ -50,7 +50,6 @@ function Sidebar() {
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     const raw = localStorage.getItem(TOGGLED_FOLDERS_KEY)
     if (!raw) return new Set<number>()
-
     try {
       const parsed: Array<number> = JSON.parse(raw)
       return new Set<number>(parsed)
@@ -67,21 +66,12 @@ function Sidebar() {
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
-  
-  /** used to allow update node names */
-  // const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
-  // const [renamingValue, setRenamingValue] = useState<string>('')
-  // const renameInputRef = useRef<HTMLInputElement | null>(null)
+  /** Used to allow update node names */
+  const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
+  const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** Global click behaviors ***/
   useEffect(() => {
-
-    // Focus newNodePromptInputRef when newNodeType has some type
-    if (newNodeType) {
-      if (newNodePromptInputRef.current) {
-       newNodePromptInputRef.current.focus()
-      }
-    }
     
     // While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt should cancel prompt
     function clickOnNewNodePrompt(e: MouseEvent) {
@@ -113,10 +103,9 @@ function Sidebar() {
       if (!target) return
       
       const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedFolder = !!target.closest('[folder-node-row="true"]')
-      const clickedFile = !!target.closest('[file-node-row="true"]')
+      const clickedFolder = !!target.closest('[node-row="true"]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton && !clickedFile) {
+      if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton) {
         e.preventDefault()
         selectNodeHandler(null)
       }
@@ -133,7 +122,12 @@ function Sidebar() {
     selectedFolder,
   ])
 
-
+  // Used explicitly to prevent input field from pushing rows off
+  useEffect(() => {
+    if (renamingNodeId === null) return
+    renameInputRef.current?.focus({ preventScroll: true })
+    renameInputRef.current?.select()
+  }, [renamingNodeId])
 
   /*** General Sidebar Behaviors ***/
   /** 
@@ -143,43 +137,39 @@ function Sidebar() {
     if (node?.type === 'file') {
       // if root file is selected, set true
       const nextSelectedFile: SelectedNodeType = node
-      selectFile(nextSelectedFile)
+      selectFileHandler(nextSelectedFile)
       
       // when a root file is created or selected
-      if (!nextSelectedFile.parentId) { 
-        // if (!rootFileSelected) {
-        //   setRootFileSelected(true)
-        //   // set folder null
-        // } 
+      if (nextSelectedFile.parentId === null) { 
         if (!selectedFolder) {
-          selectFolder(null)
+          selectFolderHandler(null)
         }
       }
 
       // when normal file is selected, update selectedFolder to its parent
       if (nextSelectedFile.parentId != selectedFolder?.id){
         const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
-        selectFolder(parentNode)
+        selectFolderHandler(parentNode)
       }
 
     } else if (node?.type === 'folder') {
       const nextSelectedFolder: SelectedNodeType = node
       // when folder is selected, nullify file so that folder is highlighted
-      selectFile(null)
-      selectFolder(nextSelectedFolder)
+      selectFileHandler(null)
+      selectFolderHandler(nextSelectedFolder)
     } else {
       // for clickOnSelectedFolder useEffect
       // unhighlight folder
-      selectFolder(null)
+      selectFolderHandler(null)
     }
   }
 
-  function selectFile(file: SelectedNodeType){
+  function selectFileHandler(file: SelectedNodeType){
     setSelectedFile(file)
     localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
   }
 
-  function selectFolder(folder: SelectedNodeType) {
+  function selectFolderHandler(folder: SelectedNodeType) {
     setSelectedFolder(folder)
     localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
   }
@@ -268,6 +258,22 @@ function Sidebar() {
     )
   }
 
+  /** Advanced Operation supports */
+
+  function renameNodeHandler(renamingNode: FsNode) {
+    
+  }
+
+  function cancelRenamingNode() {
+    setRenamingNodeId(null)
+    // optional: clear it, but not required since it’ll unmount
+    if (renameInputRef.current) renameInputRef.current.value = '' 
+  }
+
+  function deleteNode(deletingNode: FsNode) {
+    deleteNodeHandler(deletingNode, FsTree)
+  }
+
   /*** FsTree and DOM display behaviors ***/
 
   /** Render entire node in FsTree, including roots and their children */
@@ -281,20 +287,21 @@ function Sidebar() {
       selectNodeHandler, // used to set selectedNode
       // only file
       FsTree,
-      setSelectedFolder,
+      selectFolderHandler,
       // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
       toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
+      // delete
+      deleteNode,
       // renaming
-      // renamingNodeId,
-      // renamingValue,
-      // renameInputRef,
-      // setRenamingValue,
-      // setRenamingNodeId,
-      // cancelRenamingNode,
+      renamingNodeId,
+      renameInputRef,
+      setRenamingNodeId,
+      renameNodeHandler,
+      cancelRenamingNode,
     )
   }
 

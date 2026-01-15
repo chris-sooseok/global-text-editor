@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS fsNode (
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
     parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
     name TEXT NOT NULL,
-    storage_path TEXT, -- nullable for folder
+    storage_path TEXT NOT NULL,
     size_bytes INTEGER, -- nullable for folder
     mime_type TEXT, -- nullable for folder
     created_at INTEGER NOT NULL,
@@ -13,16 +13,18 @@ CREATE TABLE IF NOT EXISTS fsNode (
 
     CHECK ( 
         -- folder restrictions
-        (type = 'folder' AND storage_path IS NULL AND size_bytes IS NULL AND mime_type IS NULL)
+        (type = 'folder' AND AND size_bytes IS NULL AND mime_type IS NULL)
         OR 
         -- file restrictions
-        --! need to include mime-type later
-        (type = 'file' AND storage_path IS NOT NULL AND size_bytes >= 0)
+        (type = 'file' AND size_bytes >= 0 AND mime_type IS NOT NULL)
     )
 );
 
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_name_nocase
+ON fsNode(COALESCE(parent_id, -1), name COLLATE NOCASE);
 
 -- enforce: every fsNode file storage_path must be unique
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_storage_path_for_files
