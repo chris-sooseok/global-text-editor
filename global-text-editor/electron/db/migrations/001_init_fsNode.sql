@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS fsNode (
 
     CHECK ( 
         -- folder restrictions
-        (type = 'folder' AND AND size_bytes IS NULL AND mime_type IS NULL)
+        (type = 'folder' AND size_bytes IS NULL AND mime_type IS NULL)
         OR 
         -- file restrictions
         (type = 'file' AND size_bytes >= 0 AND mime_type IS NOT NULL)
@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS fsNode (
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
 
+-- enforce: unique siblings
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_name_nocase
 ON fsNode(COALESCE(parent_id, -1), name COLLATE NOCASE);
 

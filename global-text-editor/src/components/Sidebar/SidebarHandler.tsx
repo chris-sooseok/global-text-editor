@@ -247,7 +247,7 @@ export function renderNodeHandler(
                   // on rename save
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    
+                    cancelRenamingNode()
                     setTimeout(() => nodeEl.focus(), 0)
                     return
                   }
@@ -358,9 +358,9 @@ export async function deleteNodeHandler(
     try {
       const res: {ok: string} = await window.api.deleteFsNode(deletingNode.id, deletingNode.type)
 
-      if (res.ok) {
-        FsTree.fsTree.removeFsNode(deletingNode)
-      }
+      // if (res.ok) {
+      //   FsTree.fsTree.removeFsNode(deletingNode)
+      // }
     } catch (err) {
 
     }
