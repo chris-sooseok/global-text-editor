@@ -7,7 +7,6 @@ import {
   renderNewNodePromptHandler,
   renderNodeHandler,
   renameNodeHandler,
-  deleteNodeHandler
 } from './SidebarHandler'
 import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
@@ -260,7 +259,8 @@ function Sidebar() {
 
   /** Advanced Operation supports */
 
-  function renameNodeHandler(renamingNode: FsNode) {
+  // TODO
+  function renamingNodeHandler(renamingNode: FsNode) {
 
   }
 
@@ -270,8 +270,20 @@ function Sidebar() {
     if (renameInputRef.current) renameInputRef.current.value = '' 
   }
 
-  function deleteNode(deletingNode: FsNode) {
-    deleteNodeHandler(deletingNode, FsTree)
+  // TODO
+  async function deleteNodeHandler(deletingNode: FsNode) {
+    const ok = window.confirm(`Confirm to delete \n ${deletingNode.name}`)
+    if (ok) {
+      try {
+        const res: {ok: string} = await window.api.deleteFsNode(deletingNode.id, deletingNode.type)
+
+        // if (res.ok) {
+        //   FsTree.fsTree.removeFsNode(deletingNode)
+        // }
+      } catch (err) {
+
+      }
+    }
   }
 
   /*** FsTree and DOM display behaviors ***/
@@ -295,11 +307,12 @@ function Sidebar() {
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
       // delete
-      deleteNode,
+      deleteNodeHandler,
       // renaming
       renamingNodeId,
       renameInputRef,
       setRenamingNodeId,
+      renamingNodeHandler,
       cancelRenamingNode,
     )
   }

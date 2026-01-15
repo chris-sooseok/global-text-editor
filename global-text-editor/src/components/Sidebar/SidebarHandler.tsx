@@ -35,10 +35,9 @@ export async function submitNewNodePromptHandler(
 
     // folder where new node is to be created under
     const parentId = selectedFolder?.id ?? null
-    const isRoot = parentId === null ? true : false
     const mimeType = computeMimeTypeFromName(trimmed)
     const res = await window.api.createFsNode(
-      isRoot, newNodeType, parentId, name, mimeType
+      newNodeType, parentId, name, mimeType
     )
 
     // once submitted, cancel newNodePrompt
@@ -143,11 +142,12 @@ export function renderNodeHandler(
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
   // delete
-  deleteNode: (deletingNode: FsNode) => void,
+  deleteNodeHandler: (deletingNode: FsNode) => void,
   // renaming
   renamingNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
   setRenamingNodeId: Dispatch<SetStateAction<number | null>>,
+  renamingNodeHandler: (renamingNode: FsNode) => void,
   cancelRenamingNode: () => void,
 ): ReactNode {
 
@@ -218,7 +218,7 @@ export function renderNodeHandler(
           if (renamingNodeId !== null) return
 
           if (e.key === 'Backspace') {
-            deleteNode(node)
+            deleteNodeHandler(node)
           }
 
           // on rename edit
@@ -247,7 +247,7 @@ export function renderNodeHandler(
                   // on rename save
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    cancelRenamingNode()
+                    renamingNodeHandler(node)
                     setTimeout(() => nodeEl.focus(), 0)
                     return
                   }
@@ -348,24 +348,6 @@ function onClickFolderHandler(
 
 }
 
-
-export async function deleteNodeHandler(
-  deletingNode: FsNode,
-  FsTree: {fsTree: FsTree}
-) {
-  const ok = window.confirm(`Confirm to delete \n ${deletingNode.name}`)
-  if (ok) {
-    try {
-      const res: {ok: string} = await window.api.deleteFsNode(deletingNode.id, deletingNode.type)
-
-      // if (res.ok) {
-      //   FsTree.fsTree.removeFsNode(deletingNode)
-      // }
-    } catch (err) {
-
-    }
-  }
-}
 
 export async function renameNodeHandler(
   renamingNode: FsNode,
