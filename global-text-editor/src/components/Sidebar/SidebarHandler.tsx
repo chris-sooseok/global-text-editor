@@ -120,6 +120,7 @@ export function renderNewNodePromptHandler(
               cancelNewNodePrompt()
             }
           }}
+          
         />
       </div>
     </li>
@@ -141,7 +142,12 @@ export function renderNodeHandler(
   toggledFolderIds: Set<number>,
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
-  
+  // renaming
+  renamingNodeId: number | null,
+  renamingValue: string,
+  renameInputRef: RefObject<HTMLInputElement | null>,
+  setRenamingValue: Dispatch<SetStateAction<string>>,
+  setRenamingNodeId: Dispatch<SetStateAction<number | null>>,
 ): ReactNode {
 
   const fileIsSelected: boolean = selectedFile != null
@@ -187,7 +193,16 @@ export function renderNodeHandler(
               aria-hidden="true"
               style={{ width: 18, height: 18, display: 'block' }}
             />
-            <span>{node.name}</span>
+            {renamingNodeId === node.id ? (
+              <input
+                ref={renameInputRef}
+                value={renamingValue}
+                onChange={(e) => setRenamingValue(e.target.value)} // live update as you type
+                onBlur={() => setRenamingNodeId(null)} // exit rename mode when user clicks away (you can change later)
+              />
+            ) : (
+              <span>{node.name}</span>
+            )}
           </span>
         </div>
       </li>
@@ -241,7 +256,16 @@ export function renderNodeHandler(
             aria-hidden="true"
             style={{ width: 18, height: 18, display: 'block'}}
           />
-          <span>{node.name}</span>
+          {renamingNodeId === node.id ? (
+            <input
+              ref={renameInputRef}
+              value={renamingValue}
+              onChange={(e) => setRenamingValue(e.target.value)} // live update as you type
+              onBlur={() => setRenamingNodeId(null)} // exit rename mode when clicks away
+            />
+          ) : (
+            <span>{node.name}</span>
+          )}
         </span>
       </div>
 
