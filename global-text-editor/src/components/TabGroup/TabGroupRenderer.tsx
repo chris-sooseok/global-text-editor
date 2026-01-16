@@ -2,65 +2,49 @@
 import { useState } from "react"
 import TabGroup from "../TabGroup/TabGroup"
 
+const ACTIVE_TAB_KEY = String(import.meta.env.VITE_ACTIVE_TAB_KEY)
 const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
 
-let currentTab
-let tabFiles
-
-const activeTab = "activeTab"
-const tabGrups = "tabGroups"
 
 function TabGroupRenderer() {
 
-  // const [activeTab, setActiveTab] = useState<string>(() => {
-  //   const raw = localStorage.getItem(activeTab)
-  //   if (!raw) return null
+  // Tab where a selected file goes to
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const raw = localStorage.getItem(ACTIVE_TAB_KEY)
+    if (!raw) return null
 
-  //   try {
-  //     return JSON.parse(raw)
-  //   } catch {
-  //     return null
-  //   }
-  // })
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  })
 
-  const [tabGroups, setTabGroups] = useState<Map<string, string[]>>(() => {
+  const [tabGroups, setTabGroups] = useState<string[]>(() => {
     const raw = localStorage.getItem(TAB_GROUPS_KEY)
-    if (!raw) return new Map()
+    if (!raw) return []
 
     try {
       const parsed = JSON.parse(raw)
       return parsed
     } catch {
-      return new Map()
+      return []
     }
   })
 
-  function selectActiveTab() {
-
-  }
-
-  const handleAddTabGroup = () => {
+  function addTabGroup() {
     setTabGroups((prev) => {
-      const next = new Map(prev)
-
-      const groupName = `group-${prev.size + 1}`
-
-      // key = groupName, value = empty list
-      next.set(groupName, [])
-
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(Array.from(next.entries())))
+      const next = [...prev, `tab-group-${prev.length + 1}`]
+      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
       return next
     })
   }
 
-  const handleCloseTabGroup = (groupId: string) => {
+  function closeTabGroup(groupId: string) {
     setTabGroups((prev) => {
-      if (prev.size === 1) return prev // keep at least one group
-
-      const next = new Map(prev)
-      next.delete(groupId) // delete key (and its value list)
-
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(Array.from(next.entries())))
+      if (prev.length === 1) return prev // keep at least one group
+      const next = prev.filter((id) => id !== groupId)
+      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
       return next
     })
   }

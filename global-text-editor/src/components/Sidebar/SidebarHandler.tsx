@@ -188,6 +188,7 @@ export function renderNodeHandler(
             outline: 'none'
           }}
           onClick={() =>
+            // File selection logic
             {if (node.type === 'file'){ 
               onClickFileHandler(
                 node,
@@ -197,7 +198,8 @@ export function renderNodeHandler(
                 selectFolderHandler,
                 FsTree,
               )
-            } 
+            }
+            // Folder selection logic
             {if (node.type === 'folder'){
              onClickFolderHandler(
                 node,

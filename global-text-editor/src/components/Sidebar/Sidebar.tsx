@@ -11,9 +11,15 @@ import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
 
+import { addTabGroupHandler } from '../TabGroup/TabGroupRenderHandler'
+
 const SELECTED_FILE_KEY = String(import.meta.env.VITE_SELECTED_FILE_KEY)
 const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
 const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
+
+// tab groups
+const ACTIVE_TAB_KEY = String(import.meta.env.VITE_ACTIVE_TAB_KEY)
+const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
 
 function Sidebar() {
   const FsTree = useContext(FsTreeContext)
@@ -112,10 +118,26 @@ function Sidebar() {
     }
   }
 
-  function selectFileHandler(file: FileNode | null){
-    setSelectedFile(file)
-    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+function selectFileHandler(file: FileNode | null) {
+  setSelectedFile(file)
+  localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+
+  // only create a tab group when a real file is selected
+  if (!file) return
+
+  const raw = localStorage.getItem(ACTIVE_TAB_KEY)
+  const activeTab: string = raw ? JSON.parse(raw) : null
+
+  try {
+    const parsed: unknown = raw ? JSON.parse(raw) : null
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(['tab-group-1']))
+    }
+  } catch {
+    // corrupt/invalid data -> reset to default
+    localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(['tab-group-1']))
   }
+}
 
   function selectFolderHandler(folder: FolderNode | null) {
     setSelectedFolder(folder)

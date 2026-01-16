@@ -1,0 +1,6 @@
+need some research to figure out how to allow
+cross component state change and re-render
+
+
+consider how big packages are.
+consider if things really suit my needs
