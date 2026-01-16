@@ -7,33 +7,60 @@ const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
 let currentTab
 let tabFiles
 
+const activeTab = "activeTab"
+const tabGrups = "tabGroups"
 
 function TabGroupRenderer() {
-  const [tabGroups, setTabGroups] = useState<string[]>(() => {
-    const json = localStorage.getItem(TAB_GROUPS_KEY)
-    if (!json) return ["group-1"]
+
+  // const [activeTab, setActiveTab] = useState<string>(() => {
+  //   const raw = localStorage.getItem(activeTab)
+  //   if (!raw) return null
+
+  //   try {
+  //     return JSON.parse(raw)
+  //   } catch {
+  //     return null
+  //   }
+  // })
+
+  const [tabGroups, setTabGroups] = useState<Map<string, string[]>>(() => {
+    const raw = localStorage.getItem(TAB_GROUPS_KEY)
+    if (!raw) return new Map()
 
     try {
-      return JSON.parse(json) // you said you'll only store an array here
+      const parsed = JSON.parse(raw)
+      return parsed
     } catch {
-      return ["group-1"]
+      return new Map()
     }
   })
 
+  function selectActiveTab() {
+
+  }
+
   const handleAddTabGroup = () => {
     setTabGroups((prev) => {
-      const next = [...prev, `group-${prev.length + 1}`]
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
+      const next = new Map(prev)
+
+      const groupName = `group-${prev.size + 1}`
+
+      // key = groupName, value = empty list
+      next.set(groupName, [])
+
+      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(Array.from(next.entries())))
       return next
     })
   }
 
   const handleCloseTabGroup = (groupId: string) => {
     setTabGroups((prev) => {
-      if (prev.length === 1) return prev // keep at least one group
+      if (prev.size === 1) return prev // keep at least one group
 
-      const next = prev.filter((id) => id !== groupId)
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
+      const next = new Map(prev)
+      next.delete(groupId) // delete key (and its value list)
+
+      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(Array.from(next.entries())))
       return next
     })
   }
@@ -47,7 +74,7 @@ function TabGroupRenderer() {
         overflow: "hidden",
       }}
     >
-      {tabGroups.map((groupId) => (
+      {/* {tabGroups.map((groupId) => (
         <div
           key={groupId}
           style={{
@@ -64,7 +91,7 @@ function TabGroupRenderer() {
             onCloseTabGroup={handleCloseTabGroup}
           />
         </div>
-      ))}
+      ))} */}
     </div>
   )
 }
