@@ -1,5 +1,5 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FsNode, FsNodeRow} from "../../context/FsTreeContext/FsTreeTypes"
+import type { FolderNode, FsNode, FsNodeRow} from "../../context/FsTreeContext/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
 import type { FsTree } from  "../../context/FsTreeContext/FsTree"
@@ -14,7 +14,7 @@ export async function submitNewNodePromptHandler(
   selectedFolder: SelectedNodeType,
   FsTree: {fsTree: FsTree},
   cancelNewNodePrompt: () => void,
-  selectNodeHandler: (node: SelectedNodeType) => void, // Dispath is a function that tkaes one argument and returns void
+  selectNodeHandler: (node: FsNode) => void, // Dispath is a function that tkaes one argument and returns void
   toggleFolderHandler: (nodeId: number) => void 
 ): Promise<void> {
 
@@ -98,7 +98,13 @@ export function renderNewNodePromptHandler(
           autoFocus
           ref={newNodePromptInputRef}
           placeholder={newNodeType === 'folder' ? 'Folder name' : 'File name'}
-          style={{ flex: 1 }}
+          className="
+            flex-1 w-0 min-w-[120px]
+            bg-transparent
+            border-0 outline-none
+            focus:outline-none
+            pl-1
+          "
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
@@ -109,6 +115,7 @@ export function renderNewNodePromptHandler(
               cancelNewNodePrompt()
             }
           }}
+          onBlur={() => {cancelNewNodePrompt()}}
         />
       </div>
     </li>
@@ -120,10 +127,10 @@ export function renderNodeHandler(
   depth: number,
   selectedFile: SelectedNodeType,
   selectedFolder: SelectedNodeType,
-  selectNodeHandler: (node: SelectedNodeType) => void,
+  selectNodeHandler: (node: FsNode) => void,
   // only file
   FsTree: {fsTree: FsTree},
-  selectFolderHandler: (folder: SelectedNodeType) => void,
+  selectFolderHandler: (folder: FolderNode | null) => void,
   // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
@@ -133,10 +140,10 @@ export function renderNodeHandler(
   // delete
   deleteNodeHandler: (deletingNode: FsNode) => void,
   // renaming
-  renamingNodeId: number | null,
+  renameNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
-  setRenamingNodeId: Dispatch<SetStateAction<number | null>>,
-  renamingNodeHandler: (renamingNode: FsNode) => void,
+  setRenameNodeId: Dispatch<SetStateAction<number | null>>,
+  renameNodeHandler: (renameNode: FsNode) => void,
   cancelRenamingNode: () => void,
 ): ReactNode {
 
@@ -155,17 +162,18 @@ export function renderNodeHandler(
 
   return (
       <li key={node.id}
-      style={
-        highlightFolderBgr
+      style={{
+        paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
+        ...(highlightFolderBgr
           ? { background: 'rgba(121, 125, 131, 0.09)', borderRadius: 5, overflow: 'hidden' }
-          : undefined
-      }
+          : {}),
+      }}
       >
         <div 
           tabIndex={-1} // make focusable, not tabbable
           node-row="true"
           style={{ 
-            paddingLeft: (node.type === 'folder' ? depth * 5 : depth * 8),
+            // paddingLeft: (node.type === 'folder' ? depth : depth * 40),
             cursor: 'pointer',
             fontWeight: (node.type === 'folder' 
               ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
@@ -197,6 +205,7 @@ export function renderNodeHandler(
                 isExpanded,
                 onlyFolderIsSelected,
                 selectNodeHandler,
+                selectFolderHandler,
                 toggleFolderHandler
               )
             }}
@@ -204,30 +213,51 @@ export function renderNodeHandler(
           // on normal selection keyDown
           onKeyDown={(e) => {
             e.stopPropagation()
-            if (renamingNodeId === null) {
+            if (renameNodeId === null) {
               if (e.key === 'Backspace') {
                 deleteNodeHandler(node)
               }
 
               // initiate rename update
               if (e.key === 'Enter') {
-                setRenamingNodeId(node.id)
+                setRenameNodeId(node.id)
               }
             }
           }}
+          // Allow setting folder to root
+          onBlur={(e) => {
+            const next = e.relatedTarget as HTMLElement | null
+            const clickedIconButton = !!next?.closest('[new-node-creation-btn="true"]') 
+            const focusWentToNode = !!next?.closest?.('[node-row="true"]')
+            if (!clickedIconButton && !focusWentToNode && selectedFolder) selectFolderHandler(null)
+          }}
         >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, width: '100%' }}>
+            {node.type === 'folder' 
+              ? <span aria-hidden="true" style={{ width: 12, display: 'inline-block' }}>
+                    {isExpanded ? '▾' : '▸'}
+                </span>
+              : undefined}
             <img
               src={node.type === 'folder' ? folderIcon : fileIcon}
               alt=""
               aria-hidden="true"
               style={{ width: 18, height: 18, display: 'block' }}
             />
+            {/* will having another div ref here will prevent pusing?  */}
             {/* Renaming mode is activated */}
-            {renamingNodeId === node.id ? (
+            {renameNodeId === node.id ? (
               <input
                 key={`__rename__:${node.id}`}
                 ref={renameInputRef}
+                autoFocus
+                className="
+                  flex-1 w-0 min-w-[120px]
+                  bg-transparent
+                  border-0 outline-none
+                  focus:outline-none
+                  pl-1
+                "
                 defaultValue={node.name}
                 onKeyDown={(e) => {
                   e.stopPropagation()
@@ -236,7 +266,7 @@ export function renderNodeHandler(
                   // on rename save
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    renamingNodeHandler(node)
+                    renameNodeHandler(node)
                     setTimeout(() => nodeEl.focus(), 0)
                     return
                   }
@@ -251,7 +281,9 @@ export function renderNodeHandler(
                 onBlur={() => {cancelRenamingNode()}}
               />
             ): (
-              <span>{node.name}</span>
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {node.name}
+            </span>
             )}    
           </span>
         </div>
@@ -273,8 +305,8 @@ function onClickFileHandler (
   node: FsNode,
   isSelectedFile: boolean,
   selectedFolder: SelectedNodeType, // check if selectedFile.parentId matches this
-  selectNodeHandler:  (node: SelectedNodeType) => void,
-  selectFolderHandler:  (folder: SelectedNodeType) => void, // update selectedFolder
+  selectNodeHandler:  (node: FsNode) => void,
+  selectFolderHandler: (folder: FolderNode | null) => void,
   FsTree: {fsTree: FsTree}, // to get parent Node
 ): void {
 
@@ -283,7 +315,11 @@ function onClickFileHandler (
   // selectedFolder is null due to global click behavior
   if (isSelectedFile && node.parentId !== selectedFolder?.id) {
       const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
-      selectFolderHandler(parentNode)
+      if (parentNode && parentNode.type === 'folder') {
+        selectFolderHandler(parentNode)
+      } else {
+        selectFolderHandler(null)
+      }
       return
   }
   
@@ -298,8 +334,9 @@ function onClickFolderHandler(
   isSelectedFolder: boolean,
   isExpanded: boolean,
   onlyFolderIsSelected: boolean,
-  selectNodeHandler:  (node: SelectedNodeType) => void,
-  toggleFolderHandler: (nodeId: number) => void
+  selectNodeHandler:  (node: FsNode) => void,
+  selectFolderHandler: (folder: FolderNode | null) => void,
+  toggleFolderHandler: (nodeId: number) => void,
 ): void {
 
   // if folder is collapsed -> highlight & open
@@ -329,7 +366,7 @@ function onClickFolderHandler(
     
   // no file is selected, but this folder is highlight, and open -> unhighlight and fold
   if (onlyFolderIsSelected && isSelectedFolder && isExpanded) {
-    selectNodeHandler(null)
+    selectFolderHandler(null)
     toggleFolderHandler(node.id)
     return
   }
