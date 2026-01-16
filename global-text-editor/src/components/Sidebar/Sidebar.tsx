@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef } from 'react'
 import { FsTreeContext } from '../../context/FsTreeContext/FsTreeContext'
-import type { FsNode } from '../../context/FsTreeContext/FsTreeTypes'
+import type { FileNode, FolderNode, FsNode } from '../../context/FsTreeContext/FsTreeTypes'
 import { 
   submitNewNodePromptHandler,  
   renderNewNodePromptHandler,
@@ -64,109 +64,10 @@ function Sidebar() {
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
   /** Used to allow update node names */
-  const [renamingNodeId, setRenamingNodeId] = useState<number | null>(null)
+  const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
 
-  /*** Global click behaviors ***/
-  useEffect(() => {
-    
-    // While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt should cancel prompt
-    function clickOnNewNodePrompt(e: MouseEvent) {
-      // not applied while newNodePrompt is not activated
-      if (!newNodeType) return
-      const target = e.target as HTMLElement | null
-      if (!target) return
-      const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedOnNewNodeCreationBtn = !!target.closest('[new-node-creation-btn="true"]')
-      if (!clickedInPrompt && !clickedOnNewNodeCreationBtn) {
-        e.preventDefault()
-        e.stopPropagation() // disable clicking on other file/folder
-        cancelNewNodePrompt()
-        if (newNodePromptInputRef.current) {
-          newNodePromptInputRef.current.value = ''
-        }
-      }
-      return
-    }
-
-    // While a selectedFolder is valid, clicking outside files, folders, toolbars should set selectedFolder null
-    function clickOnSelectedFolder(e: MouseEvent) {
-      // not applied while newNodePrompt is activated
-      if (newNodeType) return 
-      const target = e.target as HTMLElement | null
-      if (!target) return
-      const clickedOnNewNodeCreationBtn = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedOnNode = !!target.closest('[node-row="true"]')
-      // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (selectedFolder?.type === 'folder' && !clickedOnNode && !clickedOnNewNodeCreationBtn) {
-        e.preventDefault()
-        selectNodeHandler(null)
-      }
-    }
-
-    window.addEventListener('click', clickOnNewNodePrompt, true)
-    window.addEventListener('click', clickOnSelectedFolder, true)
-    return () => {
-      window.removeEventListener('click', clickOnNewNodePrompt, true)
-      window.removeEventListener('click', clickOnSelectedFolder, true)
-    }
-  }, [newNodeType, selectedFolder])
-
-  // Used explicitly to prevent input field from pushing rows off
-  useEffect(() => {
-    if (renamingNodeId === null) return
-    renameInputRef.current?.focus({ preventScroll: true })
-    renameInputRef.current?.select()
-  }, [renamingNodeId])
-
   /*** General Sidebar Behaviors ***/
-  /** 
-   * Based on node selected (file or folder), highlight them
-   * Also this is used to unhighlight folder for global click behavior: else case */ 
-  function selectNodeHandler(node: SelectedNodeType) {
-
-    if (node?.type === 'file') {
-      // if root file is selected, set true
-      const nextSelectedFile: SelectedNodeType = node
-      
-      selectFileHandler(nextSelectedFile)
-      
-      // when a root file is created or selected
-      if (nextSelectedFile.parentId === null) { 
-        if (!selectedFolder) {
-          selectFolderHandler(null)
-        }
-      }
-
-      // when normal file is selected, update selectedFolder to its parent
-      if (nextSelectedFile.parentId !== selectedFolder?.id){
-        const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
-        selectFolderHandler(parentNode)
-      }
-
-    } else if (node?.type === 'folder') {
-      const nextSelectedFolder: SelectedNodeType = node
-      // when folder is selected, nullify file so that folder is highlighted
-      selectFileHandler(null)
-      selectFolderHandler(nextSelectedFolder)
-    } else {
-      // for clickOnSelectedFolder useEffect
-      // unhighlight folder
-      selectFolderHandler(null)
-    }
-  }
-
-  function selectFileHandler(file: SelectedNodeType){
-
-    setSelectedFile(file)
-    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
-  }
-
-  function selectFolderHandler(folder: SelectedNodeType) {
-    setSelectedFolder(folder)
-    localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
-  }
-
 
   /** Control folders that are folded or expanded */
   function toggleFolderHandler(nodeId: number) {
@@ -179,12 +80,81 @@ function Sidebar() {
     })
   }
 
+  /** 
+   * Based on node selected (file or folder), highlight them
+   * Also this is used to unhighlight folder for global click behavior: else case */ 
+  function selectNodeHandler(node: FsNode) {
+    if (node?.type === 'file') {
+      const nextSelectedFile: FsNode = node      
+      selectFileHandler(nextSelectedFile)
+      //* We make separate check conditions to prevent state update on every selection
+      // when a root file is created or selected
+      if (nextSelectedFile.parentId === null) { 
+        if (!selectedFolder) selectFolderHandler(null) 
+      }
+      // when normal file is selected, update selectedFolder to its parent
+      if (nextSelectedFile.parentId !== selectedFolder?.id){
+        const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+        if (parentNode && parentNode.type === 'folder') {
+          selectFolderHandler(parentNode)
+        } else {
+          selectFolderHandler(null)
+        }
+      }
+      return
+    } 
+    
+    if (node?.type === 'folder') {
+      const nextSelectedFolder: FsNode = node
+      // when folder is selected, nullify file so that folder is highlighted
+      selectFileHandler(null)
+      selectFolderHandler(nextSelectedFolder)
+    }
+  }
+
+  function selectFileHandler(file: FileNode | null){
+    setSelectedFile(file)
+    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+  }
+
+  function selectFolderHandler(folder: FolderNode | null) {
+    setSelectedFolder(folder)
+    localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
+  }
+
+  // TODO
   /** If there should be no active file selected (e.g. file is deleted) */
   function unhighlightFile() {
     setSelectedFile(null)
   }
 
-  /** New Prompt Behavior for creating new FsNode */
+  // TODO
+  function renameNodeHandler(renameNode: FsNode) {
+
+  }
+
+  function cancelRenamingNode() {
+    setRenameNodeId(null)
+    if (renameInputRef.current) renameInputRef.current.value = '' 
+  }
+
+  // TODO
+  async function deleteNodeHandler(deleteNode: FsNode) {
+    const ok = window.confirm(`Confirm to delete \n ${deleteNode.name}`)
+    if (ok) {
+      try {
+        const res: {ok: string} = await window.api.deleteFsNode(deleteNode.id, deleteNode.type)
+
+        // if (res.ok) {
+        //   FsTree.fsTree.removeFsNode(deletingNode)
+        // }
+      } catch (err) {
+
+      }
+    }
+  }
+
+  /** ! New Prompt Behavior for creating new FsNode */
   /** 
    * Updates newNodeType to the selected type
    * Once it changes, useEffect focues newNodePromptInputRef
@@ -200,6 +170,21 @@ function Sidebar() {
     // set new node type and delete prompt input if any
     setNewNodeType(type)
     if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
+  }
+
+  /** 
+   * Render <li> element that contains prompt refs which is to 
+   * be inserted under the current selectedFolder inside <ul> element */
+  function renderNewNodePrompt(depth: number) {
+    return renderNewNodePromptHandler( 
+      newNodeType, // prompt type
+      selectedFolder, // parent where to render prompt under
+      depth, // indent
+      newNodePromptRef,
+      newNodePromptInputRef,
+      submitNewNodePrompt, // prompt submission
+      cancelNewNodePrompt // prompt cancel
+    )
   }
 
   /**
@@ -228,49 +213,6 @@ function Sidebar() {
     if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
   }
 
-  /** 
-   * Render <li> element that contains prompt refs which is to 
-   * be inserted under the current selectedFolder inside <ul> element */
-  function renderNewNodePrompt(depth: number) {
-    return renderNewNodePromptHandler( 
-      newNodeType, // prompt type
-      selectedFolder, // parent where to render prompt under
-      depth, // indent
-      newNodePromptRef,
-      newNodePromptInputRef,
-      submitNewNodePrompt, // prompt submission
-      cancelNewNodePrompt // prompt cancel
-    )
-  }
-
-  /** Advanced Operation supports */
-
-  // TODO
-  function renamingNodeHandler(renamingNode: FsNode) {
-
-  }
-
-  function cancelRenamingNode() {
-    setRenamingNodeId(null)
-    // optional: clear it, but not required since it’ll unmount
-    if (renameInputRef.current) renameInputRef.current.value = '' 
-  }
-
-  // TODO
-  async function deleteNodeHandler(deletingNode: FsNode) {
-    const ok = window.confirm(`Confirm to delete \n ${deletingNode.name}`)
-    if (ok) {
-      try {
-        const res: {ok: string} = await window.api.deleteFsNode(deletingNode.id, deletingNode.type)
-
-        // if (res.ok) {
-        //   FsTree.fsTree.removeFsNode(deletingNode)
-        // }
-      } catch (err) {
-
-      }
-    }
-  }
 
   /*** FsTree and DOM display behaviors ***/
 
@@ -295,10 +237,10 @@ function Sidebar() {
       // delete
       deleteNodeHandler,
       // renaming
-      renamingNodeId,
+      renameNodeId,
       renameInputRef,
-      setRenamingNodeId,
-      renamingNodeHandler,
+      setRenameNodeId,
+      renameNodeHandler,
       cancelRenamingNode,
     )
   }
@@ -342,7 +284,7 @@ function Sidebar() {
   return (
     <>
       {/* Sidebar safe */}
-      <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden'}}>
         {/* Top-right icon buttons */}
         <div
           style={{

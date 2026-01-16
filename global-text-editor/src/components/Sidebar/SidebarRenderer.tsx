@@ -138,7 +138,7 @@ function SidebarRenderer() {
       <div
         style={{
           flex: 1,
-          overflow: 'auto',
+          overflow: 'hidden',
           opacity: sidebarCollapsed ? 0 : 1,
           transition: 'opacity 120ms ease',
           pointerEvents: sidebarCollapsed ? 'none' : 'auto',
