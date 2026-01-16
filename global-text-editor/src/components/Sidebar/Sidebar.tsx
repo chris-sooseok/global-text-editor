@@ -2,11 +2,9 @@ import { useState, useContext, useEffect, useRef } from 'react'
 import { FsTreeContext } from '../../context/FsTreeContext/FsTreeContext'
 import type { FsNode } from '../../context/FsTreeContext/FsTreeTypes'
 import { 
-  submitNewNodePromptHandler, 
-  cancelNewNodePromptHandler, 
+  submitNewNodePromptHandler,  
   renderNewNodePromptHandler,
   renderNodeHandler,
-  renameNodeHandler,
 } from './SidebarHandler'
 import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
@@ -76,13 +74,11 @@ function Sidebar() {
     function clickOnNewNodePrompt(e: MouseEvent) {
       // not applied while newNodePrompt is not activated
       if (!newNodeType) return
-
       const target = e.target as HTMLElement | null
       if (!target) return
-
       const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      if (!clickedInPrompt && !clickedIconButton) {
+      const clickedOnNewNodeCreationBtn = !!target.closest('[new-node-creation-btn="true"]')
+      if (!clickedInPrompt && !clickedOnNewNodeCreationBtn) {
         e.preventDefault()
         e.stopPropagation() // disable clicking on other file/folder
         cancelNewNodePrompt()
@@ -94,32 +90,27 @@ function Sidebar() {
     }
 
     // While a selectedFolder is valid, clicking outside files, folders, toolbars should set selectedFolder null
-    function clickOnSelectedFolderAndRootFile(e: MouseEvent) {
+    function clickOnSelectedFolder(e: MouseEvent) {
       // not applied while newNodePrompt is activated
       if (newNodeType) return 
-
       const target = e.target as HTMLElement | null
       if (!target) return
-      
-      const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      const clickedFolder = !!target.closest('[node-row="true"]')
+      const clickedOnNewNodeCreationBtn = !!target.closest('[new-node-creation-btn="true"]')
+      const clickedOnNode = !!target.closest('[node-row="true"]')
       // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      if (selectedFolder?.type == 'folder' && !clickedFolder && !clickedIconButton) {
+      if (selectedFolder?.type === 'folder' && !clickedOnNode && !clickedOnNewNodeCreationBtn) {
         e.preventDefault()
         selectNodeHandler(null)
       }
     }
 
     window.addEventListener('click', clickOnNewNodePrompt, true)
-    window.addEventListener('click', clickOnSelectedFolderAndRootFile, true)
+    window.addEventListener('click', clickOnSelectedFolder, true)
     return () => {
       window.removeEventListener('click', clickOnNewNodePrompt, true)
-      window.removeEventListener('click', clickOnSelectedFolderAndRootFile, true)
+      window.removeEventListener('click', clickOnSelectedFolder, true)
     }
-  }, [
-    newNodeType,
-    selectedFolder,
-  ])
+  }, [newNodeType, selectedFolder])
 
   // Used explicitly to prevent input field from pushing rows off
   useEffect(() => {
@@ -133,9 +124,11 @@ function Sidebar() {
    * Based on node selected (file or folder), highlight them
    * Also this is used to unhighlight folder for global click behavior: else case */ 
   function selectNodeHandler(node: SelectedNodeType) {
+
     if (node?.type === 'file') {
       // if root file is selected, set true
       const nextSelectedFile: SelectedNodeType = node
+      
       selectFileHandler(nextSelectedFile)
       
       // when a root file is created or selected
@@ -146,7 +139,7 @@ function Sidebar() {
       }
 
       // when normal file is selected, update selectedFolder to its parent
-      if (nextSelectedFile.parentId != selectedFolder?.id){
+      if (nextSelectedFile.parentId !== selectedFolder?.id){
         const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
         selectFolderHandler(parentNode)
       }
@@ -164,6 +157,7 @@ function Sidebar() {
   }
 
   function selectFileHandler(file: SelectedNodeType){
+
     setSelectedFile(file)
     localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
   }
@@ -180,7 +174,6 @@ function Sidebar() {
       const next = new Set(prev) // create a new Set so React sees a new reference
       if (next.has(nodeId)) next.delete(nodeId)
       else next.add(nodeId)
-      // localStorage can't store Set, so store as array of numbers
       localStorage.setItem(TOGGLED_FOLDERS_KEY, JSON.stringify(Array.from(next)))
       return next
     })
@@ -201,17 +194,12 @@ function Sidebar() {
   function createNewNode(type: 'folder' | 'file') {
     // if new node type is already set, highlight prompt again
     if (newNodeType === type) {
-      if (newNodePromptInputRef.current) {
-        newNodePromptInputRef.current.focus()
-      }
+      if (newNodePromptInputRef.current) newNodePromptInputRef.current.focus()
       return
     }
-    
     // set new node type and delete prompt input if any
     setNewNodeType(type)
-    if (newNodePromptInputRef.current) {
-        newNodePromptInputRef.current.value = ''
-    }
+    if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
   }
 
   /**
@@ -236,10 +224,8 @@ function Sidebar() {
    * Cancel newNodePrompt
    * This should be used whenever new node prompt to be cancelled */
   function cancelNewNodePrompt() {
-    cancelNewNodePromptHandler(
-      setNewNodeType, // erasing selected type
-      newNodePromptInputRef, // erasing prompt input
-    )
+    setNewNodeType(null)
+    if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
   }
 
   /** 

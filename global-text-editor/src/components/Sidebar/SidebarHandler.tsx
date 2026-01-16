@@ -70,16 +70,6 @@ export async function submitNewNodePromptHandler(
   
 }
 
-//* When cancel to happen, consider also adding error msgs
-export function cancelNewNodePromptHandler(
-  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>,
-  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
-): void {
-  setNewNodeType(null)
-  if (newNodePromptInputRef.current) {
-    newNodePromptInputRef.current.value = ''
-  }
-}
 
 export function renderNewNodePromptHandler(
     newNodeType: 'folder' | 'file' | null,
@@ -119,7 +109,6 @@ export function renderNewNodePromptHandler(
               cancelNewNodePrompt()
             }
           }}
-
         />
       </div>
     </li>
@@ -180,20 +169,18 @@ export function renderNodeHandler(
             cursor: 'pointer',
             fontWeight: (node.type === 'folder' 
               ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
-              : (!onlyFolderIsSelected && isSelectedFile ? 700 : 400)
-            ),
+              : (!onlyFolderIsSelected && isSelectedFile ? 700 : 400)),
             userSelect: 'none',
             background: (node.type === 'folder' 
               ? ((onlyFolderIsSelected && isSelectedFolder) ? 'rgba(67, 102, 158, 0.18)' : 'transparent')
-              : ((!onlyFolderIsSelected && isSelectedFile)  ? 'rgba(30, 91, 189, 0.18)' : 'transparent')
-            ),
+              : ((!onlyFolderIsSelected && isSelectedFile)  ? 'rgba(30, 91, 189, 0.18)' : 'transparent')),
             borderRadius: 5,
             paddingTop: 2,
             paddingBottom: 2,
             outline: 'none'
-        }}
+          }}
           onClick={() =>
-            {if (node.type !== 'folder'){ 
+            {if (node.type === 'file'){ 
               onClickFileHandler(
                 node,
                 isSelectedFile,
@@ -202,7 +189,8 @@ export function renderNodeHandler(
                 selectFolderHandler,
                 FsTree,
               )
-            } else {
+            } 
+            {if (node.type === 'folder'){
              onClickFolderHandler(
                 node,
                 isSelectedFolder,
@@ -211,22 +199,22 @@ export function renderNodeHandler(
                 selectNodeHandler,
                 toggleFolderHandler
               )
+            }}
+          }}
+          // on normal selection keyDown
+          onKeyDown={(e) => {
+            e.stopPropagation()
+            if (renamingNodeId === null) {
+              if (e.key === 'Backspace') {
+                deleteNodeHandler(node)
+              }
+
+              // initiate rename update
+              if (e.key === 'Enter') {
+                setRenamingNodeId(node.id)
+              }
             }
-          }}     
-        onKeyDown={(e) => {
-          e.stopPropagation()
-          if (renamingNodeId !== null) return
-
-          if (e.key === 'Backspace') {
-            deleteNodeHandler(node)
-          }
-
-          // on rename edit
-          if (e.key === 'Enter') {
-            console.log('updating name')
-            setRenamingNodeId(node.id)
-          }
-        }}
+          }}
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <img
@@ -235,9 +223,10 @@ export function renderNodeHandler(
               aria-hidden="true"
               style={{ width: 18, height: 18, display: 'block' }}
             />
+            {/* Renaming mode is activated */}
             {renamingNodeId === node.id ? (
               <input
-                key={`rename-${node.id}`}
+                key={`__rename__:${node.id}`}
                 ref={renameInputRef}
                 defaultValue={node.name}
                 onKeyDown={(e) => {
@@ -269,12 +258,11 @@ export function renderNodeHandler(
 
         {isExpanded && node.type === 'folder' ?
           <ul style={{ margin: 0, paddingLeft: 6 }}>
-          {children.map((child) => renderNode(child, depth + 1))}
-
-          {/* folder prompt */}
-          {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
-        </ul>
-        : undefined
+            {children.map((child) => renderNode(child, depth + 1))}
+            {/* folder prompt */}
+            {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
+          </ul>
+          : undefined
         }
 
       </li>
@@ -345,14 +333,5 @@ function onClickFolderHandler(
     toggleFolderHandler(node.id)
     return
   }
-
-}
-
-
-export async function renameNodeHandler(
-  renamingNode: FsNode,
-  FsTree: {fsTree: FsTree}
-) {
-
 
 }
