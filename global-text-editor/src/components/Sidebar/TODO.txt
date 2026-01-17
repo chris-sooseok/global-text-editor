@@ -1,2 +1,0 @@
-folder and file padding for children are not stable
-need dynamic default width for renaming and new node input
