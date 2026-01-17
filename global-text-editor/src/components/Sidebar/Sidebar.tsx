@@ -1,6 +1,8 @@
-import { useState, useContext, useEffect, useRef } from 'react'
-import { FsTreeContext } from '../../context/FsTreeContext/FsTreeContext'
-import type { FileNode, FolderNode, FsNode } from '../../context/FsTreeContext/FsTreeTypes'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
+import { buildFsTree } from '../../store/FsTreeStore/buildFsTree'
+import { TabGroupStore } from '../../store/tabManagerStore/tabGroupStore'
+import type { FileNode, FolderNode, FsNode } from '../../store/FsTreeStore/FsTreeTypes'
 import { 
   submitNewNodePromptHandler,  
   renderNewNodePromptHandler,
@@ -10,56 +12,37 @@ import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
-
-import { addTabGroupHandler } from '../TabGroup/TabGroupRenderHandler'
+import { parseLocalStorage } from '../../utils/utils'
 
 const SELECTED_FILE_KEY = String(import.meta.env.VITE_SELECTED_FILE_KEY)
 const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
 const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
 
-// tab groups
-const ACTIVE_TAB_KEY = String(import.meta.env.VITE_ACTIVE_TAB_KEY)
-const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
 
 function Sidebar() {
-  const FsTree = useContext(FsTreeContext)
+  const nodeRows = FsTreeStore((store) => store.nodeRows)
+  const loadFsNodes = FsTreeStore((store) => store.loadFsNodes)
+  const insertFsNode = FsTreeStore((store) => store.insertFsNode)
+  const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
+  /** ensure loading fsTree when mounting sidebar */
+  useEffect(() => {
+    void loadFsNodes(window.api)
+  }, [loadFsNodes])
 
+  const openFileInActiveTab = TabGroupStore((store) => store.openFileInActiveTab)
+  
   /**  Separate states for selected file and folder to control highlight behaviors */
   const [selectedFile, setSelectedFile ] = useState<SelectedNodeType>(() => {
-    const raw = localStorage.getItem(SELECTED_FILE_KEY)
-    if (!raw) return null
-    try {
-      const parsed: SelectedNodeType = JSON.parse(raw)
-      return parsed
-    } catch(err) {
-      console.error(err)
-      return null
-    }
+    return parseLocalStorage(localStorage.getItem(SELECTED_FILE_KEY), null)
   })
   
   const [selectedFolder, setSelectedFolder ] = useState<SelectedNodeType>(() => {
-    const raw = localStorage.getItem(SELECTED_FOLDER_KEY)
-    if (!raw) return null
-    try {
-      const parsed: SelectedNodeType = JSON.parse(raw)
-      return parsed
-    } catch(err) {
-      console.error(err)
-      return null
-    }
+    return parseLocalStorage(localStorage.getItem(SELECTED_FOLDER_KEY), null)
   })
 
   /** control folder toggle */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
-    const raw = localStorage.getItem(TOGGLED_FOLDERS_KEY)
-    if (!raw) return new Set<number>()
-    try {
-      const parsed: Array<number> = JSON.parse(raw)
-      return new Set<number>(parsed)
-    } catch (err) {
-      console.error(err)
-      return new Set<number>()
-    }
+    return parseLocalStorage(localStorage.getItem(TOGGLED_FOLDERS_KEY), new Set<number>)
   })
 
   /** Used for new node creation
@@ -100,7 +83,8 @@ function Sidebar() {
       }
       // when normal file is selected, update selectedFolder to its parent
       if (nextSelectedFile.parentId !== selectedFolder?.id){
-        const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+        const parentId = node.parentId
+        const parentNode = parentId === null ? null : (nodes.get(parentId) ?? null)
         if (parentNode && parentNode.type === 'folder') {
           selectFolderHandler(parentNode)
         } else {
@@ -116,28 +100,23 @@ function Sidebar() {
       selectFileHandler(null)
       selectFolderHandler(nextSelectedFolder)
     }
+
+    // ensure to focus when new node is created
+    setTimeout(() => {
+      // find the element to set focus
+      const el = document.querySelector( `[data-node-id="${node.id}"]`) as HTMLElement | null
+      el?.focus()
+    }, 0)
+
   }
 
-function selectFileHandler(file: FileNode | null) {
-  setSelectedFile(file)
-  localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+  function selectFileHandler(file: FileNode | null) {
+    setSelectedFile(file)
+    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
 
-  // only create a tab group when a real file is selected
-  if (!file) return
-
-  const raw = localStorage.getItem(ACTIVE_TAB_KEY)
-  const activeTab: string = raw ? JSON.parse(raw) : null
-
-  try {
-    const parsed: unknown = raw ? JSON.parse(raw) : null
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(['tab-group-1']))
-    }
-  } catch {
-    // corrupt/invalid data -> reset to default
-    localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(['tab-group-1']))
+    if (!file) return
+    openFileInActiveTab(file)
   }
-}
 
   function selectFolderHandler(folder: FolderNode | null) {
     setSelectedFolder(folder)
@@ -152,12 +131,13 @@ function selectFileHandler(file: FileNode | null) {
 
   // TODO
   function renameNodeHandler(renameNode: FsNode) {
-
+    
   }
 
   function cancelRenamingNode() {
     setRenameNodeId(null)
-    if (renameInputRef.current) renameInputRef.current.value = '' 
+    if (renameInputRef.current) renameInputRef.current.value = ''
+    
   }
 
   // TODO
@@ -219,7 +199,7 @@ function selectFileHandler(file: FileNode | null) {
       newNodePromptInputRef,
       newNodeType, 
       selectedFolder, // identify folder under whose new node to be created
-      FsTree, // update the tree
+      insertFsNode, // update FsTreeStore
       cancelNewNodePrompt, 
       selectNodeHandler, // selected newly created node
       // only folder
@@ -248,7 +228,7 @@ function selectFileHandler(file: FileNode | null) {
       selectedFolder,
       selectNodeHandler, // used to set selectedNode
       // only file
-      FsTree,
+      nodes,
       selectFolderHandler,
       // only folder
       renderNode, // recursively rendering fsNode
@@ -272,7 +252,7 @@ function selectFileHandler(file: FileNode | null) {
     const highlightFsTree = (selectedFolder ? false : true)
 
     return (<>
-      {FsTree.fsTree.roots.length === 0 ? (
+      {roots.length === 0 ? (
           <>
             {/* no items */}
             {!newNodeType ?
@@ -294,7 +274,7 @@ function selectFileHandler(file: FileNode | null) {
               overflow: 'hidden',
             }}>
               {/* display root node */}
-              {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
+              {roots.map((root) => renderNode(root, 0))}
               {/* root prompt when items */}
               {newNodeType && !selectedFolder ? renderNewNodePrompt(0) : null}
             </ul>

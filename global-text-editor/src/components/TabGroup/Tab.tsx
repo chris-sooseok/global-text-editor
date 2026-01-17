@@ -1,16 +1,44 @@
 // TabGroup.tsx
 import { useState } from "react"
 import FileContent from "./FileContent/FileContent"
+import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
 
 type TabGroupProps = {
-  groupId: string
+  tabId: string
   canClose: boolean
   onAddTabGroup: () => void
   onCloseTabGroup: (groupId: string) => void
 }
 
-function TabGroup({ groupId, canClose, onAddTabGroup, onCloseTabGroup }: TabGroupProps) {
-  const [fileTabs] = useState<string[]>([])
+const FILES_BY_TABS_KEY = String(import.meta.env.VITE_FILES_BY_TABS_KEY)
+const ACTIVE_FILE_BY_TAB_KEY = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KEY)
+
+
+function Tab({ tabId, canClose, onAddTabGroup, onCloseTabGroup }: TabGroupProps) {
+  const [activeFile, setActiveFile] = useState<string | null>(() => {
+      const raw = localStorage.getItem(ACTIVE_FILE_BY_TAB_KEY)
+      if (!raw) return null
+
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed[tabId]) return parsed[tabId]
+        else return null
+      } catch {
+        return null
+      }
+  })
+
+  const [files, setFiles] = useState<string[]>(() => {
+    const raw = localStorage.getItem(FILES_BY_TABS_KEY)
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed[tabId]) return parsed[tabId]
+      else return []
+    } catch {
+      return []
+    }
+  })
 
   return (
     <div
@@ -40,7 +68,7 @@ function TabGroup({ groupId, canClose, onAddTabGroup, onCloseTabGroup }: TabGrou
           <button onClick={onAddTabGroup}>+ </button>
 
           <button
-            onClick={() => onCloseTabGroup(groupId)}
+            onClick={() => onCloseTabGroup(tabId)}
             disabled={!canClose} // prevents removing the last remaining group
             title={canClose ? "Close tab group" : "At least one tab group is required"}
           >
@@ -57,4 +85,4 @@ function TabGroup({ groupId, canClose, onAddTabGroup, onCloseTabGroup }: TabGrou
   )
 }
 
-export default TabGroup
+export default Tab

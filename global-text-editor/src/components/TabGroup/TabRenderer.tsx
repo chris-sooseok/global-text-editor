@@ -1,15 +1,18 @@
 // TabGroupRenderer.tsx
 import { useState } from "react"
-import TabGroup from "../TabGroup/TabGroup"
+import Tab from "./Tab"
+import { FileStore } from "../../store/tabManagerStore/tabManagerStore"
+import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
 
 const ACTIVE_TAB_KEY = String(import.meta.env.VITE_ACTIVE_TAB_KEY)
-const TAB_GROUPS_KEY = String(import.meta.env.VITE_TAB_GROUPS_KEY)
+const TABS_KEY = String(import.meta.env.VITE_TABS_KEY)
 
+function TabRenderer() {
 
-function TabGroupRenderer() {
+  const file: FileNode | null = FileStore((store) => store.file)
 
   // Tab where a selected file goes to
-  const [activeTab, setActiveTab] = useState<string>(() => {
+  const [activeTab, setActiveTab] = useState<string | null>(() => {
     const raw = localStorage.getItem(ACTIVE_TAB_KEY)
     if (!raw) return null
 
@@ -20,8 +23,8 @@ function TabGroupRenderer() {
     }
   })
 
-  const [tabGroups, setTabGroups] = useState<string[]>(() => {
-    const raw = localStorage.getItem(TAB_GROUPS_KEY)
+  const [tabs, setTabs] = useState<string[]>(() => {
+    const raw = localStorage.getItem(TABS_KEY)
     if (!raw) return []
 
     try {
@@ -33,18 +36,18 @@ function TabGroupRenderer() {
   })
 
   function addTabGroup() {
-    setTabGroups((prev) => {
+    setTabs((prev) => {
       const next = [...prev, `tab-group-${prev.length + 1}`]
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
+      localStorage.setItem(TABS_KEY, JSON.stringify(next))
       return next
     })
   }
 
   function closeTabGroup(groupId: string) {
-    setTabGroups((prev) => {
+    setTabs((prev) => {
       if (prev.length === 1) return prev // keep at least one group
       const next = prev.filter((id) => id !== groupId)
-      localStorage.setItem(TAB_GROUPS_KEY, JSON.stringify(next))
+      localStorage.setItem(TABS_KEY, JSON.stringify(next))
       return next
     })
   }
@@ -58,7 +61,7 @@ function TabGroupRenderer() {
         overflow: "hidden",
       }}
     >
-      {/* {tabGroups.map((groupId) => (
+      {tabs.map((groupId) => (
         <div
           key={groupId}
           style={{
@@ -68,16 +71,16 @@ function TabGroupRenderer() {
             overflow: "hidden",
           }}
         >
-          <TabGroup
-            groupId={groupId}
-            canClose={tabGroups.length > 1}
-            onAddTabGroup={handleAddTabGroup}
-            onCloseTabGroup={handleCloseTabGroup}
+          <Tab
+            tabId={groupId}
+            canClose={tabs.length > 1}
+            onAddTabGroup={addTabGroup}
+            onCloseTabGroup={closeTabGroup}
           />
         </div>
-      ))} */}
+      ))}
     </div>
   )
 }
 
-export default TabGroupRenderer
+export default TabRenderer

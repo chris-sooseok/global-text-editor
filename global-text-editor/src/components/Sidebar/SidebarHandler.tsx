@@ -1,8 +1,7 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FolderNode, FsNode, FsNodeRow} from "../../context/FsTreeContext/FsTreeTypes"
+import type { FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
-import type { FsTree } from  "../../context/FsTreeContext/FsTree"
 import { computeMimeTypeFromName } from "./MimeType"
 
 // define selectedNode type
@@ -12,7 +11,7 @@ export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
   selectedFolder: SelectedNodeType,
-  FsTree: {fsTree: FsTree},
+  insertFsNode: (node: FsNodeRow) => FsNode,
   cancelNewNodePrompt: () => void,
   selectNodeHandler: (node: FsNode) => void, // Dispath is a function that tkaes one argument and returns void
   toggleFolderHandler: (nodeId: number) => void 
@@ -48,13 +47,13 @@ export async function submitNewNodePromptHandler(
       const newNode: FsNodeRow = res.node
 
       // append new node to the FsTree
-      const newFsNode: FsNode = FsTree.fsTree.insertFsNode(newNode)
+      const newFsNode: FsNode = insertFsNode(newNode)
       
       // highlight newly created node
       selectNodeHandler(newFsNode)
 
       // if it is a folder, expand
-      if (newNode.type == 'folder') {
+      if (newNode.type === 'folder') {
         toggleFolderHandler(newNode.id)
       }
 
@@ -129,7 +128,7 @@ export function renderNodeHandler(
   selectedFolder: SelectedNodeType,
   selectNodeHandler: (node: FsNode) => void,
   // only file
-  FsTree: {fsTree: FsTree},
+  nodes: Map<number, FsNode>,
   selectFolderHandler: (folder: FolderNode | null) => void,
   // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
@@ -171,7 +170,7 @@ export function renderNodeHandler(
       >
         <div 
           tabIndex={-1} // make focusable, not tabbable
-          node-row="true"
+          data-node-id={node.id}
           style={{ 
             // paddingLeft: (node.type === 'folder' ? depth : depth * 40),
             cursor: 'pointer',
@@ -196,7 +195,7 @@ export function renderNodeHandler(
                 selectedFolder,
                 selectNodeHandler,
                 selectFolderHandler,
-                FsTree,
+                nodes,
               )
             }
             // Folder selection logic
@@ -212,7 +211,7 @@ export function renderNodeHandler(
               )
             }}
           }}
-          // on normal selection keyDown
+          // on rename initiate
           onKeyDown={(e) => {
             e.stopPropagation()
             if (renameNodeId === null) {
@@ -229,8 +228,9 @@ export function renderNodeHandler(
           // Allow setting folder to root
           onBlur={(e) => {
             const next = e.relatedTarget as HTMLElement | null
-            const clickedIconButton = !!next?.closest('[new-node-creation-btn="true"]') 
-            const focusWentToNode = !!next?.closest?.('[node-row="true"]')
+            const clickedIconButton = !!next?.closest('[new-node-creation-btn="true"]')
+            // focus on other node should not set folder to null
+            const focusWentToNode = !!next?.closest?.('[data-node-id]')
             if (!clickedIconButton && !focusWentToNode && selectedFolder) selectFolderHandler(null)
           }}
         >
@@ -246,7 +246,7 @@ export function renderNodeHandler(
               aria-hidden="true"
               style={{ width: 18, height: 18, display: 'block' }}
             />
-            {/* will having another div ref here will prevent pusing?  */}
+
             {/* Renaming mode is activated */}
             {renameNodeId === node.id ? (
               <input
@@ -263,20 +263,20 @@ export function renderNodeHandler(
                 defaultValue={node.name}
                 onKeyDown={(e) => {
                   e.stopPropagation()
-                  // used to re-focus the node
-                  const nodeEl = (e.currentTarget as HTMLElement).closest('[node-row="true"]') as HTMLElement
+                  // to re-focus the node
+                  const nodeEl = (e.currentTarget as HTMLElement).closest(`[data-node-id="${node.id}"]`) as HTMLElement | null
                   // on rename save
                   if (e.key === 'Enter') {
                     e.preventDefault()
                     renameNodeHandler(node)
-                    setTimeout(() => nodeEl.focus(), 0)
+                    setTimeout(() => nodeEl?.focus(), 0)
                     return
                   }
                   // on rename escape
                   if (e.key === 'Escape') {
                     e.preventDefault()
                     cancelRenamingNode()
-                    setTimeout(() => nodeEl.focus(), 0)
+                    setTimeout(() => nodeEl?.focus(), 0)
                     return
                   }
                 }}
@@ -309,14 +309,14 @@ function onClickFileHandler (
   selectedFolder: SelectedNodeType, // check if selectedFile.parentId matches this
   selectNodeHandler:  (node: FsNode) => void,
   selectFolderHandler: (folder: FolderNode | null) => void,
-  FsTree: {fsTree: FsTree}, // to get parent Node
+  nodes: Map<number, FsNode>, // to get parent Node
 ): void {
 
   // if file is already highlighted, no need to highlight
   // but make sure to update selectedFolder to its parent when
   // selectedFolder is null due to global click behavior
   if (isSelectedFile && node.parentId !== selectedFolder?.id) {
-      const parentNode = FsTree.fsTree.nodes.get(node.parentId) ?? null
+      const parentNode = nodes.get(node.parentId) ?? null
       if (parentNode && parentNode.type === 'folder') {
         selectFolderHandler(parentNode)
       } else {
