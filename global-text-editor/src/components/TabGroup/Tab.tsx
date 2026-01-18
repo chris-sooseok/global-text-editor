@@ -36,7 +36,7 @@ const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KE
 
 function Tab({tabId}: {tabId: string}) {
 
-  const activeFileByTabIds = TabManagerStore((s) => s.activeFileByTabIds)
+  const activeFileByTabIds = TabManagerStore((s) => s.activeFileIdByTabIds)
   const filesByTabIds = TabManagerStore((s) => s.filesByTabIds)
   const switchActiveFile = TabManagerStore((s) => s.switchActiveFile)
   const closeFile = TabManagerStore((s) => s.closeFile)

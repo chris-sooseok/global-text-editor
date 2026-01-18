@@ -8,14 +8,12 @@ const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KE
 const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
 const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
 
-type FilesByTabIds = Record<string, FileNode[]>
-type ActiveFileByTabIds = Record<string, number>
 
 type tabManagerStore = {
   activeTabId: string | null
   tabIds: string[]
-  activeFileByTabIds: ActiveFileByTabIds
-  filesByTabIds: FilesByTabIds
+  activeFileIdByTabIds: Record<string, number>
+  filesByTabIds: Record<string, FileNode[]>
   tabIsVisible: boolean
   // Sidebar
   openFileInActiveTab: (file: FileNode) => void
@@ -30,45 +28,36 @@ type tabManagerStore = {
 
 // ensuring initial tab state and its visibility
 function tabIsVisibleHandler(
-    activeTabId: string | null,
-    tabIds: string[],
-    tabIsVisible: boolean,
-    file: FileNode,
+    nextActiveTabId: string | null,
+    nextTabIds: string[],
+    curTabIsVisible: boolean,
 ): boolean {
   // when some activeTabId exists, set it true
-  if (!tabIsVisible && activeTabId !== null && tabIds.length > 0) {
-    // ! enforce the initial tab state
-    localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify({activeTabId: file.id}))
-    localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify({activeTabId: [file]}))
-    localStorage.setItem(TAB_IS_VISIBLE, JSON.stringify(true))
-    return true
+  if (!curTabIsVisible && nextActiveTabId !== null && nextTabIds.length > 0) {
+    return !curTabIsVisible
   }
 
   // when no activeTab, set it false
-  if (tabIsVisible && activeTabId === null && tabIds.length === 0) {
-    // ! enforce no tab status
-    localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(null))
-    localStorage.setItem(TABS_IDS, JSON.stringify([]))
-    localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify({}))
-    localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify({}))
-    localStorage.setItem(TAB_IS_VISIBLE, JSON.stringify(false))
-    return false
+  if (curTabIsVisible && nextActiveTabId === null && nextTabIds.length === 0) {
+    return !curTabIsVisible
   }
 
   // if no matching, keep the previous
-  return tabIsVisible
+  return curTabIsVisible
 }
 
 function persist(
   activeTabId: string | null,
   tabIds: string[],
-  activeFileByTabIds: ActiveFileByTabIds,
-  filesByTabIds: FilesByTabIds,
+  activeFileByTabIds: Record<string, number>,
+  filesByTabIds: Record<string, FileNode[]>,
+  tabIsVisible: boolean
 ) {
   localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(activeTabId))
   localStorage.setItem(TABS_IDS, JSON.stringify(tabIds))
   localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(activeFileByTabIds))
   localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(filesByTabIds))
+  localStorage.setItem(TAB_IS_VISIBLE, JSON.stringify(tabIsVisible))
 }
 
 export const TabManagerStore = create<tabManagerStore>((set) => {
@@ -77,17 +66,17 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
     (localStorage.getItem(ACTIVE_TAB_ID), null)
   const tabIds = parseLocalStorage<string[]>
     (localStorage.getItem(TABS_IDS), [])
-  const activeFileByTabIds = parseLocalStorage<ActiveFileByTabIds>
-    (localStorage.getItem(ACTIVE_FILE_BY_TAB_IDS),{})
-  const filesByTabIds = parseLocalStorage<FilesByTabIds>
-    (localStorage.getItem(FILES_BY_TABS_IDS), {})
+  const activeFileIdByTabIds = parseLocalStorage<Record<string, number>>(
+    localStorage.getItem(ACTIVE_FILE_BY_TAB_IDS),{})
+  const filesByTabIds = parseLocalStorage<Record<string, FileNode[]>>(
+    localStorage.getItem(FILES_BY_TABS_IDS), {})
   const tabIsVisible = parseLocalStorage<boolean>
     (localStorage.getItem(TAB_IS_VISIBLE), false)
 
   return {
     activeTabId: activeTabId,
     tabIds: tabIds,
-    activeFileByTabIds: activeFileByTabIds,
+    activeFileIdByTabIds: activeFileIdByTabIds,
     filesByTabIds: filesByTabIds,
     tabIsVisible: tabIsVisible,
     
@@ -95,21 +84,21 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
       set((state) => {
         let nextActiveTabId: string | null = state.activeTabId
         let nextTabIds: string[] = state.tabIds
-        let nextActiveFileByTabIds: ActiveFileByTabIds = state.activeFileByTabIds
-        let nextFilesByTabIds: FilesByTabIds = state.filesByTabIds
+        let nextActiveFileByTabIds: Record<string, number> = state.activeFileIdByTabIds
+        let nextFilesByTabIds: Record<string, FileNode[]> = state.filesByTabIds
         let nextTabIsVisible: boolean = state.tabIsVisible
 
         if (!nextTabIsVisible) {
           nextActiveTabId = 'tab-1'
           nextTabIds = [nextActiveTabId]
-          activeFileByTabIds[nextActiveTabId] = selectedFile.id
+          activeFileIdByTabIds[nextActiveTabId] = selectedFile.id
           filesByTabIds[nextActiveTabId] = [selectedFile]
           nextTabIsVisible = tabIsVisibleHandler(nextActiveTabId, nextTabIds, nextTabIsVisible, selectedFile)
 
           return {
             activeTabId: nextActiveTabId,
             tabIds: nextTabIds,
-            activeFileByTabIds: nextActiveFileByTabIds,
+            activeFileIdByTabIds: nextActiveFileByTabIds,
             filesByTabIds: nextFilesByTabIds,
             tabIsVisible: nextTabIsVisible,
           }
@@ -118,14 +107,14 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         if (!nextTabIsVisible && nextActiveTabId === null && nextTabIds.length === 0) {
           nextActiveTabId = 'tab-1'
           nextTabIds = [nextActiveTabId]
-          activeFileByTabIds[nextActiveTabId] = selectedFile.id
+          activeFileIdByTabIds[nextActiveTabId] = selectedFile.id
           filesByTabIds[nextActiveTabId] = [selectedFile]
           nextTabIsVisible = tabIsVisibleHandler(nextActiveTabId, nextTabIds)
           persist(nextActiveTabId, nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds)
           return {
             activeTabId: nextActiveTabId,
             tabIds: nextTabIds,
-            activeFileByTabIds: nextActiveFileByTabIds,
+            activeFileIdByTabIds: nextActiveFileByTabIds,
             filesByTabIds: nextFilesByTabIds,
             tabIsVisible: tabIsVisibleHandler(nextActiveTabId, nextTabIds)
           }
@@ -151,12 +140,12 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         const existingFilesByTab: boolean = prevFilesByTabIds.some((file) => file.id === selectedFile.id)
 
 
-        const nextFilesByTab: FilesByTabIds= { ...state.filesByTabIds }
+        const nextFilesByTab: Record<string, FileNode[]>= { ...state.filesByTabIds }
         // assign new file list with the selected file
         nextFilesByTab[nextActiveTab] = existingFilesByTab ? prevFilesByTabIds : [...prevFilesByTabIds, selectedFile]
 
         // 3) mark active file for that tab group
-        const nextActiveFileByTab: Record<string, number> = { ...state.activeFileByTabIds }
+        const nextActiveFileByTab: Record<string, number> = { ...state.activeFileIdByTabIds }
         nextActiveFileByTab[nextActiveTab] = selectedFile.id
 
         persist(nextActiveTab, nextTabIds, nextActiveFileByTab, nextFilesByTab)
@@ -182,43 +171,94 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     },
 
-    closeFile: (tabId: string, file: FileNode) => {
+    closeFile: (tabId: string, closingFile: FileNode) => {
       set((state) => {
-        let nextActiveTabId: string | null
-        let nextTabIds: string[]
-        let nextActiveFileByTabIds: ActiveFileByTabIds
-        let nextFilesByTabIds: FilesByTabIds
-        let nextTabIsVisible: boolean
+        const curActiveTabId: string | null = state.activeTabId
+        const curTabIds: string[] = state.tabIds
+        const curActiveFileIdByTabIds: Record<string, number> = state.activeFileIdByTabIds
+        const curFilesByTabIds: Record<string, FileNode[]> = state.filesByTabIds
+        const curTabIsVisible: boolean = state.tabIsVisible
 
-        const curActiveTabId = state.activeTabId
-        const curTabIds = state.tabIds
-        const curFilesByTabIds = state.filesByTabIds
-        const curActiveFileByTabIds = state.activeFileByTabIds
+        let nextActiveTabId = curActiveTabId
+        let nextTabIds = [...curTabIds]
+        let nextActiveFileIdByTabIds = {...curActiveFileIdByTabIds}
+        let nextFilesByTabIds = {...curFilesByTabIds}
+
+        const lenOfFilesInTab = curFilesByTabIds[tabId].length
+        const curActiveFileId = curActiveFileIdByTabIds[tabId]
       
-        // if this is not active file, it means there is at least two in files in this tab
+        // if this is not active file, it means there is at least two files in this tab
         // simply delete the unactive file
-        if (curActiveFileByTabIds[tabId] !== file.id && curFilesByTabIds[tabId].length > 1) {
-          
+        if (curActiveFileId !== closingFile.id && lenOfFilesInTab > 1) {
+          nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((file) => file.id !== closingFile.id )
         }
 
         // if it is active file, and there is at least more than one file
-        // set next file to the neigbor file
-        if (curActiveFileByTabIds[tabId] === file.id && curFilesByTabIds[tabId].length > 1) {
-
+        // set neighbor file to active file
+        if (curActiveFileId === closingFile.id && lenOfFilesInTab > 1) {
+          // if closing file is last second file, set the first file id to active file id
+          if (lenOfFilesInTab === 2) {
+            nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][0].id
+          }else {
+            const idxOfActiveFile = curFilesByTabIds[tabId].findIndex((f) => f.id === closingFile.id)
+            // if closing file is the last file, set prev file to active file
+            if (idxOfActiveFile + 1 === lenOfFilesInTab) {
+              nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfActiveFile - 1].id
+            }
+            // if closing file is some file in the middle, set the next file as active file
+            nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfActiveFile + 1].id
+          }
         }
 
-        // by this point, there is only one file (active) in the tab
+        nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((file) => file.id !== closingFile.id )
+
+        // by this point, there is only one active file in this tab
         // close the tab
-        if (curActiveFileByTabIds[tabId] === file.id && curFilesByTabIds[tabId].length === 0){
+        if (curActiveFileId === closingFile.id && lenOfFilesInTab === 1){
+          const numOfTabs = curTabIds.length
 
+          // if this is last tab, update tabIsVisible
+          if (numOfTabs === 1) {
+            nextActiveTabId = null
+            nextTabIds = []
+            nextActiveFileIdByTabIds = {}
+            nextFilesByTabIds = {}
+          } else {
+            // if not last tab, simply delete the tab
+
+            let idxOfActiveTab
+            if (curActiveTabId) {
+              idxOfActiveTab = curTabIds.findIndex((id) => id === tabId)
+            }
+            if (idxOfActiveTab !== undefined && idxOfActiveTab !== -1) {
+              // if this is tab at the end, switch to previous tab
+              if (idxOfActiveTab + 1 === numOfTabs) {
+                nextActiveTabId = curTabIds[idxOfActiveTab - 1]
+              } else {
+                // if this is middle tab, switch to next tab
+                nextActiveTabId = curTabIds[idxOfActiveTab + 1]
+              }
+            }
+            nextTabIds = curTabIds.filter((ti) => ti !== tabId)
+            delete nextFilesByTabIds[tabId]
+            delete nextActiveFileIdByTabIds[tabId]
+          }
         }
+
+        persist(
+          nextActiveTabId,
+          nextTabIds,
+          nextActiveFileIdByTabIds,
+          nextFilesByTabIds,
+          tabIsVisibleHandler(nextActiveTabId, nextTabIds, curTabIsVisible)
+        )
 
         return {
           activeTabId: nextActiveTabId,
           tabIds: nextTabIds,
-          activeFileByTabIds: nextActiveFileByTabIds,
+          activeFileIdByTabIds: nextActiveFileIdByTabIds,
           filesByTabIds: nextFilesByTabIds,
-          tabIsVisible: nextTabIsVisible,
+          tabIsVisible: tabIsVisibleHandler(nextActiveTabId, nextTabIds, curTabIsVisible),
         }
       })
     },
