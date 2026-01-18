@@ -1,11 +1,10 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
+import type { SelectedNodeType } from "./Sidebar"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
 import { computeMimeTypeFromName } from "./MimeType"
 
-// define selectedNode type
-export type SelectedNodeType = FsNode | null
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -71,13 +70,13 @@ export async function submitNewNodePromptHandler(
 
 
 export function renderNewNodePromptHandler(
-    newNodeType: 'folder' | 'file' | null,
-    selectedFolder: SelectedNodeType,
-    depth: number,
-    newNodePromptRef: RefObject<HTMLDivElement | null>,
-    newNodePromptInputRef: RefObject<HTMLInputElement | null>,
-    submitNewNodePrompt: () => Promise<void>,
-    cancelNewNodePrompt: () => void
+  newNodeType: 'folder' | 'file' | null,
+  selectedFolder: SelectedNodeType,
+  depth: number,
+  newNodePromptRef: RefObject<HTMLDivElement | null>,
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+  submitNewNodePrompt: () => Promise<void>,
+  cancelNewNodePrompt: () => void
 ): ReactNode  {
   if (!newNodeType) return null
 

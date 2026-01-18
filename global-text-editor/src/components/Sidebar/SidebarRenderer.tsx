@@ -2,37 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
 import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
+import { parseLocalStorage } from '../../utils/utils'
 
 const DEFAULT_SIDEBAR_WIDTH = Number(import.meta.env.VITE_DEFAULT_SIDEBAR_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
 const SIDEBAR_MAX_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MAX_WIDTH)
 const COLLAPSED_WIDTH = Number(import.meta.env.VITE_COLLAPSED_WIDTH)
 
-const SIDEBAR_WIDTH_KEY = String(import.meta.env.VITE_SIDEBAR_WIDTH_KEY)
-const SIDEBAR_COLLAPSED_KEY = String(import.meta.env.VITE_SIDEBAR_COLLAPSED_KEY)
+const SIDEBAR_WIDTH = String(import.meta.env.VITE_SIDEBAR_WIDTH)
+const SIDEBAR_COLLAPSED = String(import.meta.env.VITE_SIDEBAR_COLLAPSED)
 
 function SidebarRenderer() {
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
-    const raw = localStorage.getItem(SIDEBAR_WIDTH_KEY)
-    if (!raw) return DEFAULT_SIDEBAR_WIDTH
-    try {
-      const parsed: number = JSON.parse(raw)
-      return parsed
-    } catch (err) {
-      console.error(err)
-      return DEFAULT_SIDEBAR_WIDTH
-    }
+    return parseLocalStorage<number>
+    (localStorage.getItem(SIDEBAR_WIDTH), DEFAULT_SIDEBAR_WIDTH)
   })
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    const raw = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-    if (!raw) return false
-    try {
-      const parsed: boolean = JSON.parse(raw)
-      return parsed
-    } catch (err) {
-      console.error(err)
-      return false
-    }
+    return parseLocalStorage<boolean>
+    (localStorage.getItem(SIDEBAR_COLLAPSED), false)
   })
   // on setSidebarCollapsedHandler, get appliedWidth
   const appliedWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
@@ -74,13 +62,13 @@ function SidebarRenderer() {
 
   function setSidebarWidthHandler(width: number) {
     setSidebarWidth(width)
-    localStorage.setItem(SIDEBAR_WIDTH_KEY, JSON.stringify(width))
+    localStorage.setItem(SIDEBAR_WIDTH, JSON.stringify(width))
   }
 
   function setSidebarCollapsedHandler() {
     setSidebarCollapsed((prev: boolean) => {
       const next = !prev
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, JSON.stringify(next)) // store boolean as JSON string
+      localStorage.setItem(SIDEBAR_COLLAPSED, JSON.stringify(next))
       return next
     })
   }
