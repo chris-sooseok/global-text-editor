@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
 import { buildFsTree } from '../../store/FsTreeStore/buildFsTree'
-import { TabGroupStore } from '../../store/tabManagerStore/tabGroupStore'
+import { TabManagerStore } from '../../store/TabManagerStore/tabManagerStore'
 import type { FileNode, FolderNode, FsNode } from '../../store/FsTreeStore/FsTreeTypes'
 import { 
   submitNewNodePromptHandler,  
   renderNewNodePromptHandler,
   renderNodeHandler,
 } from './SidebarHandler'
-import type { SelectedNodeType } from './SidebarHandler'
 import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
 import newFileIcon from '../../assets/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
@@ -18,6 +17,7 @@ const SELECTED_FILE_KEY = String(import.meta.env.VITE_SELECTED_FILE_KEY)
 const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
 const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
 
+export type SelectedNodeType = FsNode | null
 
 function Sidebar() {
   const nodeRows = FsTreeStore((store) => store.nodeRows)
@@ -29,20 +29,25 @@ function Sidebar() {
     void loadFsNodes(window.api)
   }, [loadFsNodes])
 
-  const openFileInActiveTab = TabGroupStore((store) => store.openFileInActiveTab)
+  const openFileInActiveTab = TabManagerStore((store) => store.openFileInActiveTab)
   
   /**  Separate states for selected file and folder to control highlight behaviors */
-  const [selectedFile, setSelectedFile ] = useState<SelectedNodeType>(() => {
-    return parseLocalStorage(localStorage.getItem(SELECTED_FILE_KEY), null)
+  const [selectedFile, setSelectedFile ] = useState(() => {
+    return parseLocalStorage<SelectedNodeType>
+    (localStorage.getItem(SELECTED_FILE_KEY), null)
   })
   
-  const [selectedFolder, setSelectedFolder ] = useState<SelectedNodeType>(() => {
-    return parseLocalStorage(localStorage.getItem(SELECTED_FOLDER_KEY), null)
+  const [selectedFolder, setSelectedFolder ] = useState(() => {
+    return parseLocalStorage<SelectedNodeType>
+    (localStorage.getItem(SELECTED_FOLDER_KEY), null)
   })
 
   /** control folder toggle */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
-    return parseLocalStorage(localStorage.getItem(TOGGLED_FOLDERS_KEY), new Set<number>)
+    // localStorage only supports arr, so we make sure to conver to Set
+    const arr = parseLocalStorage<number[]>
+    (localStorage.getItem(TOGGLED_FOLDERS_KEY), [])
+    return new Set(arr)
   })
 
   /** Used for new node creation
@@ -147,9 +152,6 @@ function Sidebar() {
       try {
         const res: {ok: string} = await window.api.deleteFsNode(deleteNode.id, deleteNode.type)
 
-        // if (res.ok) {
-        //   FsTree.fsTree.removeFsNode(deletingNode)
-        // }
       } catch (err) {
 
       }

@@ -2,43 +2,45 @@
 import { useState } from "react"
 import FileContent from "./FileContent/FileContent"
 import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
+import { TabManagerStore } from "../../store/TabManagerStore/tabManagerStore"
 
-type TabGroupProps = {
-  tabId: string
-  canClose: boolean
-  onAddTabGroup: () => void
-  onCloseTabGroup: (groupId: string) => void
-}
+/** Plans
+ * 
+ * Each tab Instance can keep tiptap instance to reuse it to switch between file contents.
+ * Originally, it was thought of that fileContent should own tiptap instance, but tab owning
+ * it will be more efficient
+ * 
+ * Subscribes to activeFileByTabId and filesByTabId. activeFileByTabId allows to fast-lookup
+ * to display fileContent, and filesByTabId allows displaying and switching between different
+ * file options in the tab
+ * 
+ * Each tab has a close button
+ *  - closeTab(tabId)
+ * 
+ * Each fileContent close button 
+ *  - closeFile(tabId, file)
+ * 
+ * Each fileContent is switchable
+ *  - switchActiveFile(file)
+ * 
+ * Each fileContent on right click will display dropdown menu, which has
+ *  - onRightClickOnFile
+ *    - createNewTab(file)
+ * 
+ */
 
-const FILES_BY_TABS_KEY = String(import.meta.env.VITE_FILES_BY_TABS_KEY)
-const ACTIVE_FILE_BY_TAB_KEY = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KEY)
+
+const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
+const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KEY)
 
 
-function Tab({ tabId, canClose, onAddTabGroup, onCloseTabGroup }: TabGroupProps) {
-  const [activeFile, setActiveFile] = useState<string | null>(() => {
-      const raw = localStorage.getItem(ACTIVE_FILE_BY_TAB_KEY)
-      if (!raw) return null
+function Tab({tabId}: {tabId: string}) {
 
-      try {
-        const parsed = JSON.parse(raw)
-        if (parsed[tabId]) return parsed[tabId]
-        else return null
-      } catch {
-        return null
-      }
-  })
-
-  const [files, setFiles] = useState<string[]>(() => {
-    const raw = localStorage.getItem(FILES_BY_TABS_KEY)
-    if (!raw) return []
-    try {
-      const parsed = JSON.parse(raw)
-      if (parsed[tabId]) return parsed[tabId]
-      else return []
-    } catch {
-      return []
-    }
-  })
+  const activeFileByTabIds = TabManagerStore((s) => s.activeFileByTabIds)
+  const filesByTabIds = TabManagerStore((s) => s.filesByTabIds)
+  const switchActiveFile = TabManagerStore((s) => s.switchActiveFile)
+  const closeFile = TabManagerStore((s) => s.closeFile)
+  const closeTab = TabManagerStore((s) => s.closeTab)
 
   return (
     <div
@@ -65,12 +67,9 @@ function Tab({ tabId, canClose, onAddTabGroup, onCloseTabGroup }: TabGroupProps)
 
         {/* Right controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={onAddTabGroup}>+ </button>
 
           <button
-            onClick={() => onCloseTabGroup(tabId)}
-            disabled={!canClose} // prevents removing the last remaining group
-            title={canClose ? "Close tab group" : "At least one tab group is required"}
+            onClick={() => closeTab(tabId)}
           >
             ✕
           </button>

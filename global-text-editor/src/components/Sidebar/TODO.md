@@ -1,1 +1,9 @@
-Consider implmenting create, update, and delete node around zustand store
+
+# Note type (text, code snippet, drawing snippet, pictures)
+
+
+[y] export pdf
+# Canvas type
+
+
+# pdf type
