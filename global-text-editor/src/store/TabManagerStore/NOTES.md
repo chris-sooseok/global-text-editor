@@ -2,6 +2,10 @@
 
 # TabManagerStore logics
 
+## `ActiveTabId`
+if no tab is to be displayed, the ActiveTabId default value will be
+'tab-1'. Then, TabIsVisible will be set based on the length of tabIds.
+
 ## `TabIsVisible`
-Initially when no file is selected yet, any tab should not be rendered, so should any file content.
-To enforce activeTabId and tabIds has some value when some file should be displayed, we will use tabIsVisible field. If tabIsVisible is false, since tab must not be rendered, no state values for activeTabId and tabIds will be set (thus they are `undefined`).
+Initially when no file is selected yet, no tab should be rendered, so should any no file content.
+To enforce this, TabIsVisible will control the visiblity of tab based on the length of tabIds. If no tab exists, tabids length will be 0
