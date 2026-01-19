@@ -1,21 +1,23 @@
 import { create } from 'zustand'
 import { parseLocalStorage } from '../../utils/utils'
 import type { FileNode } from '../FsTreeStore/FsTreeTypes'
-import { tabStateCommitHelper } from './TabManagerStoreHelper'
+import { tabStateCommiter } from './TabMangerStoreHelper'
+
+const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
 const ACTIVE_TAB_ID = String(import.meta.env.VITE_ACTIVE_TAB_ID)
 const TABS_IDS = String(import.meta.env.VITE_TABS_IDS)
-const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_KEY)
+const ACTIVE_FILE_ID_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_ID_BY_TAB_IDS)
 const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
-const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
 
-const DEFAULT_ACTIVE_TAB_ID = 'tab-1'
+
+export const DEFAULT_ACTIVE_TAB_ID = 'tab-1'
 
 type tabManagerStore = {
+  tabIsVisible: boolean
   activeTabId: string
   tabIds: string[]
   activeFileIdByTabIds: Record<string, number>
   filesByTabIds: Record<string, FileNode[]>
-  tabIsVisible: boolean
   // Sidebar
   openFileInActiveTab: (file: FileNode) => void
   // TabRenderer
@@ -29,23 +31,23 @@ type tabManagerStore = {
 
 export const TabManagerStore = create<tabManagerStore>((set) => {
 
+  const tabIsVisible = parseLocalStorage<boolean>
+    (localStorage.getItem(TAB_IS_VISIBLE), false)
   const activeTabId = parseLocalStorage<string>
     (localStorage.getItem(ACTIVE_TAB_ID), DEFAULT_ACTIVE_TAB_ID)
   const tabIds = parseLocalStorage<string[]>
     (localStorage.getItem(TABS_IDS), [])
   const activeFileIdByTabIds = parseLocalStorage<Record<string, number>>(
-    localStorage.getItem(ACTIVE_FILE_BY_TAB_IDS),{})
+    localStorage.getItem(ACTIVE_FILE_ID_BY_TAB_IDS),{})
   const filesByTabIds = parseLocalStorage<Record<string, FileNode[]>>(
     localStorage.getItem(FILES_BY_TABS_IDS), {})
-  const tabIsVisible = parseLocalStorage<boolean>
-    (localStorage.getItem(TAB_IS_VISIBLE), false)
 
   return {
+    tabIsVisible: tabIsVisible,
     activeTabId: activeTabId,
     tabIds: tabIds,
     activeFileIdByTabIds: activeFileIdByTabIds,
     filesByTabIds: filesByTabIds,
-    tabIsVisible: tabIsVisible,
     
     openFileInActiveTab: (selectedFile: FileNode) => {
       set((state) => {
@@ -55,16 +57,16 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         const curFilesByTabIds: Record<string, FileNode[]> = state.filesByTabIds
         let nextActiveTabId = curActiveTabId
         let nextTabIds = [...curTabIds]
-        let nextActiveFileIdByTabIds = {...curActiveFileIdByTabIds}
+        let nextActiveFileIdByTabIds:Record<string, number>  = {...curActiveFileIdByTabIds}
         let nextFilesByTabIds = {...curFilesByTabIds}
 
         // no tab exists, create the first tab
         if (!state.tabIsVisible && curTabIds.length === 0) {
           nextActiveTabId = DEFAULT_ACTIVE_TAB_ID
           nextTabIds = [nextActiveTabId]
-          nextActiveFileIdByTabIds = {nextActiveTabId: selectedFile.id}
-          nextFilesByTabIds = {nextActiveTabId: [selectedFile]}
-          return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
+          nextActiveFileIdByTabIds = {[nextActiveTabId]: selectedFile.id}
+          nextFilesByTabIds = {[nextActiveTabId]: [selectedFile]}
+          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
         }
 
         /** If tab exists, we have three conditions
@@ -87,13 +89,13 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             // case 2: current active tab has selectedFile, but not as active file
             // -> set its active file to the selectedFile 
             nextActiveFileIdByTabIds[curActiveTabId] = selectedFile.id
-            localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+            localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
             return {
+              tabIsVisible: state.tabIsVisible,
               activeTabId: nextActiveTabId,
               tabIds: nextTabIds,
               activeFileIdByTabIds: nextActiveFileIdByTabIds,
               filesByTabIds: nextFilesByTabIds,
-              tabIsVisible: state.tabIsVisible,
             }
           }
         }
@@ -102,15 +104,15 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         const existingFiles = nextFilesByTabIds[curActiveTabId] ?? []
         nextFilesByTabIds[curActiveTabId] = [...existingFiles, selectedFile]
         nextActiveFileIdByTabIds[curActiveTabId] = selectedFile.id
-        localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+        localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
         localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
 
         return {
+          tabIsVisible: state.tabIsVisible,
           activeTabId: nextActiveTabId,
           tabIds: nextTabIds,
           activeFileIdByTabIds: nextActiveFileIdByTabIds,
           filesByTabIds: nextFilesByTabIds,
-          tabIsVisible: state.tabIsVisible,
         }
       })
     },
@@ -127,11 +129,11 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(nextActiveTabId))
 
         return {
+          tabIsVisible: state.tabIsVisible,
           activeTabId: nextActiveTabId,
           tabIds: state.tabIds,
           activeFileIdByTabIds: state.activeFileIdByTabIds,
           filesByTabIds: state.filesByTabIds,
-          tabIsVisible: state.tabIsVisible,
         }
       })
     },
@@ -148,12 +150,12 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         let nextFilesByTabIds = {...curFilesByTabIds}
 
         const newTabId = `tab-${curTabIds.length + 1}`
+        nextActiveTabId = newTabId
         nextTabIds = [...curTabIds, newTabId]
         nextFilesByTabIds[newTabId] = [copyingFile]
         nextActiveFileIdByTabIds[newTabId] = copyingFile.id
-        nextActiveTabId = newTabId
-
-        return tabStateCommitHelper(
+        
+        return tabStateCommiter(
           nextActiveTabId,
           nextTabIds,
           nextActiveFileIdByTabIds,
@@ -170,13 +172,13 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         if (curActiveFileIdByTabIds[tabId] === nextFile.id) return state
 
         nextActiveFileIdByTabIds[tabId] = nextFile.id
-        localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+        localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
         return {
+            tabIsVisible: state.tabIsVisible,
             activeTabId: state.activeTabId,
             tabIds: state.tabIds,
             activeFileIdByTabIds: nextActiveFileIdByTabIds,
             filesByTabIds: state.filesByTabIds,
-            tabIsVisible: state.tabIsVisible
         }
       })
     },
@@ -201,7 +203,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
          * -> simply close the non-active file */
         if (curActiveFileId !== closingFile.id && lenOfFilesInTab > 1) {
           nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((f) => f.id !== closingFile.id )
-          return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
+          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
         }
 
         /** closingFile is the active file, and the tab has at least two files
@@ -209,22 +211,22 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         if (curActiveFileId === closingFile.id && lenOfFilesInTab > 1) {
           // if there are only two files, set leftover file to the next active file
           if (lenOfFilesInTab === 2) {
-            const remainingFiles = curFilesByTabIds[tabId].filter((f) => f.id !== closingFile.id)
-            nextActiveFileIdByTabIds[tabId] = remainingFiles[0].id
-            nextFilesByTabIds[tabId] = remainingFiles
-            return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
+            const remainingFile: FileNode = curFilesByTabIds[tabId].filter((f) => f.id !== closingFile.id)[0]
+            nextActiveFileIdByTabIds[tabId] = remainingFile.id
+            nextFilesByTabIds[tabId] = [remainingFile]
+            return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
           }else {
             // if there are more than two files, apply different logics
-            const idxOfActiveFile = curFilesByTabIds[tabId].findIndex((f) => f.id === closingFile.id)
+            const idxOfClosingFile = curFilesByTabIds[tabId].findIndex((f) => f.id === closingFile.id)
             // closing file is the end file, set prev file to the active file
-            if (idxOfActiveFile + 1 === lenOfFilesInTab) {
-              nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfActiveFile - 1].id
+            if (idxOfClosingFile + 1 === lenOfFilesInTab) {
+              nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfClosingFile - 1].id
             } else {
               // closing file is the first file or some middle file, set the next file as active file
-              nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfActiveFile + 1].id
+              nextActiveFileIdByTabIds[tabId] = curFilesByTabIds[tabId][idxOfClosingFile + 1].id
             }
             nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((file) => file.id !== closingFile.id )
-            return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
+            return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
           }
         }
 
@@ -238,7 +240,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             nextTabIds = []
             nextActiveFileIdByTabIds = {}
             nextFilesByTabIds = {}
-            return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
+            return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
           }
           
           // if the tab that has closing file is not active tab -> simply close it
@@ -247,14 +249,14 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             delete nextActiveFileIdByTabIds[tabId]
             delete nextFilesByTabIds[tabId]
             localStorage.setItem(TABS_IDS, JSON.stringify(nextTabIds))
-            localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+            localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
             localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
             return {
+              tabIsVisible: state.tabIsVisible,
               activeTabId: nextActiveTabId,
               tabIds: nextTabIds,
               activeFileIdByTabIds: nextActiveFileIdByTabIds,
               filesByTabIds: nextFilesByTabIds,
-              tabIsVisible: state.tabIsVisible,
             }
           }
 
@@ -268,7 +270,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             nextActiveTabId = nextTabIds[0]
             delete nextFilesByTabIds[tabId]
             delete nextActiveFileIdByTabIds[tabId]
-            return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
+            return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
           }
 
           // if closing tab is the end tab, set prev tab to the active tab
@@ -281,7 +283,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           nextTabIds = curTabIds.filter((id) => id !== tabId)
           delete nextFilesByTabIds[tabId]
           delete nextActiveFileIdByTabIds[tabId]
-          return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)  
+          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)  
           
         }
 
@@ -309,7 +311,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           nextTabIds = []
           nextActiveFileIdByTabIds = {}
           nextFilesByTabIds = {}
-          return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
+          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds) 
         }
 
         // if closing tab is not activeTab, simply close it
@@ -318,41 +320,41 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           delete nextActiveFileIdByTabIds[closingTabId]
           delete nextFilesByTabIds[closingTabId]
           localStorage.setItem(TABS_IDS, JSON.stringify(nextTabIds))
-          localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+          localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
           localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
           return {
+            tabIsVisible: state.tabIsVisible,
             activeTabId: nextActiveTabId,
             tabIds: nextTabIds,
             activeFileIdByTabIds: nextActiveFileIdByTabIds,
             filesByTabIds: nextFilesByTabIds,
-            tabIsVisible: state.tabIsVisible,
           }
         }
 
         // if closing tab is the activeTab, apply these logics
-        const idxOfActiveTab = curTabIds.findIndex((id) => id === closingTabId)
+        const idxOfClosingTab = curTabIds.findIndex((id) => id === closingTabId)
         const lenOfTabs = curTabIds.length
 
         // safe guard: set next tab to the first tab in tabIds 
-        if (idxOfActiveTab === -1) {
+        if (idxOfClosingTab === -1) {
           nextTabIds = curTabIds.filter((id) => id !== closingTabId)
           nextActiveTabId = nextTabIds[0]
           delete nextFilesByTabIds[closingTabId]
           delete nextActiveFileIdByTabIds[closingTabId]
-          return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
+          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
         }
 
         // if closing tab is the end tab, set prev tab to the active tab
-        if (idxOfActiveTab + 1 === lenOfTabs) {
-          nextActiveTabId = curTabIds[idxOfActiveTab - 1]
+        if (idxOfClosingTab + 1 === lenOfTabs) {
+          nextActiveTabId = curTabIds[idxOfClosingTab - 1]
         } else {
           // if closing tab is the first or some middle tab, set the next tab as active tab
-          nextActiveTabId = curTabIds[idxOfActiveTab + 1]
+          nextActiveTabId = curTabIds[idxOfClosingTab + 1]
         }
         nextTabIds = curTabIds.filter((id) => id !== closingTabId)
         delete nextFilesByTabIds[closingTabId]
         delete nextActiveFileIdByTabIds[closingTabId]
-        return tabStateCommitHelper(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)  
+        return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)  
       })
     },
 
