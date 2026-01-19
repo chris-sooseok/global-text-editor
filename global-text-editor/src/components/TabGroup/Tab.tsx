@@ -100,7 +100,7 @@ function Tab({tabId}: {tabId: string}) {
               <button
                 onClick={() => {
                   if (!isActiveTab) switchActiveTab(tabId)
-                  switchActiveFile(tabId, file)
+                  if (activeFileId !== file.id) switchActiveFile(tabId, file)
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault()

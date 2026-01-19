@@ -149,7 +149,9 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         let nextActiveFileIdByTabIds = {...curActiveFileIdByTabIds}
         let nextFilesByTabIds = {...curFilesByTabIds}
 
-        const newTabId = `tab-${curTabIds.length + 1}`
+        // making sure not to add already existing tabId
+        const maxNum = Math.max(...curTabIds.map((id) => Number(id.split('-')[1])))
+        const newTabId = `tab-${maxNum + 1}`
         nextActiveTabId = newTabId
         nextTabIds = [...curTabIds, newTabId]
         nextFilesByTabIds[newTabId] = [copyingFile]
@@ -244,7 +246,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           }
           
           // if the tab that has closing file is not active tab -> simply close it
-          if (curActiveTabId === tabId) {
+          if (curActiveTabId !== tabId) {
             nextTabIds = curTabIds.filter((id) => id !== tabId)
             delete nextActiveFileIdByTabIds[tabId]
             delete nextFilesByTabIds[tabId]
@@ -334,7 +336,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         // if closing tab is the activeTab, apply these logics
         const idxOfClosingTab = curTabIds.findIndex((id) => id === closingTabId)
         const lenOfTabs = curTabIds.length
-
+  
         // safe guard: set next tab to the first tab in tabIds 
         if (idxOfClosingTab === -1) {
           nextTabIds = curTabIds.filter((id) => id !== closingTabId)
@@ -343,9 +345,9 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           delete nextActiveFileIdByTabIds[closingTabId]
           return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileIdByTabIds, nextFilesByTabIds)
         }
-
         // if closing tab is the end tab, set prev tab to the active tab
         if (idxOfClosingTab + 1 === lenOfTabs) {
+          
           nextActiveTabId = curTabIds[idxOfClosingTab - 1]
         } else {
           // if closing tab is the first or some middle tab, set the next tab as active tab

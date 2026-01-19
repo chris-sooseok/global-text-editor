@@ -1,5 +1,5 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
+import type { FileNode, FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
 import type { SelectedNodeType } from "./Sidebar"
 import folderIcon from '../../assets/icons8-folder-96.png'
 import fileIcon from '../../assets/icons8-file-96.png'
@@ -143,6 +143,7 @@ export function renderNodeHandler(
   setRenameNodeId: Dispatch<SetStateAction<number | null>>,
   renameNodeHandler: (renameNode: FsNode) => void,
   cancelRenamingNode: () => void,
+  openFileInActiveTab: (file: FileNode) => void,
 ): ReactNode {
 
   // if both some file and folder are selected, only highlight folder
@@ -195,6 +196,7 @@ export function renderNodeHandler(
                 selectNodeHandler,
                 selectFolderHandler,
                 nodes,
+                openFileInActiveTab,
               )
             }
             // Folder selection logic
@@ -309,14 +311,18 @@ function onClickFileHandler (
   selectNodeHandler:  (node: FsNode) => void,
   selectFolderHandler: (folder: FolderNode | null) => void,
   nodes: Map<number, FsNode>, // to get parent Node
+  openFileInActiveTab: (file: FileNode) => void,
 ): void {
 
   // if file is already highlighted, no need to highlight
   // but make sure to update selectedFolder to its parent when
   // selectedFolder is null due to global click behavior
   if (isSelectedFile && node.parentId !== selectedFolder?.id) {
+      // still open the file
+      openFileInActiveTab(node as FileNode)
       const parentNode = nodes.get(node.parentId) ?? null
       if (parentNode && parentNode.type === 'folder') {
+
         selectFolderHandler(parentNode)
       } else {
         selectFolderHandler(null)
