@@ -123,16 +123,18 @@ function SidebarRenderer() {
       </div>
 
       {/* Sidebar content */}
-      <div
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-          opacity: sidebarCollapsed ? 0 : 1,
-          transition: 'opacity 120ms ease',
-          pointerEvents: sidebarCollapsed ? 'none' : 'auto',
-        }}
-      >
-        {sidebarCollapsed ? null : <Sidebar />}
+      {/* by controlling opacity, sidebar remounting is not neccessary */}
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <div
+          style={{
+            height: "100%",
+            opacity: sidebarCollapsed ? 0 : 1,
+            pointerEvents: sidebarCollapsed ? "none" : "auto",
+            transition: "opacity 120ms ease",
+          }}
+        >
+          <Sidebar />
+        </div>
       </div>
 
       {/* only when not collapsed, allow dragging */}

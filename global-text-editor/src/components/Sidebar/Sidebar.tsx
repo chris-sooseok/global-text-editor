@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
 import { buildFsTree } from '../../store/FsTreeStore/buildFsTree'
-import { TabManagerStore } from '../../store/TabManagerStore/tabManagerStore'
+import { TabManagerStore } from '../../store/TabManagerStore/TabManagerStore'
 import type { FileNode, FolderNode, FsNode } from '../../store/FsTreeStore/FsTreeTypes'
 import { 
   submitNewNodePromptHandler,  
@@ -23,6 +23,9 @@ function Sidebar() {
   const nodeRows = FsTreeStore((store) => store.nodeRows)
   const loadFsNodes = FsTreeStore((store) => store.loadFsNodes)
   const insertFsNode = FsTreeStore((store) => store.insertFsNode)
+  const renameNode = FsTreeStore((s) => s.renameFsNode)
+  const removeNode = FsTreeStore((s) => s.removeFsNode)
+  
   const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
   /** ensure loading fsTree when mounting sidebar */
   useEffect(() => {
