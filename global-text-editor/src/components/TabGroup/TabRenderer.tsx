@@ -9,34 +9,33 @@ function TabRenderer() {
   // TODO
   // consider adding dragging between tabs
   
+  if (!tabIsVisible) return undefined
+
   return (
-    <>
-      {tabIsVisible ? (
+  <>
+    {/* Tabs Container */}
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
+      {/* Each Tab */}
+      {tabIds.map((tabId) => (
         <div
+          key={tabId}
           style={{
-            display: "flex",
-            width: "100%",
+            flex: 1,
             height: "100%",
             overflow: "hidden",
           }}
         >
-          {tabIds.map((tabId) => (
-            <div
-              key={tabId}
-              style={{
-                flex: 1,
-                minWidth: 0,
-                height: "100%",
-                overflow: "hidden",
-              }}
-            >
-              <Tab tabId={tabId}/>
-            </div>
-          ))}
+          <Tab tabId={tabId}/>
         </div>
-      )
-      : undefined
-    }
+      ))}
+    </div>
   </>)
 }
 
