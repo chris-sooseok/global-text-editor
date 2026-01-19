@@ -1,5 +1,5 @@
 import SidebarRenderer from '../components/Sidebar/SidebarRenderer'
-import TabRenderer from '../components/TabGroup/TabRenderer'
+import TabRenderer from '../components/Tab/TabRenderer'
 
 export default function MainPage() {
 

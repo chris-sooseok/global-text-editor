@@ -17,7 +17,9 @@ import type { FetchFsNodeRes } from '../../api/fsNodeApi'
 type FsTreeStore = {
   nodeRows: FsNodeRow[]
   loadFsNodes: (api: Window['api']) => Promise<void>
-  insertFsNode: (node: FsNodeRow) => FsNode
+  insertFsNode: (newNode: FsNodeRow) => FsNode
+  renameFsNode: (renameNode: FsNode) => void
+  removeFsNode: (removeNode: FsNode) => void
 }
 
 export const FsTreeStore = create<FsTreeStore>((set) => {

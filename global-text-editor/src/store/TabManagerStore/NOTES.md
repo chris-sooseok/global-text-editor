@@ -29,7 +29,8 @@ The methods where you need to consider updating `tabIsVisible` are **`openFileIn
 
 The first initial `tabId` is to be added when any file is selected from `Sidebar`. Additional `tabId` can only be added by **split-right** button which you can display by right-clicking on any file that you wish to copy over into new tab from (Sidebar or Tab), and is tied to **`openNewTab`** method.
 
-> Consider also keeping one initial `Tab` component just like the default `activeTabId` if this may help an initial performance of tab mount
+### Optimiazation
+Consider also keeping one initial `Tab` component just like the default `activeTabId` if this may help an initial performance of tab mount
 
 ## Tab Component
 ### `activeTabId`
