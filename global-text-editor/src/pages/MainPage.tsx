@@ -1,10 +1,7 @@
 import SidebarRenderer from '../components/Sidebar/SidebarRenderer'
 import TabRenderer from '../components/TabGroup/TabRenderer'
-import { TabManagerStore } from '../store/TabManagerStore/tabManagerStore'
 
 export default function MainPage() {
-
-  const tabIsVisible = TabManagerStore((s) => s.tabIsVisible)
 
   return (
       <div style={{ display: 'flex', width: '100%', height: '100vh', overflow: 'hidden'}}>

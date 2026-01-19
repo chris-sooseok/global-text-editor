@@ -246,6 +246,8 @@ function Sidebar() {
       setRenameNodeId,
       renameNodeHandler,
       cancelRenamingNode,
+      // support opening alredy selected file
+      openFileInActiveTab,
     )
   }
 
