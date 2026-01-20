@@ -24,8 +24,14 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* Path alias for Tiptap SimpleEditor code generated under project-root "@/..." */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./@/*"]
+    }
   },
 
-  "include": ["src", "src/components/Sidebar/MimeType.ts"] /* only checks files in /src */
+  "include": ["src", "@"]
 }

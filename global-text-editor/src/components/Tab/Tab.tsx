@@ -158,7 +158,7 @@ function Tab({tabId}: {tabId: string}) {
     </div>
 
     {/* Content area */}
-    <div style={{ flex: 1, overflow: "auto" }}>
+    <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
         <NormalType />
     </div>
 
