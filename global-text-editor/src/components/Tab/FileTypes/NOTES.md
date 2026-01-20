@@ -64,4 +64,12 @@ This is not so different from Canvas. You will have to think whether they actual
 ## export to PDF
 
 
+# TODO
 
+
+figure out how to handle extensions efficiently
+
+1. Briefly review tiptap documents
+2. Based on what you have learned, implement NormalType notes
+3. After that, implement Markdown Type notes
+4. After that, come up with strategy of how to load, build, and save notes efficiently
