@@ -1,8 +1,6 @@
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from '@tiptap/starter-kit'
-import NormalTypeToolbar from "./NormalTypeToolbar"
-
-import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
+import NormalTypeToolbar from "./NormalTypeToolbar/NormalTypeToolbar"
 
 export default function NormalType() {
 
@@ -45,8 +43,14 @@ export default function NormalType() {
     >
 
       {/* Editor */}
-
-      <SimpleEditor />
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "0 10px 10px 10px" }}>
+        <NormalTypeToolbar editor={editor} />
+        <EditorContent
+          editor={editor}
+          className="prose max-w-none [&_.ProseMirror>p:first-child]:mt-0"
+        />
+      </div>
+      
 
     </div>
   )
