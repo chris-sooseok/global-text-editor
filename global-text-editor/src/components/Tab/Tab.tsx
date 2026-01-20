@@ -1,8 +1,10 @@
 // TabGroup.tsx
 import { useState } from "react"
-import FileContent from "./FileContent/FileContent"
+import FileContent from "./FileTypes/FileContent"
+import NormalType from "./FileTypes/NormalType/NormalType"
 import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
-import { TabManagerStore } from "../../store/TabManagerStore/tabManagerStore"
+import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
+
 
 function Tab({tabId}: {tabId: string}) {
 
@@ -27,6 +29,11 @@ function Tab({tabId}: {tabId: string}) {
   const openNewTab = TabManagerStore((s) => s.openNewTab)
   const closeFile = TabManagerStore((s) => s.closeFile)
   const closeTab = TabManagerStore((s) => s.closeTab)
+
+  // const editor = useEditor({
+  //   extensions: [StarterKit],
+  //   content: "<p>Hello TipTap</p>",
+  // })
 
   return (
     <>
@@ -153,7 +160,7 @@ function Tab({tabId}: {tabId: string}) {
 
       {/* Content area */}
       <div style={{ flex: 1, overflow: "auto" }}>
-        <FileContent />
+         <NormalType />
       </div>
 
     </div>

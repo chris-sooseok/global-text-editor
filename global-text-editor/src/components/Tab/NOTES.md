@@ -11,5 +11,6 @@ Tiptap editor will be first mounted when a file that requires the editor is sele
 What is expensive of mounting `Tab` is when Tiptap editor is required. Multiple tabs that keep Tiptap editor is doable. However, un-mounting and re-mounting tab that requires Tiptap editor will be expensive. `TabId` helps re-rendering existing tabs that already have Tiptap editor mounted.
 
 
+# TODO
 
-
+## Moving files between tabs
