@@ -1,6 +1,7 @@
 const { ipcMain, app } = require('electron')
 const { connect_db } = require('../db/index.cjs')
 const { getNextSortOrder } = require('./fsNodeIpcHelper.cjs')
+const { randomUUID } = require('node:crypto')
 
 const db = connect_db()
 
@@ -15,23 +16,25 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     const parentId = payload.parentId ?? null
     const name = payload.name
     let mimeType = payload.mimeType ?? null
-    let storagePath = null
+
+    const uuid = randomUUID()
+    const storagePath = `nodes/${uuid}`
+
     const now = Date.now()
     const nextSortOrder = getNextSortOrder(db, parentId)
-    let info
 
-
-    info = db
-    .prepare(`
-      INSERT INTO fsNode (type, parent_id, name, storage_path, mime_type, created_at, updated_at, sort_order)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-    .run(type, parentId, name, storagePath, mimeType, now, now, nextSortOrder)
+    const info = db
+      .prepare(`
+        INSERT INTO fsNode (uuid, type, parent_id, name, storage_path, mime_type, created_at, updated_at, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(uuid, type, parentId, name, storagePath, mimeType, now, now, nextSortOrder)
 
     return {
       ok: true,
       node: {
         id: Number(info.lastInsertRowid),
+        uuid,
         type,
         parentId,
         name,

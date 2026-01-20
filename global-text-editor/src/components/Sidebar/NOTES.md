@@ -1,11 +1,11 @@
+# Folders and Files
+Files and Folders can't be real directory. This makes moving those difficult.
 
-# Sidebar logics
-Currently, same names for files and folders under same directory are allowd.
-This is enabled since only fsNode id is the primary key that keeps the unique row in FsNode table.
+However, still will enforce no name under the same directory for convention (least important so care about this later). For now, we have set constraint `(parent_id, name)` in db.
 
-Folder directories will be abstracted and handled by DB only.
-However, for files, we will create physical files via OS.
-Then, when creating physical files, consider creating shards using hash function to prevent folders from being chunked by too many files
+Each folder and file will have UUID, and all file metadata will be stored in its UUID. This makes it easy to sync across devices.
+
+Later, we will support 'export to PDF' and 'locate file' feature to provide a way to access a copy of file content, or its metadata.
 
 
 # Sidebar Optimization
@@ -27,3 +27,11 @@ Currently, there is only one static root. Need to implement actual dynamic root 
 ## File Icons
 
 ## File and Folder highlight logics
+
+## Dropdown on files
+
+## File and Folder indentation
+Currently file and folder indentation are not stable
+
+## Input field width issue
+Need to dynamically set width 
