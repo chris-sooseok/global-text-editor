@@ -1,6 +1,6 @@
 // TabGroup.tsx
 import { useState } from "react"
-import NormalType from "./FileTypes/NormalType/NormalType"
+import NormalType from "../FileTypes/NormalType/NormalType"
 import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
 import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
