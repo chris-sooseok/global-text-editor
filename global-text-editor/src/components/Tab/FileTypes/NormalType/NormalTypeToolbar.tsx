@@ -1,13 +1,14 @@
-
-import { Editor } from "@tiptap/react"
+import { useEffect, useState } from "react"
+import type { Editor } from "@tiptap/react"
 
 export default function NormalTypeToolbar(
     {editor} : {editor: Editor | null}
 ) {
 
+  const [headingChoice, setHeadingChoice] = useState("")
 
-  if (!editor) { return null}
-
+  if (!editor) return null
+  
   return (
   <>
   {/* Toolbar */}
@@ -22,27 +23,40 @@ export default function NormalTypeToolbar(
         borderBottom: "1px solid rgba(0,0,0,0.08)",
       }}
     >
+      <select
+        value=""
+        onChange={(e) => {
+          const level = Number(e.target.value) as 1 | 2 | 3
+          editor.chain().focus().setHeading({ level }).run()
+          setHeadingChoice("") // reset so it shows "H" again
+        }}
+        
+        style={{
+          cursor: "pointer",
+          outline: "none"
+        }}
+      >
+        <option value="" disabled>
+          H
+        </option>
+        <option value="1">Heading 1</option>
+        <option value="2">Heading 2</option>
+        <option value="3">Heading 3</option>
+      </select>
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         style={{ fontWeight: editor.isActive('bold') ? 'bold' : 'normal' }}
       >
-        Bold
+        B
       </button>
 
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
         style={{ fontStyle: editor.isActive('italic') ? 'italic' : 'normal' }}
       >
-        Italic
+        I
       </button>
 
-      <button
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        // toggleHeading({ level }) switches between paragraph and that heading level
-        style={{ fontWeight: editor.isActive('heading', { level: 1 }) ? 'bold' : 'normal' }}
-      >
-        H1
-      </button>
 
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}

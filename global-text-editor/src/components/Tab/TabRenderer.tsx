@@ -1,5 +1,5 @@
 import Tab from "./Tab"
-import { TabManagerStore } from "../../store/TabManagerStore/tabManagerStore"
+import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
 function TabRenderer() {
 
