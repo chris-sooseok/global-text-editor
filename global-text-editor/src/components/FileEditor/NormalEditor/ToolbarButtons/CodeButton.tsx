@@ -13,18 +13,12 @@ function CodeButton({
 }) {
   if (!editor) return null
 
-  const isActive = editor.isActive("code")
-
   return (
     <button
       type="button"
-      aria-label="Inline code"
       onMouseDown={(e) => {
         e.preventDefault()
         editor.chain().focus().toggleCode().run()
-      }}
-      style={{
-        background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
       }}
     >
       <ToolbarIcon 

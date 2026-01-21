@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
+import { FontSize, FontFamily, TextStyle } from "@tiptap/extension-text-style"
 import { ListKit } from "@tiptap/extension-list"
 import Highlight from "@tiptap/extension-highlight"
 import Link from "@tiptap/extension-link"
@@ -20,6 +21,9 @@ export default function NormalEditor() {
   // editor configuration
   const editor = useEditor({
     extensions: [
+      FontFamily,
+      TextStyle,
+      FontSize,
       StarterKit.configure({
         bulletList: false,
         orderedList: false,

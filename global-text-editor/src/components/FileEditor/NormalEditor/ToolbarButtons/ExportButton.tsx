@@ -25,29 +25,19 @@ function ExportButton({
 
   if (!editor) return null
 
-  const markdownIcon = themeColor === "black" ? whiteMarkdownIcon : blackMarkdownIcon
-  const pdfIcon = themeColor === "black" ? whitePdfIcon : blackPdfIcon
-
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
       {/* Toolbar Button */}
       <button
         ref={btnRef}
         type="button"
-        aria-label="Export"
         onMouseDown={(e) => {
           e.preventDefault()
           setDropdownIsOpen((v) => !v)
         }}
         style={{
           background: "rgba(255,255,255,0.05)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          lineHeight: 0,
         }}
-        aria-haspopup="menu"
-        aria-expanded={dropdownIsOpen}
       >
         <ToolbarIcon
           themeColor={themeColor}
@@ -64,65 +54,40 @@ function ExportButton({
         themeColor={themeColor}
         align="right"
       >
+        {/* Markdown */}
         <button
           type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
+          onMouseDown={async () => {
             const md = editor.getMarkdown()
-            setDropdownIsOpen(false)
-
-            void (async () => {
-              try {
-                await navigator.clipboard.writeText(md)
-              } catch {
-                window.prompt("Copy Markdown:", md)
-              }
-            })()
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: "transparent",
+            try {
+              await navigator.clipboard.writeText(md)
+            } catch {
+              window.prompt("Copy Markdown:", md)
+            }
           }}
         >
-          <img src={markdownIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
-          <span>Copy Markdown</span>
+          <ToolbarIcon
+            themeColor={themeColor}
+            blackIcon={blackMarkdownIcon}
+            whiteIcon={whiteMarkdownIcon}
+          />
+          <span>Export to markdown</span>
         </button>
-
+        {/* PDF */}
         <button
           type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            setDropdownIsOpen(false)
-
-            void (async () => {
-              const res = await window.api.exportToPDF()
-              if (!res.ok || res.canceled) return
-              window.alert(`Saved PDF: ${res.filePath}`)
-            })()
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: "transparent",
+          onMouseDown={async () => {
+            const res = await window.api.exportToPDF()
+            if (!res.ok || res.canceled) return
+            window.alert(`Saved PDF: ${res.filePath}`)
           }}
         >
-          <img src={pdfIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
-          <span>Save PDF</span>
+          <ToolbarIcon
+            themeColor={themeColor}
+            blackIcon={blackPdfIcon}
+            whiteIcon={whitePdfIcon}
+          />
+          <span>Export to PDF</span>
         </button>
       </DropdownOverlay>
     </div>

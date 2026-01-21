@@ -22,13 +22,18 @@ function ListButton({
 
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
-  const bulletIcon = themeColor === "black" ? whiteBulletIcon : blackBulletIcon
-  const numberedIcon = themeColor === "black" ? whiteNumberedIcon : blackNumberedIcon
-  const taskIcon = themeColor === "black" ? whiteTaskIcon : blackTaskIcon
+
+  const activeIcons =
+    editor.isActive("taskList")
+      ? { black: blackTaskIcon, white: whiteTaskIcon }
+      : editor.isActive("orderedList")
+        ? { black: blackNumberedIcon, white: whiteNumberedIcon }
+        : { black: blackBulletIcon, white: whiteBulletIcon }
 
   return (
     <div style={{ 
-      position: "relative",
+      position: "relative", // allows dropdown position
+      // align with toolbar
       display: "flex",
       alignItems: "center"
     }}>
@@ -36,21 +41,15 @@ function ListButton({
       <button
         ref={btnRef}
         type="button"
-        aria-label="List options"
         onMouseDown={(e) => {
           e.preventDefault()
           setDropdownIsOpen(dropdownIsOpen ? false : true)
         }}
-        style={{
-          background: "rgba(255,255,255,0.05)",
-        }}
-        aria-haspopup="menu"
-        aria-expanded={dropdownIsOpen}
       >
         <ToolbarIcon 
           themeColor={themeColor} 
-          blackIcon={blackBulletIcon}
-          whiteIcon={whiteBulletIcon}
+          blackIcon={activeIcons.black}
+          whiteIcon={activeIcons.white}
         />
       </button>
 
@@ -60,81 +59,43 @@ function ListButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         themeColor={themeColor}
+        // 
+        activeCheck={(key) => editor.isActive(key)} 
       >
+        {/* BulletList */}
         <button
-          type="button"
-
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().toggleBulletList().run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            whiteSpace: "nowrap",
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: editor.isActive("bulletList")
-              ? "rgba(67, 102, 158, 0.18)"
-              : "transparent",
-          }}
+          data-active-key="bulletList"
+          onMouseDown={() => editor.chain().focus().toggleBulletList().run()}
         >
-          <img src={bulletIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackBulletIcon} 
+            whiteIcon={whiteBulletIcon} 
+          />
           <span>Bullet list</span>
         </button>
-
+        {/* OrderedList */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().toggleOrderedList().run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: editor.isActive("orderedList")
-              ? "rgba(67, 102, 158, 0.18)"
-              : "transparent",
-          }}
+          data-active-key="orderedList"
+          onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}
         >
-          <img src={numberedIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackNumberedIcon} 
+            whiteIcon={whiteNumberedIcon} 
+          />
           <span>Ordered list</span>
         </button>
-
+        {/* TaskList */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().toggleTaskList().run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            padding: "6px 10px",
-            borderRadius: 8,
-            background: editor.isActive("taskList")
-              ? "rgba(3, 98, 251, 0.18)"
-              : "transparent",
-          }}
+          data-active-key="taskList"
+          onMouseDown={() => editor.chain().focus().toggleTaskList().run()}
         >
-          <img src={taskIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackTaskIcon} 
+            whiteIcon={whiteTaskIcon} 
+          />
           <span>Task list</span>
         </button>
       </DropdownOverlay>

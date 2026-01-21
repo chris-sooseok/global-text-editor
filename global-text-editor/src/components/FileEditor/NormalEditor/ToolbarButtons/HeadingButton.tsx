@@ -19,7 +19,15 @@ function HeadingButton({
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const levels = [1, 2, 3, 4] as const
+  
 
+  const activeLevel =
+    editor.isActive("heading", { level: 1 }) ? 1 :
+    editor.isActive("heading", { level: 2 }) ? 2 :
+    editor.isActive("heading", { level: 3 }) ? 3 :
+    editor.isActive("heading", { level: 4 }) ? 4 :
+    null
+  
   return (
     <div style={{ 
       position: "relative",
@@ -32,19 +40,34 @@ function HeadingButton({
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
-          setDropdownIsOpen(dropdownIsOpen ? false : true)
+          setDropdownIsOpen((v) => !v)
         }}
         style={{
           background: "rgba(255,255,255,0.05)",
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
         }}
-        aria-haspopup="menu"
-        aria-expanded={dropdownIsOpen}
       >
-        <ToolbarIcon 
-          themeColor={themeColor} 
+        <ToolbarIcon
+          themeColor={themeColor}
           blackIcon={blackHIcon}
           whiteIcon={whiteHIcon}
         />
+
+        {activeLevel ? (
+          <span
+            style={{
+              position: "absolute",
+              right: -2,
+              bottom: 1,
+              fontSize: 10,
+              lineHeight: "10px",
+            }}
+          >
+            {activeLevel}
+          </span>
+        ) : null}
       </button>
 
       {/* Dropdown Options */}
@@ -53,23 +76,18 @@ function HeadingButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         themeColor={themeColor}
+        activeCheck={(level) => editor.isActive("heading", { level: Number(level) })}
       >
         {levels.map((level) => {
-          const isActive = editor.isActive("heading", { level })
-
           return (
             <button
               key={level}
+              data-active-key={level}
               type="button"
-              role="menuitem"
               onMouseDown={(e) => {
                 e.preventDefault()
                 editor.chain().focus().toggleHeading({ level }).run()
                 setDropdownIsOpen(false)
-              }}
-              style={{
-                padding: "1px",
-                background: isActive ? "rgba(67, 102, 158, 0.18)" : "transparent",
               }}
             >
               Heading {level}

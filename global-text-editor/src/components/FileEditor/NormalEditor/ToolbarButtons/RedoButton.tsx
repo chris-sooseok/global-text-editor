@@ -18,14 +18,12 @@ function RedoButton({
   return (
     <button
     type="button"
-    aria-label="Redo"
     disabled={!canRedo}
     onMouseDown={(e) => {
         e.preventDefault()
         editor.chain().focus().redo().run()
     }}
     style={{
-        background: "rgba(255,255,255,0.05)",
         opacity: canRedo ? 1 : 0.4,
     }}
     >
