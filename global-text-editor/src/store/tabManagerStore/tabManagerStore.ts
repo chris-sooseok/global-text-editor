@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { parseLocalStorage } from '../../utils/utils'
+import { parseLocalStorage } from '../../shared/utils'
 import type { FileNode } from '../FsTreeStore/FsTreeTypes'
 import { tabStateCommiter } from './TabMangerStoreHelper'
 

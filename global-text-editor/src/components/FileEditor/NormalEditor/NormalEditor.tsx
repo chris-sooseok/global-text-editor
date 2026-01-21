@@ -9,6 +9,8 @@ import Subscript from "@tiptap/extension-subscript"
 import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
 import NormalToolbarRenderer from "./NormalToolbarRenderer"
+import { Markdown } from '@tiptap/markdown'
+
 
 export type themeColorType = "black" | "white"
 
@@ -30,6 +32,7 @@ export default function NormalEditor() {
       Subscript,
       TextAlign,
       Image,
+      Markdown,
     ],
     content: "",
 

@@ -28,6 +28,9 @@ declare global {
       )
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
+
+
+      exportToPDF(): Promise<>
     }
   }
 }
