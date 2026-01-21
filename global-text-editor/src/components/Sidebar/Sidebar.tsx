@@ -8,8 +8,8 @@ import {
   renderNewNodePromptHandler,
   renderNodeHandler,
 } from './SidebarHandler'
-import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
-import newFileIcon from '../../assets/icons8-add-file-96-black.png'
+import newFolderIcon from '../../assets/Sidebar/icons8-add-folder-96-black.png'
+import newFileIcon from '../../assets/Sidebar/icons8-add-file-96-black.png'
 import IconButton from './IconButton'
 import { parseLocalStorage } from '../../utils/utils'
 
