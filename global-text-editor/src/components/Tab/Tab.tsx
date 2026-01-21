@@ -1,13 +1,12 @@
 // TabGroup.tsx
 import { useState } from "react"
-import NormalTypeEditor from "../FileTypes/NormalType/NormalTypeEditor"
+import NormalEditor from "../FileEditor/NormalEditor/NormalEditor"
 import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
 import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
-
 function Tab({tabId}: {tabId: string}) {
 
-  // right-click on file display dropdown DOM
+  // right-click on filename display dropdown DOM
   const [dropdownMenu, setDropdownMenu] = useState<{
     open: boolean
     x: number
@@ -29,6 +28,7 @@ function Tab({tabId}: {tabId: string}) {
   const closeFile = TabManagerStore((s) => s.closeFile)
   const closeTab = TabManagerStore((s) => s.closeTab)
 
+  // TODO: will have to consider loading tiptap editor here and update content on file change
   // const editor = useEditor({
   //   extensions: [StarterKit],
   //   content: "<p>Hello TipTap</p>",
@@ -36,7 +36,7 @@ function Tab({tabId}: {tabId: string}) {
 
   return (
   <>
-  {/* Tab and FileContent Container */}
+  {/* Tab and FileEditor Container */}
   <div
     style={{
       height: "100%",
@@ -45,41 +45,42 @@ function Tab({tabId}: {tabId: string}) {
       overflow: "hidden",
     }}
   >
-    {/* Tab bar */}
+    {/* Tabbar Container */}
     <div
       style={{
         height: 45, // tab height
         display: "flex",
-        alignItems: "stretch", // files fill tab space
-        padding: "0 15px 0 0", // right padding for close btn
-        borderRight: "1px solid rgba(0,0,0,0.15)",
-        justifyContent: "space-between" // space between files and close btn
+        alignItems: "stretch", // files occupy all tab space
+        padding: "0 15px 0 0", // right padding for tab close btn
+        borderRight: "1px solid rgba(0,0,0,0.15)", // tab distinguish
+        justifyContent: "space-between" // space between files and tab close btn
       }}
     >
-      {/* files scrollbar */}
+      {/* files scroll config */}
       <style>{`
         /* Chrome / Edge / Electron */
-        .files-scrollbar::-webkit-scrollbar {
+        .files-scroll::-webkit-scrollbar {
           height: 0px;
         }
-
         /* Firefox */
-        .files-scrollbar {
+        .files-scroll {
           scrollbar-width: none;
         }
       `}</style>
-      {/* File List */}
+      {/* Files Container */}
       <div 
-        className="files-scrollbar"
+        className="files-scroll"
         style={{ 
           display: "flex",
           alignItems: "stretch",
           height: "100%",
+          textWrap: "nowrap",
           gap: 1, // little space between files
-          overflow: "auto", // scrollable
+          overflowX: "auto", // horizontal scroll
+          overflowY: "hidden",
         }}
       >
-        {/* filename and close button */}
+        {/* filename and file close button */}
         {files.map((file) => (
           <div 
             key={file.id} 
@@ -87,7 +88,8 @@ function Tab({tabId}: {tabId: string}) {
               display: "inline-flex",
               alignItems: "center",
               padding: "0 8px", // padding between files
-              gap: 6, // gap between filename and close button
+              gap: 6, // gap between filename and file close button
+              // active file highlight under active or non-active tab
               background:
                 activeFileId === file.id
                   ? (isActiveTab
@@ -108,12 +110,13 @@ function Tab({tabId}: {tabId: string}) {
                 if (!isActiveTab) switchActiveTab(tabId)
                 if (activeFileId !== file.id) switchActiveFile(tabId, file)
               }}
+              // dropdown on right-click on filename
               onContextMenu={(e) => {
                 e.preventDefault()
                 setDropdownMenu({ open: true, x: e.clientX, y: e.clientY, file })
               }}
               style={{
-                padding: "0 5px", // padding around name
+                padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: "16px",
                 fontWeight: activeFileId === file.id ? 600 : 400,
@@ -127,7 +130,7 @@ function Tab({tabId}: {tabId: string}) {
             <button
               onClick={() => closeFile(tabId, file)}
               style={{
-                paddingRight: "5px",
+                paddingRight: "5px", // align padding with filename padding
                 cursor: "pointer",
                 opacity: activeFileId === file.id ? 1 : 0.8,
                 fontSize: "14px",
@@ -140,13 +143,12 @@ function Tab({tabId}: {tabId: string}) {
         ))}
       </div>
       
-
       {/* Tab Close Button */}
       <div 
         style={{
           display: "flex",
           alignItems: "center",
-          paddingLeft: "15px", // preventing file close button to overlap
+          paddingLeft: "15px", // preventing file close button from overlapping
           fontSize: "16px",
           cursor: "pointer"
         }}
@@ -157,9 +159,14 @@ function Tab({tabId}: {tabId: string}) {
       </div>
     </div>
 
-    {/* Content area */}
-    <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
-        <NormalTypeEditor />
+    {/* File Editor */}
+    <div style={{ 
+      flex: 1, // file editor takes up the renaming space
+      minWidth: 0, // force width shrink
+      minHeight: 0, // force height shrink 
+    }}
+    >
+        <NormalEditor />
     </div>
 
   </div>
@@ -176,17 +183,19 @@ function Tab({tabId}: {tabId: string}) {
       {/* menu */}
       <div
         style={{
+          display: "flex",
+          flexDirection: "column",
           position: "fixed",
           left: dropdownMenu.x,
           top: dropdownMenu.y,
           zIndex: 1000,
           border: "1px solid white",
-          background: "grey",
+          borderRadius: "4px",
+          background: "black",
         }}
       >
         <button
           style={{
-            border: 0,
             background: "transparent",
             cursor: "pointer",
             padding: "6px 10px",
@@ -198,6 +207,17 @@ function Tab({tabId}: {tabId: string}) {
           }}
         >
           Split right
+        </button>
+
+        {/* TODO */}
+        <button
+          style={{
+            background: "transparent",
+            cursor: "pointer",
+            padding: "6px 10px",
+          }}
+        >
+          Copy Path
         </button>
       </div>
     </>
