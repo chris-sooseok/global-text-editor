@@ -26,12 +26,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    /* Path alias for Tiptap SimpleEditor code generated under project-root "@/..." */
+    /* allows ts accept assets dir */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./@/*"]
+      "assets/*": ["src/assets/*"]
     }
   },
 
-  "include": ["src", "@"]
+  "include": ["src"]
 }

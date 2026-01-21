@@ -1,6 +1,6 @@
 // TabGroup.tsx
 import { useState } from "react"
-import NormalType from "../FileTypes/NormalType/NormalType"
+import NormalTypeEditor from "../FileTypes/NormalType/NormalTypeEditor"
 import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
 import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
@@ -159,7 +159,7 @@ function Tab({tabId}: {tabId: string}) {
 
     {/* Content area */}
     <div style={{ flex: 1, minWidth: 0, minHeight: 0, overflowY: "auto", overflowX: "hidden" }}>
-        <NormalType />
+        <NormalTypeEditor />
     </div>
 
   </div>

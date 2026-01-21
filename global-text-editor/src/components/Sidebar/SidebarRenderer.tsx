@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
-import hideIcon from '../../assets/icons8-hide-sidepanel-96.png'
+import hideIcon from '../../assets/Sidebar/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
 import { parseLocalStorage } from '../../utils/utils'
 
