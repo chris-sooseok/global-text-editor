@@ -16,7 +16,42 @@ body {
   box-sizing: border-box;
 }
 
-
+/* ProseMirror Styles */
 .ProseMirror:focus {
 
 }
+
+/* Notion-ish editor surface */
+.ProseMirror {
+  padding: 24px 18px;
+  min-height: 100%;
+  outline: none;
+
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* headings spacing */
+.ProseMirror h1 { font-size: 2.1em; margin: 0.9em 0 0.4em; }
+.ProseMirror h2 { font-size: 1.6em; margin: 0.85em 0 0.35em; }
+.ProseMirror h3 { font-size: 1.3em; margin: 0.8em 0 0.3em; }
+
+/* paragraph spacing */
+.ProseMirror p { margin: 0.5em 0; }
+
+/* blockquote */
+.ProseMirror blockquote {
+  margin: 0.8em 0;
+  padding-left: 12px;
+  border-left: 3px solid rgba(127,127,127,0.4);
+}
+
+/* code block */
+.ProseMirror pre {
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+/* lists spacing */
+.ProseMirror ul, .ProseMirror ol { padding-left: 1.4em; }
