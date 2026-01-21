@@ -1,10 +1,17 @@
 import type { Editor } from "@tiptap/core"
-
+import type { themeColorType } from "../NormalEditor"
+import ToolbarIcon from "./Components/ToolbarIcon"
 import blackLinkIcon from "assets/NormalTypeIcons/icons8-attach-black-96.png"
 import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
 
 
-function LinkButton({ editor }: { editor: Editor | null }) {
+function LinkButton({ 
+  editor,
+  themeColor
+}: {
+  editor: Editor | null
+  themeColor: themeColorType
+}) {
   if (!editor) return null
 
   const isActive = editor.isActive("link")
@@ -46,7 +53,11 @@ function LinkButton({ editor }: { editor: Editor | null }) {
         background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
       }}
     >
-      🔗
+      <ToolbarIcon 
+        themeColor={themeColor} 
+        blackIcon={blackLinkIcon}
+        whiteIcon={whiteLinkIcon}
+      />
     </button>
   )
 }

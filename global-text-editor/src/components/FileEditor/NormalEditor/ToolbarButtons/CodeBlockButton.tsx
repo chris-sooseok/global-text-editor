@@ -1,9 +1,16 @@
 import type { Editor } from "@tiptap/core"
-
+import type { themeColorType } from "../NormalEditor"
+import ToolbarIcon from "./Components/ToolbarIcon"
 import blackCodeBlockIcon from "assets/NormalTypeIcons/icons8-code-block-black-96.png"
 import whiteCodeBlockIcon from "assets/NormalTypeIcons/icons8-code-block-white-96.png"
 
-function CodeBlockButton({ editor }: { editor: Editor | null }) {
+function CodeBlockButton({
+  editor,
+  themeColor
+}: {
+  editor: Editor | null
+  themeColor: themeColorType
+}) {
   if (!editor) return null
 
   const isActive = editor.isActive("codeBlock")
@@ -20,7 +27,11 @@ function CodeBlockButton({ editor }: { editor: Editor | null }) {
         background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
       }}
     >
-      [code]
+      <ToolbarIcon 
+        themeColor={themeColor} 
+        blackIcon={blackCodeBlockIcon}
+        whiteIcon={whiteCodeBlockIcon}
+      />
     </button>
   )
 }
