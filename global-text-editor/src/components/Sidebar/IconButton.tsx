@@ -36,7 +36,7 @@ export default function IconButton({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '1px solid rgba(0,0,0,0.15)',
+        border: '2px solid rgb(229, 218, 218))',
         borderRadius: 6,
         background: background,
         cursor: disabled ? 'not-allowed' : 'pointer',

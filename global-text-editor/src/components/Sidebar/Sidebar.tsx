@@ -8,8 +8,8 @@ import {
   renderNewNodePromptHandler,
   renderNodeHandler,
 } from './SidebarHandler'
-import newFolderIcon from '../../assets/Sidebar/icons8-add-folder-96-black.png'
-import newFileIcon from '../../assets/Sidebar/icons8-add-file-96-black.png'
+import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
+import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
 import IconButton from './IconButton'
 import { parseLocalStorage } from '../../utils/utils'
 
@@ -317,7 +317,7 @@ function Sidebar() {
               label="Create folder"
               buttonSize={28}
               iconSize={16}
-              background="white"
+              background="transparent"
               onClick={() => createNewNode('folder')}
             />
             <IconButton
@@ -326,7 +326,7 @@ function Sidebar() {
               label="Create file"
               buttonSize={28}
               iconSize={16}
-              background="white"
+              background="transparent"
               onClick={() => createNewNode('file')}
             />
           </div>

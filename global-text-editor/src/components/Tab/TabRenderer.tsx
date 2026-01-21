@@ -16,8 +16,9 @@ function TabRenderer() {
     {/* Tabs Container */}
     <div
       style={{
-        display: "flex",
-        width: "100%",
+        display: "flex", // horizontally rendering tabs
+        // tabs should take all space
+        width: "100%", 
         height: "100%",
         overflow: "hidden",
       }}
@@ -27,7 +28,7 @@ function TabRenderer() {
         <div
           key={tabId}
           style={{
-            flex: 1,
+            flex: 1, // each tab takes up space
             height: "100%",
             overflow: "hidden",
           }}

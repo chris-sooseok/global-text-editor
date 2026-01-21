@@ -1,19 +1,21 @@
 import { useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import NormalTypeToolbarRenderer from "./NormalTypeToolbar/NormalTypeToolbarRenderer"
-
+import { ListKit } from "@tiptap/extension-list"
 import Highlight from "@tiptap/extension-highlight"
-import Image from "@tiptap/extension-image"
+import Link from "@tiptap/extension-link"
 import SuperScript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
-import Link from "@tiptap/extension-link"
-import { ListKit } from "@tiptap/extension-list"
 import TextAlign from "@tiptap/extension-text-align"
+import Image from "@tiptap/extension-image"
+import NormalToolbarRenderer from "./NormalToolbarRenderer"
 
-export default function NormalTypeEditor() {
-  const [isLight, setIsLight] = useState(false)
+export type themeColorType = "black" | "white"
 
+export default function NormalEditor() {
+  const [themeColor, setThemeColor] = useState<themeColorType>("black")
+
+  // editor configuration
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -49,45 +51,37 @@ export default function NormalTypeEditor() {
   })
 
   return (
+  <>
+    {/* Toolbar and Editor Container */}
     <div
       style={{
-        height: "100%",
         display: "flex",
         flexDirection: "column",
+        height: "100%",
+        overflowY: "auto",
+        overflowX: "hidden", // ! will have to change for multiple tabs
+        background: themeColor === "black" ? "rgba(0,0,0,1)" : "rgba(255,255,255,1)",
       }}
     >
-      {/* Editor */}
-      <div
+      <NormalToolbarRenderer
+        editor={editor}
+        themeColor={themeColor}
+        setThemeColor={setThemeColor}
+      />
+
+      <EditorContent
+        editor={editor}
+        // ✅ typography colors switch (dark mode uses prose-invert)
+        className={
+          (themeColor === "black" ? "prose prose-invert " : "prose ") +
+          "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
+        }
+        // ✅ ensure the editable surface inherits the background
         style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          padding: "0 10px 10px 10px",
-
-          // ✅ editor area background switches too
-          background: isLight ? "rgba(255,255,255,1)" : "rgba(0,0,0,1)",
+          background: "transparent",
         }}
-      >
-        <NormalTypeToolbarRenderer
-          editor={editor}
-          isLight={isLight}
-          setIsLight={setIsLight}
-        />
-
-        <EditorContent
-          editor={editor}
-          // ✅ typography colors switch (dark mode uses prose-invert)
-          className={
-            (isLight ? "prose " : "prose prose-invert ") +
-            "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
-          }
-          // ✅ ensure the editable surface inherits the background
-          style={{
-            background: "transparent",
-            minHeight: "100%",
-          }}
-        />
-      </div>
+      />
     </div>
+  </>
   )
 }

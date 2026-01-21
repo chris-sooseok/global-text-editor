@@ -9,12 +9,14 @@ import whiteNumberedIcon from "assets/NormalTypeIcons/icons8-numbered-list-white
 import blackTaskIcon from "assets/NormalTypeIcons/icons8-task-list-black-96.png"
 import whiteTaskIcon from "assets/NormalTypeIcons/icons8-task-list-white-96.png"
 
+import type { themeColorType } from "../NormalEditor"
+
 function ListDropdown({
   editor,
-  isLight,
+  themeColor,
 }: {
   editor: Editor | null
-  isLight: boolean
+  themeColor: themeColorType
 }) {
   const [open, setOpen] = useState(false)
 
@@ -45,7 +47,7 @@ function ListDropdown({
           {
             key: "bullet",
             label: "Bullet list",
-            iconSrc: isLight ? blackBulletIcon : whiteBulletIcon,
+            iconSrc: themeColor === "black" ? whiteBulletIcon : blackBulletIcon,
             isActive: editor.isActive("bulletList"),
             onMouseDown: (e) => {
               e.preventDefault()
@@ -56,7 +58,7 @@ function ListDropdown({
           {
             key: "ordered",
             label: "Ordered list",
-            iconSrc: isLight ? blackNumberedIcon : whiteNumberedIcon,
+            iconSrc: themeColor === "black" ? whiteNumberedIcon : blackNumberedIcon,
             isActive: editor.isActive("orderedList"),
             onMouseDown: (e) => {
               e.preventDefault()
@@ -67,7 +69,7 @@ function ListDropdown({
           {
             key: "task",
             label: "Task list",
-            iconSrc: isLight ? blackTaskIcon : whiteTaskIcon,
+            iconSrc: themeColor === "black" ? whiteTaskIcon : blackTaskIcon ,
             isActive: editor.isActive("taskList"),
             onMouseDown: (e) => {
               e.preventDefault()
