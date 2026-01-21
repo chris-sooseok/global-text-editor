@@ -14,8 +14,6 @@ function SubscriptButton({
 }) {
   if (!editor) return null
 
-  const isActive = editor.isActive("subscript")
-
   return (
       <button
         type="button"
@@ -23,9 +21,6 @@ function SubscriptButton({
         onMouseDown={(e) => {
           e.preventDefault()
           editor.chain().focus().toggleSubscript().run()
-        }}
-        style={{
-          background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
         }}
       >
         <ToolbarIcon 

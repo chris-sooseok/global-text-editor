@@ -13,18 +13,12 @@ function CodeBlockButton({
 }) {
   if (!editor) return null
 
-  const isActive = editor.isActive("codeBlock")
-
   return (
     <button
       type="button"
-      aria-label="Code block"
       onMouseDown={(e) => {
         e.preventDefault()
         editor.chain().focus().toggleCodeBlock().run()
-      }}
-      style={{
-        background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
       }}
     >
       <ToolbarIcon 

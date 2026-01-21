@@ -16,7 +16,6 @@ function ThemeColorButton({
   return (
     <button
       type="button"
-      aria-label="Toggle theme"
       onMouseDown={(e) => {
         e.preventDefault()
         setThemeColor((prev) => (prev === "black" ? "white" : "black"))

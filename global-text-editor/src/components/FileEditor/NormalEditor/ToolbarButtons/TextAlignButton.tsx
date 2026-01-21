@@ -13,7 +13,6 @@ import blackJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-b
 import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-white-96.png"
 
 
-
 function TextAlignButton({
   editor,
   themeColor
@@ -25,11 +24,15 @@ function TextAlignButton({
 
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
-  const leftAlignIcon = themeColor === "black" ? whiteLeftAlignIcon : blackLeftAlignIcon
-  const centerAlignIcon = themeColor === "black" ? whiteCenterAlignIcon : blackCenterAlignIcon
-  const rightAlignIcon = themeColor === "black" ? whiteRightAlignIcon : blackRightAlignIcon
-  const justifyAlignIcon = themeColor === "black" ? whiteJustifyAlignIcon : blackJustifyAlignIcon
 
+  const activeAlignIcons =
+  editor.isActive({ textAlign: "center" })
+    ? { black: blackCenterAlignIcon, white: whiteCenterAlignIcon }
+    : editor.isActive({ textAlign: "right" })
+      ? { black: blackRightAlignIcon, white: whiteRightAlignIcon }
+      : editor.isActive({ textAlign: "justify" })
+        ? { black: blackJustifyAlignIcon, white: whiteJustifyAlignIcon }
+        : { black: blackLeftAlignIcon, white: whiteLeftAlignIcon }
 
   return (
     <div style={{ 
@@ -41,21 +44,15 @@ function TextAlignButton({
       <button
         ref={btnRef}
         type="button"
-        aria-label="Alignment options"
         onMouseDown={(e) => {
           e.preventDefault()
           setDropdownIsOpen(dropdownIsOpen ? false : true)
         }}
-        style={{
-          background: "rgba(255,255,255,0.05)",
-        }}
-        aria-haspopup="menu"
-        aria-expanded={dropdownIsOpen}
       >
         <ToolbarIcon 
           themeColor={themeColor} 
-          blackIcon={blackJustifyAlignIcon}
-          whiteIcon={whiteJustifyAlignIcon}
+          blackIcon={activeAlignIcons.black}
+          whiteIcon={activeAlignIcons.white}
         />
       </button>
 
@@ -65,82 +62,52 @@ function TextAlignButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         themeColor={themeColor}
+        activeCheck={(key) => editor.isActive({ textAlign: key })}
       >
         {/* Justify */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().setTextAlign("justify").run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            background: editor.isActive({ textAlign: "justify" }) ? "rgba(67, 102, 158, 0.18)" : "transparent",
-          }}
+          data-active-key="justify"
+          onMouseDown={() => editor.chain().focus().setTextAlign("justify").run()}
         >
-          <img src={justifyAlignIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackJustifyAlignIcon} 
+            whiteIcon={whiteJustifyAlignIcon} 
+          />
         </button>
-
         {/* Left */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().setTextAlign("left").run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-          }}
+          data-active-key="left"
+          onMouseDown={() => editor.chain().focus().setTextAlign("left").run()}
         >
-          <img src={leftAlignIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackLeftAlignIcon} 
+            whiteIcon={whiteLeftAlignIcon} 
+          />
         </button>
-
         {/* Center */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().setTextAlign("center").run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            background: editor.isActive({ textAlign: "center" }) ? "rgba(67, 102, 158, 0.18)" : "transparent",
-          }}
+          data-active-key="center"
+          onMouseDown={() => editor.chain().focus().setTextAlign("center").run()}
         >
-          <img src={centerAlignIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackCenterAlignIcon} 
+            whiteIcon={whiteCenterAlignIcon} 
+          />
         </button>
-
         {/* Right */}
         <button
-          type="button"
-          role="menuitem"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            editor.chain().focus().setTextAlign("right").run()
-            setDropdownIsOpen(false)
-          }}
-          style={{
-            width: "100%",
-            textAlign: "left",
-            whiteSpace: "nowrap",
-            background: editor.isActive({ textAlign: "right" }) ? "rgba(67, 102, 158, 0.18)" : "transparent",
-          }}
+          data-active-key="right"
+          onMouseDown={() => editor.chain().focus().setTextAlign("right").run()}
         >
-          <img src={rightAlignIcon} alt="" aria-hidden="true" style={{ width: 16, height: 16 }} />
+          <ToolbarIcon 
+            themeColor={themeColor} 
+            blackIcon={blackRightAlignIcon} 
+            whiteIcon={whiteRightAlignIcon} 
+          />
         </button>
-
       </DropdownComponent>
     </div>
   )

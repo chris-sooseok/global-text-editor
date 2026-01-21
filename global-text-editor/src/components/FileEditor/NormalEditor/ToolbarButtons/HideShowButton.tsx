@@ -24,13 +24,9 @@ function HideShowButton({
   return (
     <button
       type="button"
-      aria-label={toolbarIsVisible ? "Hide toolbar" : "Show toolbar"}
       onMouseDown={(e) => {
         e.preventDefault()
         setToolbarIsVisible((prev) => !prev)
-      }}
-      style={{
-        background: toolbarIsVisible ? "rgba(255,255,255,0.05)" : "rgba(67, 102, 158, 0.18)",
       }}
     >
       {toolbarIsVisible 

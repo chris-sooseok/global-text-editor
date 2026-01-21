@@ -20,6 +20,8 @@ import RedoButton from "./ToolbarButtons/RedoButton"
 import ThemeColorButton from "./ToolbarButtons/ThemeColorButton"
 import ExportButton from "./ToolbarButtons/ExportButton"
 import HideShowButton from "./ToolbarButtons/HideShowButton"
+import FontSizeButton from "./ToolbarButtons/FontSizeButton"
+import FontFamilyButton from "./ToolbarButtons/FontFamilyButton"
 
 function NormalToolbarRenderer({
   editor,
@@ -55,26 +57,46 @@ function NormalToolbarRenderer({
     {/* Button List */}
     <div 
       style={{ 
-        position: "relative", // set center and right buttons
-
+        display: "flex", // set center and right buttons
+        alignItems: "center",
+        gap: 12,
       } 
       }>
       {toolbarIsVisible ? <>
-        {/* Center Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            // center dropdown-embeded buttons since
-            // they return "relative" element instead of button element
-            alignItems: "center", 
-            gap: 18,
-            flexWrap: "nowrap",
-          }}
-        >
+        {/* Left Buttons */}
+              {/* files scroll config */}
+      <style>{`
+        /* Chrome / Edge / Electron */
+        .files-scroll::-webkit-scrollbar {
+          height: 0px;
+        }
+        /* Firefox */
+        .files-scroll {
+          scrollbar-width: none;
+        }
+      `}</style>
+<div
+  className="files-scroll"
+  style={{
+    flex: 1,
+    minWidth: 0,
+    overflowX: "auto",
+    overflowY: "hidden",
+  }}
+>
+  <div
+    style={{
+      display: "flex",     // important: shrink-to-fit content
+      alignItems: "center",
+      gap: 14,
+      flexWrap: "nowrap",
+      width: "max-content",
+    }}
+  >
           {/* TODO
           font style */}
-          
+          <FontFamilyButton editor={editor} themeColor={themeColor} />
+          <FontSizeButton editor={editor} themeColor={themeColor} />
           <HeadingButton editor={editor} themeColor={themeColor} />
           <ListButton editor={editor} themeColor={themeColor} />
           <BackQuoteButton editor={editor} themeColor={themeColor} />
@@ -90,20 +112,16 @@ function NormalToolbarRenderer({
           <ImageButton editor={editor} themeColor={themeColor} />
           <UndoButton editor={editor} themeColor={themeColor}/>
           <RedoButton editor={editor} themeColor={themeColor}/>
-        </div> </> 
-        : null}  
+        </div> 
+        </div></> 
+        : <div style={{ flex: 1, minWidth: 0 }} />}  
 
         {/* Right Buttons */}
         <div
           style={{
             display: "flex",
-            // position them at the right cornet
-            position: "absolute",
-            right: 0,
-            // center
-            top: "50%",
-            transform: "translateY(-50%)",
             gap: 8,
+            flexShrink: 0
           }}
         >
           <ExportButton 

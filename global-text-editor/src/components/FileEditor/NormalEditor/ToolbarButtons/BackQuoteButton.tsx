@@ -15,8 +15,6 @@ function BackQuoteButton({
 }) {
   if (!editor) return null
 
-  const isActive = editor.isActive("blockquote")
-
   return (
     <button
       type="button"
@@ -24,9 +22,6 @@ function BackQuoteButton({
       onMouseDown={(e) => {
         e.preventDefault()
         editor.chain().focus().toggleBlockquote().run()
-      }}
-      style={{
-        background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
       }}
     >
       <ToolbarIcon 

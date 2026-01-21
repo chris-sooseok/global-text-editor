@@ -14,8 +14,6 @@ function SuperscriptButton({
 }) {
   if (!editor) return null
 
-  const isActive = editor.isActive("superscript")
-
   return (
       <button
         type="button"
@@ -23,9 +21,6 @@ function SuperscriptButton({
         onMouseDown={(e) => {
           e.preventDefault()
           editor.chain().focus().toggleSuperscript().run()
-        }}
-        style={{
-          background: isActive ? "rgba(67, 102, 158, 0.18)" : "rgba(255,255,255,0.05)",
         }}
       >
         <ToolbarIcon 

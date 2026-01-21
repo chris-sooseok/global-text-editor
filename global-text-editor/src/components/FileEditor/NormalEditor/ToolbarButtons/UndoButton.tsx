@@ -26,7 +26,6 @@ function UndoButton({
         editor.chain().focus().undo().run()
     }}
     style={{
-        background: "rgba(255,255,255,0.05)",
         opacity: canUndo ? 1 : 0.4,
     }}
     >
