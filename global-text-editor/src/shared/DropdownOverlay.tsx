@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import type { themeColorType } from "../components/FileEditor/NormalEditor/NormalEditor"
 
 function DropdownOverlay({
@@ -7,7 +7,8 @@ function DropdownOverlay({
   parentRef,
   align = "left",
   themeColor,
-  activeCheck,
+  activeCheck, // editor active
+  scrollable = true, // scrollable parent needs fixed position
   children,
 }: {
   dropdownIsOpen: boolean
@@ -16,9 +17,12 @@ function DropdownOverlay({
   align?: "left" | "right"
   themeColor: themeColorType
   activeCheck?: (key: string) => boolean
+  scrollable?: boolean
   children: React.ReactNode
 }) {
   const dropdownRef = useRef<HTMLDivElement | null>(null)
+  // for fixed position dropdown
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null) 
 
   useEffect(() => {
     if (!dropdownIsOpen) return
@@ -37,6 +41,22 @@ function DropdownOverlay({
       if (e.key === "Escape") setDropdownIsOpen()
     }
 
+    function updatePos() {
+      if (!scrollable) return
+      const el = parentRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const top = r.bottom + 8
+      const left = align === "left" ? r.left : r.right
+      setPos({ top, left })
+    }
+
+    if (scrollable) {
+      updatePos()
+      window.addEventListener("scroll", updatePos, true)
+      window.addEventListener("resize", updatePos)
+    }
+
     window.addEventListener("pointerdown", onPointerDown, true)
     window.addEventListener("keydown", onKeyDown, true)
 
@@ -44,9 +64,10 @@ function DropdownOverlay({
       window.removeEventListener("pointerdown", onPointerDown, true)
       window.removeEventListener("keydown", onKeyDown, true)
     }
-  }, [dropdownIsOpen, setDropdownIsOpen, parentRef])
+  }, [dropdownIsOpen, setDropdownIsOpen, parentRef, scrollable, align])
 
   if (!dropdownIsOpen) return null
+  if (scrollable && !pos) return null
 
   return (<>
   {/* DropdownOverlay */}
@@ -54,11 +75,13 @@ function DropdownOverlay({
       ref={dropdownRef}
       style={{
         // dropdown positioning
-        position: "absolute",
-        top: "calc(100% + 8px)",
+      position: scrollable ? "fixed" : "absolute",
+        top: scrollable ? pos!.top : "calc(100% + 8px)",
+        left: scrollable ? pos!.left : align === "left" ? 0 : "auto",
+        right: scrollable ? "auto" : align === "right" ? 0 : "auto",
+        transform: scrollable && align === "right" ? "translateX(-100%)" : undefined,
         zIndex: 9999,
-        left: align === "left" ? 0 : "auto",
-        right: align === "right" ? 0 : "auto",
+
         // dropdown styling
         border: (themeColor === "black" 
           ? "1px solid rgba(255, 255, 255, 0.98)" 
@@ -74,7 +97,6 @@ function DropdownOverlay({
         // width adjust buttons
         width: "max-content",
         whiteSpace: "nowrap",
-        justifyContent: "left"
       }}
     >
       {/* Buttons */}
@@ -84,8 +106,6 @@ function DropdownOverlay({
       }}>
         {/* Since each parent requires differnt buttons, we accept them as children */}
         {React.Children.map(children, (child) => {
-
-          
 
           // each button is tied to some action
           const btn = child as React.ReactElement<React.ButtonHTMLAttributes<HTMLButtonElement>>

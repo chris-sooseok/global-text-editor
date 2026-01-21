@@ -53,6 +53,7 @@ function NormalToolbarRenderer({
         ? "2px solid rgba(255,255,255,0.10)"
         : "2px solid rgba(0,0,0,0.10)",
     }}
+    
   >
     {/* Button List */}
     <div 
@@ -64,35 +65,34 @@ function NormalToolbarRenderer({
       }>
       {toolbarIsVisible ? <>
         {/* Left Buttons */}
-              {/* files scroll config */}
-      <style>{`
-        /* Chrome / Edge / Electron */
-        .files-scroll::-webkit-scrollbar {
-          height: 0px;
-        }
-        /* Firefox */
-        .files-scroll {
-          scrollbar-width: none;
-        }
-      `}</style>
-<div
-  className="files-scroll"
-  style={{
-    flex: 1,
-    minWidth: 0,
-    overflowX: "auto",
-    overflowY: "hidden",
-  }}
->
-  <div
-    style={{
-      display: "flex",     // important: shrink-to-fit content
-      alignItems: "center",
-      gap: 14,
-      flexWrap: "nowrap",
-      width: "max-content",
-    }}
-  >
+        <style>{`
+          /* Chrome / Edge / Electron */
+          .toolbar-scroll::-webkit-scrollbar {
+            height: 0px;
+          }
+          /* Firefox */
+          .files-scroll {
+            scrollbar-width: none;
+          }
+        `}</style>
+        <div
+          className="toolbar-scroll"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            overflowX: "auto", //scrollable
+            overflowY: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "nowrap",
+              alignItems: "center",
+              gap: 14,
+              width: "max-content", // forces buttons to overflow
+            }}
+          >
           {/* TODO
           font style */}
           <FontFamilyButton editor={editor} themeColor={themeColor} />
@@ -112,8 +112,7 @@ function NormalToolbarRenderer({
           <ImageButton editor={editor} themeColor={themeColor} />
           <UndoButton editor={editor} themeColor={themeColor}/>
           <RedoButton editor={editor} themeColor={themeColor}/>
-        </div> 
-        </div></> 
+        </div></div> </> 
         : <div style={{ flex: 1, minWidth: 0 }} />}  
 
         {/* Right Buttons */}
@@ -121,7 +120,8 @@ function NormalToolbarRenderer({
           style={{
             display: "flex",
             gap: 8,
-            flexShrink: 0
+            paddingLeft: "5px",
+            flexShrink: 0,
           }}
         >
           <ExportButton 

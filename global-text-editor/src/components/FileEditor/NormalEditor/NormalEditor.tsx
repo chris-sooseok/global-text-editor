@@ -39,7 +39,6 @@ export default function NormalEditor() {
       Markdown,
     ],
     content: "",
-
     coreExtensionOptions: {
       // making a single newline instead of two. This prevents copy/paste from
       // tiptap to other text editor having two lines
@@ -66,7 +65,7 @@ export default function NormalEditor() {
         flexDirection: "column",
         height: "100%",
         overflowY: "auto",
-        overflowX: "hidden", // ! will have to change for multiple tabs
+        overflowX: "hidden",
         background: themeColor === "black" ? "rgba(0,0,0,1)" : "rgba(255,255,255,1)",
       }}
     >
@@ -76,18 +75,19 @@ export default function NormalEditor() {
         setThemeColor={setThemeColor}
       />
 
-      <EditorContent
-        editor={editor}
-        // ✅ typography colors switch (dark mode uses prose-invert)
-        className={
-          (themeColor === "black" ? "prose prose-invert " : "prose ") +
-          "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
-        }
-        // ✅ ensure the editable surface inherits the background
-        style={{
-          background: "transparent",
-        }}
-      />
+      {/* Editor */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ width: "100%", maxWidth: 900 }}>
+          <EditorContent
+            editor={editor}
+            className={
+              (themeColor === "black" ? "prose prose-invert " : "prose ") +
+              "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
+            }
+            style={{ background: "transparent" }}
+          />
+        </div>
+      </div>
     </div>
   </>
   )
