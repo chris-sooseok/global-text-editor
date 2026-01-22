@@ -44,7 +44,8 @@ function NormalToolbarRenderer({
       position: "sticky",
       top: 0,
       zIndex: 10,
-      padding: "10px 15px",
+      padding: "5px 15px",
+      minHeight: 30,
       // change toolbar theme color and border color
       background: themeColor === "black" 
         ? "rgba(0,0,0,1)" 
@@ -63,7 +64,6 @@ function NormalToolbarRenderer({
         gap: 12,
       } 
       }>
-      {toolbarIsVisible ? <>
         {/* Left Buttons */}
         <style>{`
           /* Chrome / Edge / Electron */
@@ -82,6 +82,8 @@ function NormalToolbarRenderer({
             minWidth: 0,
             overflowX: "auto", //scrollable
             overflowY: "hidden",
+            visibility: toolbarIsVisible ? "visible" : "hidden",
+            pointerEvents: toolbarIsVisible ? "auto" : "none",
           }}
         >
           <div
@@ -112,8 +114,8 @@ function NormalToolbarRenderer({
           <ImageButton editor={editor} themeColor={themeColor} />
           <UndoButton editor={editor} themeColor={themeColor}/>
           <RedoButton editor={editor} themeColor={themeColor}/>
-        </div></div> </> 
-        : <div style={{ flex: 1, minWidth: 0 }} />}  
+        </div>
+      </div>
 
         {/* Right Buttons */}
         <div

@@ -1,6 +1,6 @@
 
 import type { themeColorType } from "../NormalEditor"
-import ToolbarIcon from "./Components/ToolbarIcon"
+import ToolbarIcon from "shared/ToolbarIcon"
 import blackSunIcon from "assets/NormalTypeIcons/icons8-sun-black-96.png"
 import whiteSunIcon from "assets/NormalTypeIcons/icons8-sun-white-96.png"
 import blackMoonIcon from "assets/NormalTypeIcons/icons8-moon-black-96.png"

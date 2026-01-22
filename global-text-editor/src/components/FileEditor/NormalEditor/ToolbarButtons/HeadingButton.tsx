@@ -1,8 +1,8 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
 import type { themeColorType } from "../NormalEditor"
-import DropdownOverlay from "../../../../shared/DropdownOverlay"
-import ToolbarIcon from "./Components/ToolbarIcon"
+import DropdownOverlay from "shared/DropdownOverlay"
+import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackHIcon from "assets/NormalTypeIcons/icons8-h-black-96.png"
 import whiteHIcon from "assets/NormalTypeIcons/icons8-h-white-96.png"

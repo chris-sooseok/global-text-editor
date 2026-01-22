@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/core"
 import type { themeColorType } from "../NormalEditor"
-import ToolbarIcon from "./Components/ToolbarIcon"
+import ToolbarIcon from "shared/ToolbarIcon"
 import blackItalicIcon from "assets/NormalTypeIcons/icons8-italic-black-96.png"
 import whiteItalicIcon from "assets/NormalTypeIcons/icons8-italic-white-96.png"
 

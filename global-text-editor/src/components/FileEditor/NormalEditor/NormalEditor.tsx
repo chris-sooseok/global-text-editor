@@ -4,7 +4,6 @@ import StarterKit from "@tiptap/starter-kit"
 import { FontSize, FontFamily, TextStyle } from "@tiptap/extension-text-style"
 import { ListKit } from "@tiptap/extension-list"
 import Highlight from "@tiptap/extension-highlight"
-import Link from "@tiptap/extension-link"
 import SuperScript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
 import TextAlign from "@tiptap/extension-text-align"
@@ -12,6 +11,7 @@ import Image from "@tiptap/extension-image"
 import NormalToolbarRenderer from "./NormalToolbarRenderer"
 import { Markdown } from '@tiptap/markdown'
 
+import Link from "@tiptap/extension-link"
 
 export type themeColorType = "black" | "white"
 
@@ -31,7 +31,6 @@ export default function NormalEditor() {
       }),
       ListKit,
       Highlight,
-      Link,
       SuperScript,
       Subscript,
       TextAlign,
@@ -39,6 +38,12 @@ export default function NormalEditor() {
       Markdown,
     ],
     content: "",
+    editorProps: {
+      attributes: {
+        class: "normal-editor",
+        spellcheck: "false"
+      }
+    },
     coreExtensionOptions: {
       // making a single newline instead of two. This prevents copy/paste from
       // tiptap to other text editor having two lines
@@ -77,7 +82,7 @@ export default function NormalEditor() {
 
       {/* Editor */}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "100%", maxWidth: 900 }}>
+        <div style={{ width: "100%", maxWidth: 600 }}>
           <EditorContent
             editor={editor}
             className={
