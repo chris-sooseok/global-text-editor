@@ -1,14 +1,14 @@
 import { useState } from "react"
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
 function FontSizeButton({
   editor,
-  themeColor,
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
+
+  const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   const [value, setValue] = useState("16")
 
   if (!editor) return null
@@ -41,14 +41,14 @@ function FontSizeButton({
       }}
       style={{
         width: 35,
-        padding: "2px 2px",
+        padding: "0px 2px",
         borderRadius: 6,
         border:
-          themeColor === "black"
-            ? "1px solid rgba(255,255,255,0.20)"
-            : "1px solid rgba(0,0,0,0.20)",
+          editorTheme === "black"
+            ? "1px solid rgba(255, 255, 255, 0.6)"
+            : "1px solid rgba(0, 0, 0, 0.6)",
         background: "transparent",
-        color: themeColor === "black" ? "rgba(255,255,255,0.90)" : "rgba(0,0,0,0.90)",
+        color: editorTheme === "black" ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)",
       }}
     />
   )

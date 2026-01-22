@@ -9,14 +9,11 @@ import whiteNumberedIcon from "assets/NormalTypeIcons/icons8-numbered-list-white
 import blackTaskIcon from "assets/NormalTypeIcons/icons8-task-list-black-96.png"
 import whiteTaskIcon from "assets/NormalTypeIcons/icons8-task-list-white-96.png"
 
-import type { themeColorType } from "../NormalEditor"
 
 function ListButton({
   editor,
-  themeColor,
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -47,7 +44,6 @@ function ListButton({
         }}
       >
         <ToolbarIcon 
-          themeColor={themeColor} 
           blackIcon={activeIcons.black}
           whiteIcon={activeIcons.white}
         />
@@ -58,8 +54,6 @@ function ListButton({
         dropdownIsOpen={dropdownIsOpen}
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        themeColor={themeColor}
-        // 
         activeCheck={(key) => editor.isActive(key)} 
       >
         {/* BulletList */}
@@ -68,9 +62,9 @@ function ListButton({
           onMouseDown={() => editor.chain().focus().toggleBulletList().run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackBulletIcon} 
             whiteIcon={whiteBulletIcon} 
+            onlyBlackIcon={true}
           />
           <span>Bullet list</span>
         </button>
@@ -80,9 +74,9 @@ function ListButton({
           onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackNumberedIcon} 
             whiteIcon={whiteNumberedIcon} 
+            onlyBlackIcon={true}
           />
           <span>Ordered list</span>
         </button>
@@ -92,9 +86,9 @@ function ListButton({
           onMouseDown={() => editor.chain().focus().toggleTaskList().run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackTaskIcon} 
-            whiteIcon={whiteTaskIcon} 
+            whiteIcon={whiteTaskIcon}
+            onlyBlackIcon={true}
           />
           <span>Task list</span>
         </button>

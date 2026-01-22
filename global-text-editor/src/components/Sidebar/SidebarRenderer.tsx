@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import IconButton from './IconButton'
-import hideIcon from '../../assets/Sidebar/icons8-hide-sidepanel-96.png'
+import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
-import { parseLocalStorage } from '../../shared/utils'
+import { parseLocalStorage } from 'shared/parseLocalStorage'
 
 const DEFAULT_SIDEBAR_WIDTH = Number(import.meta.env.VITE_DEFAULT_SIDEBAR_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)

@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackUndoIcon from "assets/NormalTypeIcons/icons8-undo-black-96.png"
 import whiteUndoIcon from "assets/NormalTypeIcons/icons8-undo-white-96.png"
@@ -7,10 +6,8 @@ import whiteUndoIcon from "assets/NormalTypeIcons/icons8-undo-white-96.png"
 
 function UndoButton({ 
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -30,7 +27,6 @@ function UndoButton({
     }}
     >
     <ToolbarIcon 
-        themeColor={themeColor} 
         blackIcon={blackUndoIcon}
         whiteIcon={whiteUndoIcon}
     />

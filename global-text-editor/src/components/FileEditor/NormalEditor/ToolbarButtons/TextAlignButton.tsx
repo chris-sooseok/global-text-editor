@@ -2,7 +2,6 @@ import { useState, useRef} from "react"
 import type { Editor } from "@tiptap/core"
 import DropdownOverlay from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
-import type { themeColorType } from "../NormalEditor"
 import blackLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-black-96.png"
 import whiteLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-white-96.png"
 import blackRightAlignIcon from "assets/NormalTypeIcons/icons8-align-right-black-96.png"
@@ -15,10 +14,8 @@ import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-w
 
 function TextAlignButton({
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
     if (!editor) return null
 
@@ -50,7 +47,6 @@ function TextAlignButton({
         }}
       >
         <ToolbarIcon 
-          themeColor={themeColor} 
           blackIcon={activeAlignIcons.black}
           whiteIcon={activeAlignIcons.white}
         />
@@ -61,7 +57,6 @@ function TextAlignButton({
         dropdownIsOpen={dropdownIsOpen} 
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        themeColor={themeColor}
         activeCheck={(key) => editor.isActive({ textAlign: key })}
       >
         {/* Justify */}
@@ -70,9 +65,9 @@ function TextAlignButton({
           onMouseDown={() => editor.chain().focus().setTextAlign("justify").run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackJustifyAlignIcon} 
-            whiteIcon={whiteJustifyAlignIcon} 
+            whiteIcon={whiteJustifyAlignIcon}
+            onlyBlackIcon={true}
           />
         </button>
         {/* Left */}
@@ -80,10 +75,10 @@ function TextAlignButton({
           data-active-key="left"
           onMouseDown={() => editor.chain().focus().setTextAlign("left").run()}
         >
-          <ToolbarIcon 
-            themeColor={themeColor} 
+          <ToolbarIcon
             blackIcon={blackLeftAlignIcon} 
             whiteIcon={whiteLeftAlignIcon} 
+            onlyBlackIcon={true}
           />
         </button>
         {/* Center */}
@@ -92,9 +87,9 @@ function TextAlignButton({
           onMouseDown={() => editor.chain().focus().setTextAlign("center").run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackCenterAlignIcon} 
-            whiteIcon={whiteCenterAlignIcon} 
+            whiteIcon={whiteCenterAlignIcon}
+            onlyBlackIcon={true}
           />
         </button>
         {/* Right */}
@@ -103,9 +98,9 @@ function TextAlignButton({
           onMouseDown={() => editor.chain().focus().setTextAlign("right").run()}
         >
           <ToolbarIcon 
-            themeColor={themeColor} 
             blackIcon={blackRightAlignIcon} 
-            whiteIcon={whiteRightAlignIcon} 
+            whiteIcon={whiteRightAlignIcon}
+            onlyBlackIcon={true}
           />
         </button>
       </DropdownOverlay>

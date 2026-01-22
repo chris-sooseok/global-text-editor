@@ -11,7 +11,7 @@ import {
 import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
 import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
 import IconButton from './IconButton'
-import { parseLocalStorage } from '../../shared/utils'
+import { parseLocalStorage } from 'shared/parseLocalStorage'
 
 const SELECTED_FILE_KEY = String(import.meta.env.VITE_SELECTED_FILE_KEY)
 const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)

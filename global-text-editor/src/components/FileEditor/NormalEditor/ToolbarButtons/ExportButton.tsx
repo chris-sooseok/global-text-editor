@@ -1,6 +1,5 @@
 import { useRef, useState } from "react"
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import DropdownOverlay from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 
@@ -15,10 +14,8 @@ import whitePdfIcon from "assets/NormalTypeIcons/icons8-pdf-white-96.png"
 
 function ExportButton({
   editor,
-  themeColor,
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
@@ -40,7 +37,6 @@ function ExportButton({
         }}
       >
         <ToolbarIcon
-          themeColor={themeColor}
           blackIcon={blackDownloadIcon}
           whiteIcon={whiteDownloadIcon}
         />
@@ -51,7 +47,6 @@ function ExportButton({
         dropdownIsOpen={dropdownIsOpen}
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        themeColor={themeColor}
         align="right"
       >
         {/* Markdown */}
@@ -67,9 +62,9 @@ function ExportButton({
           }}
         >
           <ToolbarIcon
-            themeColor={themeColor}
             blackIcon={blackMarkdownIcon}
             whiteIcon={whiteMarkdownIcon}
+            onlyBlackIcon={true}
           />
           <span>Export to markdown</span>
         </button>
@@ -83,9 +78,9 @@ function ExportButton({
           }}
         >
           <ToolbarIcon
-            themeColor={themeColor}
             blackIcon={blackPdfIcon}
             whiteIcon={whitePdfIcon}
+            onlyBlackIcon={true}
           />
           <span>Export to PDF</span>
         </button>

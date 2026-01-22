@@ -1,8 +1,8 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FileNode, FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
 import type { SelectedNodeType } from "./Sidebar"
-import folderIcon from '../../assets/Sidebar/icons8-folder-96.png'
-import fileIcon from '../../assets/Sidebar/icons8-file-96.png'
+import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
+import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import { computeMimeTypeFromName } from "./MimeType"
 
 

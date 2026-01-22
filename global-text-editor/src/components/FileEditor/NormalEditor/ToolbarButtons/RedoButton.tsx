@@ -1,15 +1,12 @@
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackRedoIcon from "assets/NormalTypeIcons/icons8-redo-black-96.png"
 import whiteRedoIcon from "assets/NormalTypeIcons/icons8-redo-white-96.png"
 
 function RedoButton({ 
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -28,7 +25,6 @@ function RedoButton({
     }}
     >
     <ToolbarIcon 
-        themeColor={themeColor} 
         blackIcon={blackRedoIcon}
         whiteIcon={whiteRedoIcon}
     />

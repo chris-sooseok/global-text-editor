@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackLinkIcon from "assets/NormalTypeIcons/icons8-attach-black-96.png"
 import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
@@ -7,10 +6,8 @@ import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
 
 function LinkButton({ 
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -49,7 +46,6 @@ function LinkButton({
       }}
     >
       <ToolbarIcon 
-        themeColor={themeColor} 
         blackIcon={blackLinkIcon}
         whiteIcon={whiteLinkIcon}
       />
