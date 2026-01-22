@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { Editor } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 // Button List
@@ -31,11 +31,10 @@ function NormalToolbarRenderer({
 }) {
 
   const toolbarBackground = ThemeManagerStore((s) => s.toolbarBackground)
-
   const [toolbarIsVisible, setToolbarIsVisible] = useState(true)
-
   if (!editor) return null
 
+  
   return (<>
   {/* Toolbar Container */}
   <div
