@@ -1,7 +1,23 @@
 
 # Normal Type Note
 
-First, complete the toolbar
+## Toolbar
+Consider having settings where you can edit which buttons to show
+
+TODO
+- export
+- image upload
+- sync with editor state
+
+consider adding
+- mathmetics
+
+## Editor
+
+TODO
+- set state a4 size and make it scrollable
+- command tool
+- 
 
 Then, we will configure editor
 

@@ -1,4 +1,4 @@
-import type { themeColorType } from "../../NormalEditor"
+import type { themeColorType } from "../components/FileEditor/NormalEditor/NormalEditor"
 
 function ToolbarIcon({
   themeColor,

@@ -1,8 +1,8 @@
 import { useState, useRef} from "react"
 import type { Editor } from "@tiptap/core"
-import DropdownComponent from "../../../../shared/DropdownOverlay"
+import DropdownOverlay from "shared/DropdownOverlay"
+import ToolbarIcon from "shared/ToolbarIcon"
 import type { themeColorType } from "../NormalEditor"
-import ToolbarIcon from "./Components/ToolbarIcon"
 import blackLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-black-96.png"
 import whiteLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-white-96.png"
 import blackRightAlignIcon from "assets/NormalTypeIcons/icons8-align-right-black-96.png"
@@ -57,7 +57,7 @@ function TextAlignButton({
       </button>
 
       {/* Dropdown Options */}
-      <DropdownComponent 
+      <DropdownOverlay 
         dropdownIsOpen={dropdownIsOpen} 
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
@@ -108,7 +108,7 @@ function TextAlignButton({
             whiteIcon={whiteRightAlignIcon} 
           />
         </button>
-      </DropdownComponent>
+      </DropdownOverlay>
     </div>
   )
 }
