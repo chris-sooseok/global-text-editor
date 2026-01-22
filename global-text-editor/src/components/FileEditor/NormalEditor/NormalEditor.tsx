@@ -13,8 +13,11 @@ import NormalToolbarRenderer from "./NormalToolbarRenderer"
 import { Markdown } from '@tiptap/markdown'
 
 import Link from "@tiptap/extension-link"
+const SAVE_DELAY_MS = 2000
 
-export default function NormalEditor() {
+export default function NormalEditor(
+  fileId: number
+) {
 
   const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   const editorBackground = ThemeManagerStore((s) => s.editorBackground)
