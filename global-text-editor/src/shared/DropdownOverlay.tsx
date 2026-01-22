@@ -9,8 +9,7 @@ function DropdownOverlay({
   align = "left",
 
   activeCheck, // active boolbar button
-  // scrollable parent needs fixed position
-  scrollable = true,
+  scrollable = true, // scrollable parent needs fixed position
   children,
 }: {
   dropdownIsOpen: boolean;
