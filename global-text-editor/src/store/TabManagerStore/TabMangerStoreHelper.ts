@@ -1,5 +1,5 @@
 import type { FileNode } from "../FsTreeStore/FsTreeTypes"
-import { DEFAULT_ACTIVE_TAB_ID } from "./tabManagerStore"
+import { DEFAULT_ACTIVE_TAB_ID } from "./TabManagerStore"
 
 const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
 const ACTIVE_TAB_ID = String(import.meta.env.VITE_ACTIVE_TAB_ID)
@@ -14,7 +14,7 @@ const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
 export function tabStateCommiter(
   nextActiveTabId: string,
   nextTabIds: string[],
-  nextActiveFileIdByTabIds: Record<string, number>,
+  nextActiveFileIdByTabIds: Record<string, FileNode>,
   nextFilesByTabIds: Record<string, FileNode[]>,
 ) {
   const nextTabIsVisible = nextTabIds.length > 0

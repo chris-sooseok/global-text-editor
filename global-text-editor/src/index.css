@@ -6,6 +6,8 @@ html, body, #root {
   width: 100%;
   color-scheme: light dark;
   background-color: #242424;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
 }
 
 body {

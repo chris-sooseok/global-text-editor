@@ -1,7 +1,6 @@
 // TabGroup.tsx
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import NormalEditor from "../FileEditor/NormalEditor/NormalEditor"
-import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
@@ -10,28 +9,22 @@ import DropdownOverlay from "shared/DropdownOverlay"
 
 function Tab({tabId}: {tabId: string}) {
 
+  // styles
   const fileFontSize = ThemeManagerStore((s)=>s.fileFontSize)
   const activeFileUnderActiveTabBgr = ThemeManagerStore((s) => s.activeFileUnderActiveTabBgr)
   const activeFileBorder = ThemeManagerStore((s)=>s.activeFileBorder)
   const activeFileBackground = ThemeManagerStore((s)=>s.activeFileBackground)
 
-  // right-click on filename display dropdown DOM
+  // dropdown
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
 
-  // const [dropdownMenu, setDropdownMenu] = useState<{
-  //   open: boolean
-  //   x: number
-  //   y: number
-  //   file: FileNode | null
-  // }>({ open: false, x: 0, y: 0, file: null })
-
+  // tab logics
   const activeTabId = TabManagerStore((s) => s.activeTabId)
-  const activeFileIdByTabIds = TabManagerStore((s) => s.activeFileIdByTabIds)
+  const activeFileByTabIds = TabManagerStore((s) => s.activeFileByTabIds)
   const filesByTabIds = TabManagerStore((s) => s.filesByTabIds)
-  const activeFileId = activeFileIdByTabIds[tabId]
+  const activeFile = activeFileByTabIds[tabId]
   const files = filesByTabIds[tabId] ?? []
-
   const isActiveTab = tabId === activeTabId
 
   const switchActiveTab = TabManagerStore((s) => s.switchActiveTab)
@@ -46,6 +39,11 @@ function Tab({tabId}: {tabId: string}) {
   //   content: "<p>Hello TipTap</p>",
   // })
 
+  useEffect(() => {
+
+
+  }, [activeFile])
+  
   return (
   <>
   {/* Tab and FileEditor Container */}
@@ -103,13 +101,13 @@ function Tab({tabId}: {tabId: string}) {
               gap: 6, // gap between filename and file close button
               // active file highlight under active or non-active tab
               background:
-                activeFileId === file.id
+                activeFile.id === file.id
                   ? (isActiveTab
                     ? activeFileUnderActiveTabBgr 
                     : activeFileBackground)
                   : undefined,
               borderBottom: 
-                activeFileId === file.id 
+                activeFile.id === file.id 
                   ? activeFileBorder
                   : undefined,
           }}> 
@@ -118,7 +116,7 @@ function Tab({tabId}: {tabId: string}) {
               ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFileId !== file.id) switchActiveFile(tabId, file)
+                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
@@ -131,8 +129,8 @@ function Tab({tabId}: {tabId: string}) {
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
-                fontWeight: activeFileId === file.id ? 600 : 400,
-                opacity: activeFileId === file.id ? 1 : 0.8,
+                fontWeight: activeFile.id === file.id ? 600 : 400,
+                opacity: activeFile.id === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
@@ -152,13 +150,11 @@ function Tab({tabId}: {tabId: string}) {
                 >
                   Split right
                 </button>
-
                 {/* TODO */}
                 <button>
                   Copy Path
                 </button>
               </DropdownOverlay>
-
             {/* file close button */}
             <button
               onClick={() => closeFile(tabId, file)}
@@ -172,16 +168,8 @@ function Tab({tabId}: {tabId: string}) {
           </div>
         ))}
       </div>
-      
       {/* Tab Close Button */}
-      <div 
-        style={{
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "15px", // preventing file close button from overlapping
-          cursor: "pointer"
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", paddingLeft: "15px", cursor: "pointer" }} >
         <button onClick={() => closeTab(tabId)}>
           <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={18} />
         </button>
@@ -197,9 +185,7 @@ function Tab({tabId}: {tabId: string}) {
     >
         <NormalEditor />
     </div>
-
   </div>
-
   </>
   )
 }
