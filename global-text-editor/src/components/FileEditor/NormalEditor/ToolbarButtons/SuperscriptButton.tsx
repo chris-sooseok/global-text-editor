@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackSuperscriptIcon from "assets/NormalTypeIcons/superscript-black.png"
@@ -7,10 +6,8 @@ import whiteSuperscriptIcon from "assets/NormalTypeIcons/superscript-white.png"
 
 function SuperscriptButton({ 
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -24,7 +21,6 @@ function SuperscriptButton({
         }}
       >
         <ToolbarIcon 
-          themeColor={themeColor} 
           blackIcon={blackSuperscriptIcon}
           whiteIcon={whiteSuperscriptIcon}
         />

@@ -1,21 +1,30 @@
-import type { themeColorType } from "../components/FileEditor/NormalEditor/NormalEditor"
 
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+
+/**
+ * 
+ * @param param0 
+ * @returns 
+ */
 function ToolbarIcon({
-  themeColor,
   blackIcon,
   whiteIcon,
   alt = "",
   size = 18,
+  onlyBlackIcon = false
 }: {
-  themeColor: themeColorType
   blackIcon: string
   whiteIcon: string
   alt?: string
   size?: number
+  onlyBlackIcon?: boolean
 }) {
+
+  const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   return (
     <img
-      src={themeColor === "black" ? whiteIcon : blackIcon}
+      src={onlyBlackIcon ? blackIcon :
+        editorTheme === "black" ? whiteIcon : blackIcon}
       alt={alt}
       aria-hidden={alt === ""}
       style={{ width: size, height: size, display: "block" }}

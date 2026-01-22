@@ -1,5 +1,4 @@
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackBoldIcon from "assets/NormalTypeIcons/icons8-bold-black-96.png"
 import whiteBoldIcon from "assets/NormalTypeIcons/icons8-bold-white-96.png"
@@ -7,10 +6,8 @@ import whiteBoldIcon from "assets/NormalTypeIcons/icons8-bold-white-96.png"
 
 function BoldButton({ 
   editor,
-  themeColor
 }: { 
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -23,7 +20,6 @@ function BoldButton({
       }}
     >
       <ToolbarIcon 
-        themeColor={themeColor}
         blackIcon={blackBoldIcon}
         whiteIcon={whiteBoldIcon}
       />

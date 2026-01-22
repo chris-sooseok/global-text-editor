@@ -1,19 +1,23 @@
 import Tab from "./Tab"
 import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
+/** 
+ * TabRenderer renders tabs that exists in tabIds
+ * Once a file is selected from Sidebar, it pushes the file
+ * into attributes defined in TabManageerStore, and appends new
+ * tab into tabIds
+ */
+
 function TabRenderer() {
 
   const tabIsVisible = TabManagerStore((s) => s.tabIsVisible)
   const tabIds = TabManagerStore((s) => s.tabIds)
 
-  // TODO
-  // consider adding dragging between tabs
+  // TODO: consider adding dragging between tabs
   
-  if (!tabIsVisible) return undefined
-
   return (
   <>
-    {/* Tabs Container */}
+    {/* Tab Containers */}
     <div
       style={{
         display: "flex", // horizontally rendering tabs
@@ -21,9 +25,10 @@ function TabRenderer() {
         width: "100%", 
         height: "100%",
         overflow: "hidden",
+        visibility: tabIsVisible ? "visible" : "hidden"
       }}
     >
-      {/* Each Tab */}
+      {/* Tab */}
       {tabIds.map((tabId) => (
         <div
           key={tabId}

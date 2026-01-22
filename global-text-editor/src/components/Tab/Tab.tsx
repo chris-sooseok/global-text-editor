@@ -7,6 +7,8 @@ import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 function Tab({tabId}: {tabId: string}) {
 
   // right-click on filename display dropdown DOM
+  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+
   const [dropdownMenu, setDropdownMenu] = useState<{
     open: boolean
     x: number

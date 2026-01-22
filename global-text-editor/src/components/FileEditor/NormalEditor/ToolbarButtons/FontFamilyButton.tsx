@@ -1,8 +1,6 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
 import DropdownOverlay from "shared/DropdownOverlay"
-import type { themeColorType } from "../NormalEditor"
-
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackFontIcon from "assets/NormalTypeIcons/icons8-font-black-96.png"
 import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
@@ -10,10 +8,8 @@ import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
 
 function FontFamilyButton({
   editor,
-  themeColor,
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -50,7 +46,6 @@ function FontFamilyButton({
         }}
       >
         <ToolbarIcon 
-            themeColor={themeColor}
             blackIcon={blackFontIcon}
             whiteIcon={whiteFontIcon}
         />
@@ -61,7 +56,6 @@ function FontFamilyButton({
         dropdownIsOpen={dropdownIsOpen}
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        themeColor={themeColor}
         activeCheck={(key) => isActiveFontFamily(String(key))}
       >
         <button

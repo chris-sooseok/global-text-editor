@@ -1,5 +1,5 @@
-import { useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import StarterKit from "@tiptap/starter-kit"
 import { FontSize, FontFamily, TextStyle } from "@tiptap/extension-text-style"
 import { ListKit } from "@tiptap/extension-list"
@@ -13,10 +13,11 @@ import { Markdown } from '@tiptap/markdown'
 
 import Link from "@tiptap/extension-link"
 
-export type themeColorType = "black" | "white"
 
 export default function NormalEditor() {
-  const [themeColor, setThemeColor] = useState<themeColorType>("black")
+
+  const editorTheme = ThemeManagerStore((s) => s.editorTheme)
+  const editorBackground = ThemeManagerStore((s) => s.editorBackground)
 
   // editor configuration
   const editor = useEditor({
@@ -71,13 +72,11 @@ export default function NormalEditor() {
         height: "100%",
         overflowY: "auto",
         overflowX: "hidden",
-        background: themeColor === "black" ? "rgba(0,0,0,1)" : "rgba(255,255,255,1)",
+        background: editorBackground,
       }}
     >
       <NormalToolbarRenderer
         editor={editor}
-        themeColor={themeColor}
-        setThemeColor={setThemeColor}
       />
 
       {/* Editor */}
@@ -86,7 +85,7 @@ export default function NormalEditor() {
           <EditorContent
             editor={editor}
             className={
-              (themeColor === "black" ? "prose prose-invert " : "prose ") +
+              (editorTheme === "black" ? "prose prose-invert " : "prose ") +
               "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
             }
             style={{ background: "transparent" }}

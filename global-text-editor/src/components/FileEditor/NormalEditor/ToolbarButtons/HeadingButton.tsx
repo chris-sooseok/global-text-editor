@@ -1,6 +1,5 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
-import type { themeColorType } from "../NormalEditor"
 import DropdownOverlay from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 
@@ -9,10 +8,8 @@ import whiteHIcon from "assets/NormalTypeIcons/icons8-h-white-96.png"
 
 function HeadingButton({
   editor,
-  themeColor
 }: {
   editor: Editor | null
-  themeColor: themeColorType
 }) {
   if (!editor) return null
 
@@ -50,7 +47,6 @@ function HeadingButton({
         }}
       >
         <ToolbarIcon
-          themeColor={themeColor}
           blackIcon={blackHIcon}
           whiteIcon={whiteHIcon}
         />
@@ -75,7 +71,6 @@ function HeadingButton({
         dropdownIsOpen={dropdownIsOpen}
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        themeColor={themeColor}
         activeCheck={(level) => editor.isActive("heading", { level: Number(level) })}
       >
         {levels.map((level) => {
