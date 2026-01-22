@@ -57,6 +57,7 @@ function FontFamilyButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         activeCheck={(key) => isActiveFontFamily(String(key))}
+        scrollable={true}
       >
         <button
           data-active-key={MONO}

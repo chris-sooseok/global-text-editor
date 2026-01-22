@@ -58,6 +58,7 @@ function TextAlignButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         activeCheck={(key) => editor.isActive({ textAlign: key })}
+        scrollable={true}
       >
         {/* Justify */}
         <button
