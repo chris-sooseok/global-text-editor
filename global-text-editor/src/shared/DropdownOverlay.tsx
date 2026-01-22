@@ -7,9 +7,8 @@ function DropdownOverlay({
   setDropdownIsOpen,
   parentRef,
   align = "left",
-
   activeCheck, // active boolbar button
-  scrollable = true, // scrollable parent needs fixed position
+  scrollable = false, // scrollable parent needs fixed position
   children,
 }: {
   dropdownIsOpen: boolean;
@@ -50,10 +49,11 @@ function DropdownOverlay({
     }
 
     function updatePos() {
-      if (!scrollable) return;
-      const el = parentRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
+      if (!scrollable) return
+      const el = parentRef.current
+      if (!el) return
+
+      const r = el.getBoundingClientRect()
       const top = r.bottom + 8
 
       let left = r.left
@@ -64,9 +64,9 @@ function DropdownOverlay({
         transform = "translateX(-100%)"
       } else if (align === "center") {
         left = r.left + r.width / 2
-        transform = "translateX(-50%)"
       }
-      setPos({ top, left });
+
+      setPos({ top, left, transform })
     }
 
     if (scrollable) {
@@ -79,6 +79,8 @@ function DropdownOverlay({
     window.addEventListener("keydown", onKeyDown, true);
 
     return () => {
+      window.removeEventListener("scroll", updatePos, true)
+      window.removeEventListener("resize", updatePos)
       window.removeEventListener("pointerdown", onPointerDown, true);
       window.removeEventListener("keydown", onKeyDown, true);
     };
@@ -96,7 +98,7 @@ function DropdownOverlay({
           // dropdown positioning
           position: scrollable ? "fixed" : "absolute",
           top: scrollable ? pos!.top : "calc(100% + 8px)",
-          left: scrollable ? pos!.left : align === "left" ? 0 : "auto",
+          left: scrollable ? pos!.left : align === "left" ? 0 : align === "center" ? "50%" : "auto",
           right: scrollable ? "auto" : align === "right" ? 0 : "auto",
           transform: scrollable ? pos!.transform : undefined, 
           zIndex: 9999,

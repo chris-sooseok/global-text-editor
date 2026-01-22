@@ -142,6 +142,7 @@ function Tab({tabId}: {tabId: string}) {
                 dropdownIsOpen={dropdownIsOpen}
                 setDropdownIsOpen={() => setDropdownIsOpen(false)}
                 parentRef={btnRef}
+                scrollable={true}
                 align="center"
               >
                 <button

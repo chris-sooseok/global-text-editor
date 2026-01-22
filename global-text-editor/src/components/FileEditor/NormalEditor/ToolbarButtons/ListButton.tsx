@@ -54,7 +54,8 @@ function ListButton({
         dropdownIsOpen={dropdownIsOpen}
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
-        activeCheck={(key) => editor.isActive(key)} 
+        activeCheck={(key) => editor.isActive(key)}
+        scrollable={true}
       >
         {/* BulletList */}
         <button

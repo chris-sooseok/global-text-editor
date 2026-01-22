@@ -72,6 +72,7 @@ function HeadingButton({
         setDropdownIsOpen={() => setDropdownIsOpen(false)}
         parentRef={btnRef}
         activeCheck={(level) => editor.isActive("heading", { level: Number(level) })}
+        scrollable={true}
       >
         {levels.map((level) => {
           return (
