@@ -1,20 +1,30 @@
 // TabGroup.tsx
-import { useState } from "react"
+import { useState, useRef } from "react"
 import NormalEditor from "../FileEditor/NormalEditor/NormalEditor"
-import type { FileNode } from "../../store/FsTreeStore/FsTreeTypes"
-import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
+import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import xIcon from "assets/Tab/icons8-x-96.png"
+import ToolbarIcon from "shared/ToolbarIcon"
+import DropdownOverlay from "shared/DropdownOverlay"
 
 function Tab({tabId}: {tabId: string}) {
 
+  const fileFontSize = ThemeManagerStore((s)=>s.fileFontSize)
+  const activeFileUnderActiveTabBgr = ThemeManagerStore((s) => s.activeFileUnderActiveTabBgr)
+  const activeFileBorder = ThemeManagerStore((s)=>s.activeFileBorder)
+  const activeFileBackground = ThemeManagerStore((s)=>s.activeFileBackground)
+
   // right-click on filename display dropdown DOM
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement | null>(null)
 
-  const [dropdownMenu, setDropdownMenu] = useState<{
-    open: boolean
-    x: number
-    y: number
-    file: FileNode | null
-  }>({ open: false, x: 0, y: 0, file: null })
+  // const [dropdownMenu, setDropdownMenu] = useState<{
+  //   open: boolean
+  //   x: number
+  //   y: number
+  //   file: FileNode | null
+  // }>({ open: false, x: 0, y: 0, file: null })
 
   const activeTabId = TabManagerStore((s) => s.activeTabId)
   const activeFileIdByTabIds = TabManagerStore((s) => s.activeFileIdByTabIds)
@@ -89,25 +99,23 @@ function Tab({tabId}: {tabId: string}) {
             style={{ 
               display: "inline-flex",
               alignItems: "center",
-              padding: "0 8px", // padding between files
+              padding: "0 8px", // padding around each file
               gap: 6, // gap between filename and file close button
               // active file highlight under active or non-active tab
               background:
                 activeFileId === file.id
                   ? (isActiveTab
-                    ? "rgba(131, 125, 220, 0.15)" 
-                    : "rgba(211, 171, 171, 0.06)")
+                    ? activeFileUnderActiveTabBgr 
+                    : activeFileBackground)
                   : undefined,
               borderBottom: 
                 activeFileId === file.id 
-                  ? (isActiveTab
-                    ? "2px solid rgba(189, 184, 184, 0.15)" 
-                    : "2px solid rgba(132, 124, 124, 0.15)")
+                  ? activeFileBorder
                   : undefined,
-              
           }}> 
             {/* filename */}
             <button
+              ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
                 if (activeFileId !== file.id) switchActiveFile(tabId, file)
@@ -115,18 +123,40 @@ function Tab({tabId}: {tabId: string}) {
               // dropdown on right-click on filename
               onContextMenu={(e) => {
                 e.preventDefault()
-                setDropdownMenu({ open: true, x: e.clientX, y: e.clientY, file })
+                btnRef.current = e.currentTarget
+                setDropdownIsOpen(true)
+                // setDropdownMenu({ open: true, x: e.clientX, y: e.clientY, file })
               }}
               style={{
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
-                fontSize: "16px",
+                fontSize: fileFontSize,
                 fontWeight: activeFileId === file.id ? 600 : 400,
                 opacity: activeFileId === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
             </button>
+              {/* Dropdown */}
+              <DropdownOverlay
+                dropdownIsOpen={dropdownIsOpen}
+                setDropdownIsOpen={() => setDropdownIsOpen(false)}
+                parentRef={btnRef}
+                align="center"
+              >
+                <button
+                  onClick={() => {
+                    openNewTab(file)
+                  }}
+                >
+                  Split right
+                </button>
+
+                {/* TODO */}
+                <button>
+                  Copy Path
+                </button>
+              </DropdownOverlay>
 
             {/* file close button */}
             <button
@@ -134,12 +164,9 @@ function Tab({tabId}: {tabId: string}) {
               style={{
                 paddingRight: "5px", // align padding with filename padding
                 cursor: "pointer",
-                opacity: activeFileId === file.id ? 1 : 0.8,
-                fontSize: "14px",
               }}
-              aria-label={`Close ${file.name}`}
             >
-              ✕
+              <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={16} />
             </button>
           </div>
         ))}
@@ -151,12 +178,11 @@ function Tab({tabId}: {tabId: string}) {
           display: "flex",
           alignItems: "center",
           paddingLeft: "15px", // preventing file close button from overlapping
-          fontSize: "16px",
           cursor: "pointer"
         }}
       >
         <button onClick={() => closeTab(tabId)}>
-          ✕
+          <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={18} />
         </button>
       </div>
     </div>
@@ -173,57 +199,6 @@ function Tab({tabId}: {tabId: string}) {
 
   </div>
 
-  {/* Right-Click File Dropdown */}
-  {dropdownMenu.open && dropdownMenu.file ? (
-    <>
-      {/* click-away overlay */}
-      <div
-        onClick={() => setDropdownMenu({ open: false, x: 0, y: 0, file: null })}
-        style={{ position: "fixed", inset: 0, zIndex: 999 }}
-      />
-
-      {/* menu */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          position: "fixed",
-          left: dropdownMenu.x,
-          top: dropdownMenu.y,
-          zIndex: 1000,
-          border: "1px solid white",
-          borderRadius: "4px",
-          background: "black",
-        }}
-      >
-        <button
-          style={{
-            background: "transparent",
-            cursor: "pointer",
-            padding: "6px 10px",
-          }}
-          onClick={() => {
-            if (!dropdownMenu.file) return
-            openNewTab(dropdownMenu.file)
-            setDropdownMenu({ open: false, x: 0, y: 0, file: null })
-          }}
-        >
-          Split right
-        </button>
-
-        {/* TODO */}
-        <button
-          style={{
-            background: "transparent",
-            cursor: "pointer",
-            padding: "6px 10px",
-          }}
-        >
-          Copy Path
-        </button>
-      </div>
-    </>
-  ) : null}
   </>
   )
 }

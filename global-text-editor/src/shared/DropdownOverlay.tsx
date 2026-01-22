@@ -15,13 +15,13 @@ function DropdownOverlay({
   dropdownIsOpen: boolean;
   setDropdownIsOpen: () => void;
   parentRef: React.RefObject<HTMLElement | null>;
-  align?: "left" | "right";
+  align?: "left" | "right" | "center";
   activeCheck?: (key: string) => boolean;
   scrollable?: boolean;
   children: React.ReactNode;
 }) {
 
-  const dropdownBorder = ThemeManagerStore((s)=>s.dropdownBordor)
+  const dropdownBorder = ThemeManagerStore((s)=>s.dropdownBorder)
   const dropdownBackground = ThemeManagerStore((s)=>s.dropdownBackground)
   const dropdownColor= ThemeManagerStore((s)=>s.dropdownColor)
   const dropdownHighlight = ThemeManagerStore((s)=>s.dropdownHighlight)
@@ -29,7 +29,8 @@ function DropdownOverlay({
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   // for fixed position dropdown
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; transform?: string } | null>(null)
+
 
   useEffect(() => {
     if (!dropdownIsOpen) return;
@@ -53,8 +54,18 @@ function DropdownOverlay({
       const el = parentRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      const top = r.bottom + 8;
-      const left = align === "left" ? r.left : r.right;
+      const top = r.bottom + 8
+
+      let left = r.left
+      let transform: string | undefined
+
+      if (align === "right") {
+        left = r.right
+        transform = "translateX(-100%)"
+      } else if (align === "center") {
+        left = r.left + r.width / 2
+        transform = "translateX(-50%)"
+      }
       setPos({ top, left });
     }
 
@@ -87,13 +98,12 @@ function DropdownOverlay({
           top: scrollable ? pos!.top : "calc(100% + 8px)",
           left: scrollable ? pos!.left : align === "left" ? 0 : "auto",
           right: scrollable ? "auto" : align === "right" ? 0 : "auto",
-          transform:
-            scrollable && align === "right" ? "translateX(-100%)" : undefined,
+          transform: scrollable ? pos!.transform : undefined, 
           zIndex: 9999,
 
           // dropdown styling
           border: dropdownBorder,
-          borderRadius: 6,
+          borderRadius: 4,
           background: dropdownBackground,
           // icon and btn color
           color: dropdownColor,

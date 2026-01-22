@@ -8,6 +8,10 @@ export type FetchFsNodeRes =
   | { ok: true; rows: NodeRow[] }
   | { ok: false; message: string }
 
+export type SaveNormalEditorRes =
+  | { ok: true}
+  | { ok: false; message: string}
+
 declare global {
   interface Window {
     api: {
@@ -29,6 +33,14 @@ declare global {
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
+      fetchNormalEditor(
+        storagePath: string
+      ): Promise<string>
+      
+      saveNormalEditor(
+        id: number,
+        editorData: string
+      ): Promise<SaveNormalEditorRes>
 
       exportToPDF(): Promise<>
     }

@@ -4,7 +4,7 @@ import type { SelectedNodeType } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import { computeMimeTypeFromName } from "./MimeType"
-
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -146,6 +146,8 @@ export function renderNodeHandler(
   openFileInActiveTab: (file: FileNode) => void,
 ): ReactNode {
 
+  const fileFontSize = ThemeManagerStore.getState().fileFontSize
+
   // if both some file and folder are selected, only highlight folder
   const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
   
@@ -284,9 +286,15 @@ export function renderNodeHandler(
                 onBlur={() => {cancelRenamingNode()}}
               />
             ): (
-              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-              {node.name}
-            </span>
+              <span style={{ 
+                flex: 1, 
+                minWidth: 0, 
+                overflow: 'hidden', 
+                whiteSpace: 'nowrap',
+                fontSize: fileFontSize
+              }}>
+                {node.name}
+              </span>
             )}    
           </span>
         </div>

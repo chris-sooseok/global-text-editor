@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import StarterKit from "@tiptap/starter-kit"
@@ -12,7 +13,6 @@ import NormalToolbarRenderer from "./NormalToolbarRenderer"
 import { Markdown } from '@tiptap/markdown'
 
 import Link from "@tiptap/extension-link"
-
 
 export default function NormalEditor() {
 
@@ -61,6 +61,28 @@ export default function NormalEditor() {
       console.log(props.error)
     },
   })
+
+  const saveTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!editor) return
+
+    const scheduleSave = () => {
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+
+      saveTimerRef.current = window.setTimeout(() => {
+        const json = JSON.stringify(editor.getJSON())
+        window.api.saveNormalEditor(json)
+      }, SAVE_DELAY_MS)
+    }
+
+    editor.on("update", scheduleSave)
+
+    return () => {
+      editor.off("update", scheduleSave)
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+    }
+  }, [editor])
 
   return (
   <>
