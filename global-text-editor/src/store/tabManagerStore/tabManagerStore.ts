@@ -141,6 +141,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     openNewTab: (copyingFile: FileNode) => {
       set((state) => {
+        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
@@ -188,7 +189,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     closeFile: (tabId: string, closingFile: FileNode) => {
       set((state) => {
-
+        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds

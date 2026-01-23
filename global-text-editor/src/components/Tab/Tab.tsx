@@ -8,7 +8,6 @@ import ToolbarIcon from "shared/ToolbarIcon"
 import DropdownOverlay from "shared/DropdownOverlay"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
-
 type FileTypes = "Normal" | "Markdown" | "Canvas" 
 
 function Tab({tabId}: {tabId: string}) {
@@ -23,6 +22,7 @@ function Tab({tabId}: {tabId: string}) {
 
   // dropdown
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+  const [dropdownFile, setDropdownFile] = useState<FileNode | null>(null)
   const btnRef = useRef<HTMLButtonElement | null>(null)
 
   // tab logics
@@ -60,7 +60,6 @@ function Tab({tabId}: {tabId: string}) {
   }
 
   function temp() {
-    console.log(activeFile)
     return <>
         {activeFile ? <NormalEditor key="normal" file={activeFile}/> : null}
     </>
@@ -129,7 +128,7 @@ function Tab({tabId}: {tabId: string}) {
                     : activeFileBackground)
                   : undefined,
               borderBottom: 
-                activeFile.id === file.id 
+                activeFile?.id === file.id 
                   ? activeFileBorder
                   : undefined,
           }}> 
@@ -138,45 +137,26 @@ function Tab({tabId}: {tabId: string}) {
               ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
+                if (activeFile?.id !== file.id) switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
                 e.preventDefault()
                 btnRef.current = e.currentTarget
+                setDropdownFile(file)
                 setDropdownIsOpen(true)
-                // setDropdownMenu({ open: true, x: e.clientX, y: e.clientY, file })
               }}
               style={{
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
-                fontWeight: activeFile.id === file.id ? 600 : 400,
-                opacity: activeFile.id === file.id ? 1 : 0.8,
+                fontWeight: activeFile?.id === file.id ? 600 : 400,
+                opacity: activeFile?.id === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
             </button>
-              {/* Dropdown */}
-              <DropdownOverlay
-                dropdownIsOpen={dropdownIsOpen}
-                setDropdownIsOpen={() => setDropdownIsOpen(false)}
-                parentRef={btnRef}
-                scrollable={true}
-                align="center"
-              >
-                <button
-                  onClick={() => {
-                    openNewTab(file)
-                  }}
-                >
-                  Split right
-                </button>
-                {/* TODO */}
-                <button>
-                  Copy Path
-                </button>
-              </DropdownOverlay>
+  
             {/* file close button */}
             <button
               onClick={() => closeFile(tabId, file)}
@@ -190,6 +170,30 @@ function Tab({tabId}: {tabId: string}) {
           </div>
         ))}
       </div>
+      {/* Dropdown */}
+      <DropdownOverlay
+        dropdownIsOpen={dropdownIsOpen}
+        setDropdownIsOpen={() => setDropdownIsOpen(false)}
+        parentRef={btnRef}
+        scrollable={true}
+        align="center"
+      >
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            if (!dropdownFile) return
+            openNewTab(dropdownFile)
+            setDropdownIsOpen(false)
+          }}
+        >
+          Split right
+        </button>
+        {/* TODO */}
+        <button>
+          Copy Path
+        </button>
+      </DropdownOverlay>
+
       {/* Tab Close Button */}
       <div style={{ display: "flex", alignItems: "center", paddingLeft: "15px", cursor: "pointer" }} >
         <button onClick={() => closeTab(tabId)}>
@@ -198,6 +202,7 @@ function Tab({tabId}: {tabId: string}) {
       </div>
     </div>
 
+    
     <div style={{ 
       flex: 1, // file editor takes up the renaming space
       minWidth: 0, // force width shrink
