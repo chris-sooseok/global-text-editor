@@ -28,7 +28,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   migrate() // ensure migrating all sqls
-  require('./ipc/fsNodeIpc.cjs') // load ipc handlers
+  require("./ipc/fsNodeIpc.cjs")
   createWindow()
 })
 

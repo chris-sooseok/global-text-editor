@@ -1,16 +1,20 @@
-import type { NodeRow } from "../context/FsTree";
+import type { FsNodeRow } from "store/FsTreeStore/FsTreeTypes";
 
-export type CreateFsNodeRes =
-  | { ok: true; node: NodeRow }
+type CreateFsNodeRes =
+  | { ok: true; row: FsNodeRow }
   | { ok: false; message: string }
 
-export type FetchFsNodeRes =
-  | { ok: true; rows: NodeRow[] }
+type DeleteFsNodeRes = {ok: boolean}
+
+type RenameFsNodeRes = {ok: boolean}
+
+type FetchFsNodeRes =
+  | { ok: true; rows: FsNodeRow[] }
   | { ok: false; message: string }
 
-export type SaveNormalEditorRes =
-  | { ok: true}
-  | { ok: false; message: string}
+type SaveNormalEditorRes =
+    | { ok: true}
+    | { ok: false; message: string}
 
 declare global {
   interface Window {
@@ -19,23 +23,17 @@ declare global {
         type: string,
         parentId: number | null,
         name: string,
-        mimeType: string
-      ): Promise< CreateFsNodeRes >
+        mimeType: string | null,
+        fileType: string | null
+      ): Promise<CreateFsNodeRes>
 
-      deleteFsNode(
-        id: number,
-        type: string,
-      ) : Promise < DeleteFsNodeRes >
+      renameFsNode(id: number, newName: string): Promise<RenameFsNodeRes>
 
-      renameFsNode(
-        id: number,
-      )
+      deleteFsNode(id: number): Promise<DeleteFsNodeRes>
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
-      fetchNormalEditor(
-        storagePath: string
-      ): Promise<string>
+      fetchNormalEditor(storagePath: string): Promise<string>
       
       saveNormalEditor(
         id: number,

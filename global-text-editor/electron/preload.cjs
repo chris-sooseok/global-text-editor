@@ -14,14 +14,17 @@ async function invokeLogged(channel, payload) {
 }
 
 contextBridge.exposeInMainWorld('api', {
-  createFsNode: (type, parentId, name, mimeType) =>
-    invokeLogged('fsNodes:create', { type, parentId, name, mimeType}),
-  deleteFsNode: (id, type) =>
-    invokeLogged('fsNodes:delete', { id, type }),
+  createFsNode: (type, parentId, name, mimeType, fileType) =>
+    invokeLogged('fsNodes:create', { type, parentId, name, mimeType, fileType}),
+  renameFsNode: (id, newName) =>
+    invokeLogged('fsNode:rename', { id, newName}),
+  deleteFsNode: (id) =>
+    invokeLogged('fsNodes:delete', { id }),
   fetchFsNodes: () =>
     invokeLogged('fsNodes:fetch', {}),
-  saveNormalEditor: (editorData) =>
-    invokeLogged('normalEditor:saveJSON', {editorData}),
+
+  saveNormalEditor: (id, editorData) =>
+    invokeLogged('editor:save', {id, editorData}),
   fetchNormalEditor: (storagePath) =>
     invokeLogged('normalEditor:fetchJSON', {storagePath})
 })

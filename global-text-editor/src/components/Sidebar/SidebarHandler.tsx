@@ -34,8 +34,9 @@ export async function submitNewNodePromptHandler(
     // folder where new node is to be created under
     const parentId = selectedFolder?.id ?? null
     const mimeType = computeMimeTypeFromName(trimmed)
+    const fileType = (newNodeType === 'file' ? "normal" : null)
     const res = await window.api.createFsNode(
-      newNodeType, parentId, name, mimeType
+      newNodeType, parentId, name, mimeType, fileType
     )
 
     // once submitted, cancel newNodePrompt
@@ -43,7 +44,7 @@ export async function submitNewNodePromptHandler(
     cancelNewNodePrompt()
 
     if (res.ok) {
-      const newNode: FsNodeRow = res.node
+      const newNode: FsNodeRow = res.row
 
       // append new node to the FsTree
       const newFsNode: FsNode = insertFsNode(newNode)
