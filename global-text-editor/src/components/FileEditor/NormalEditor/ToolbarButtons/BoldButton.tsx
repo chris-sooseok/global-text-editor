@@ -6,8 +6,10 @@ import whiteBoldIcon from "assets/NormalTypeIcons/icons8-bold-white-96.png"
 
 function BoldButton({ 
   editor,
+  editorTheme
 }: { 
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -22,6 +24,7 @@ function BoldButton({
       <ToolbarIcon 
         blackIcon={blackBoldIcon}
         whiteIcon={whiteBoldIcon}
+        editorTheme={editorTheme}
       />
     </button>
   )

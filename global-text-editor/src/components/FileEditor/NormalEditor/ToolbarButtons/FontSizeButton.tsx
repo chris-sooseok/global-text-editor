@@ -4,11 +4,12 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
 function FontSizeButton({
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
 
-  const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   const [value, setValue] = useState("16")
 
   if (!editor) return null

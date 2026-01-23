@@ -29,4 +29,8 @@ contextBridge.exposeInMainWorld('api', {
   saveNormalEditor: (id, editorData) =>
     invokeLogged('editor:save', {id, editorData}),
 
+  loadFileConfig: (id) => invokeLogged('editor:loadConfig', {id}),
+
+  switchEditorTheme: (id, theme) => invokeLogged('editor:switchTheme', {id, theme})
+
 })

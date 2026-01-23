@@ -6,8 +6,10 @@ import whiteSubscriptIcon from "assets/NormalTypeIcons/subscript-white.png"
 
 function SubscriptButton({ 
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -23,6 +25,7 @@ function SubscriptButton({
         <ToolbarIcon 
           blackIcon={blackSubscriptIcon}
           whiteIcon={whiteSubscriptIcon}
+          editorTheme={editorTheme}
         />
       </button>
   )

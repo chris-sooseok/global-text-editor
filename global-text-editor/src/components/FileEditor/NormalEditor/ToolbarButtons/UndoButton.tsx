@@ -6,8 +6,10 @@ import whiteUndoIcon from "assets/NormalTypeIcons/icons8-undo-white-96.png"
 
 function UndoButton({ 
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -29,6 +31,7 @@ function UndoButton({
     <ToolbarIcon 
         blackIcon={blackUndoIcon}
         whiteIcon={whiteUndoIcon}
+        editorTheme={editorTheme}
     />
     </button>
   )

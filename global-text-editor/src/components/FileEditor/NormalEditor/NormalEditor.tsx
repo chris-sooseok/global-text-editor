@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import NormalToolbarRenderer from "./NormalToolbarRenderer"
@@ -9,9 +9,11 @@ const SAVE_DELAY_MS = 2000
 
 function NormalEditor({file}: {file : FileNode}) {
   const editor = normalEditorConfig()
-  
-  const editorTheme = ThemeManagerStore((s) => s.editorTheme)
-  const editorBackground = ThemeManagerStore((s) => s.editorBackground)
+
+
+  const [ editorTheme, setEditorTheme ] = useState<"black"|"white">("black")
+
+  const { editorBackgroundBlack, editorBackgroundWhite } = ThemeManagerStore.getState()
   const saveTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -50,6 +52,22 @@ function NormalEditor({file}: {file : FileNode}) {
   }, [editor, file.storagePath])
 
   useEffect(() => {
+    let cancelled = false
+
+    ;(async () => {
+      const res = await window.api.loadFileConfig(file.id)
+      if (cancelled) return
+      if (!res.ok) return
+
+      setEditorTheme(res.editorTheme) // "black" | "white"
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [file.id])
+
+  useEffect(() => {
     if (!editor) return
 
     const onUpdate = () => {
@@ -85,11 +103,14 @@ function NormalEditor({file}: {file : FileNode}) {
         height: "100%",
         overflowY: "auto",
         overflowX: "hidden",
-        background: editorBackground,
+        background: editorTheme === "black" ? editorBackgroundBlack : editorBackgroundWhite,
       }}
     >
       <NormalToolbarRenderer
+        fileId={file.id}
         editor={editor}
+        editorTheme={editorTheme}
+        setEditorTheme={setEditorTheme}
       />
 
       {/* Editor */}
