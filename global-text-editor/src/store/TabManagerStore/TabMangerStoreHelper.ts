@@ -4,7 +4,7 @@ import { DEFAULT_ACTIVE_TAB_ID } from "./TabManagerStore"
 const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
 const ACTIVE_TAB_ID = String(import.meta.env.VITE_ACTIVE_TAB_ID)
 const TABS_IDS = String(import.meta.env.VITE_TABS_IDS)
-const ACTIVE_FILE_ID_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_ID_BY_TAB_IDS)
+const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_IDS)
 const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
 
 /** Helps committing tab state
@@ -24,7 +24,7 @@ export function tabStateCommiter(
   localStorage.setItem(TAB_IS_VISIBLE, JSON.stringify(nextTabIsVisible))
   localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(nextActiveTabId))
   localStorage.setItem(TABS_IDS, JSON.stringify(nextTabIds))
-  localStorage.setItem(ACTIVE_FILE_ID_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+  localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
   localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
   
 

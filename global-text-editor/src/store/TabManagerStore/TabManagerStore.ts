@@ -52,6 +52,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
     openFileInActiveTab: (selectedFile: FileNode) => {
       set((state) => {
         const curActiveTabId: string = state.activeTabId
+        debugger
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
         const curFilesByTabIds: Record<string, FileNode[]> = state.filesByTabIds

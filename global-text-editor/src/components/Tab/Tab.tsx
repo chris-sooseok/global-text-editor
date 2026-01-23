@@ -6,6 +6,10 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
 import ToolbarIcon from "shared/ToolbarIcon"
 import DropdownOverlay from "shared/DropdownOverlay"
+import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+
+
+type FileTypes = "Normal" | "Markdown" | "Canvas" 
 
 function Tab({tabId}: {tabId: string}) {
 
@@ -33,17 +37,33 @@ function Tab({tabId}: {tabId: string}) {
   const closeFile = TabManagerStore((s) => s.closeFile)
   const closeTab = TabManagerStore((s) => s.closeTab)
 
-  // TODO: will have to consider loading tiptap editor here and update content on file change
-  // const editor = useEditor({
-  //   extensions: [StarterKit],
-  //   content: "<p>Hello TipTap</p>",
-  // })
 
-  useEffect(() => {
+  function renderEditorOnFileType() {
+    return <>
+        {/* {activeFile ? (
+          <>
+            {activeFile.fileType === "normal" && (
+              <NormalEditor key="Normal" fileId={activeFile.id} />
+            )}
 
+            {activeFile.fileType === "markdown" && (
+              <MarkdownEditor key="Markdown" fileId={activeFile.id} />
+            )}
 
-  }, [activeFile])
-  
+            {activeFile.fileType === "page" && (
+              <CanvasEditor key="Canvas" fileId={activeFile.id} />
+            )}
+          </>
+        ) : null}       */}
+    </> 
+  }
+
+  function temp() {
+    return <>
+        {activeFile ? <NormalEditor key="normal" fileId={activeFile?.id}/> : null}
+    </>
+  }
+
   return (
   <>
   {/* Tab and FileEditor Container */}
@@ -101,13 +121,13 @@ function Tab({tabId}: {tabId: string}) {
               gap: 6, // gap between filename and file close button
               // active file highlight under active or non-active tab
               background:
-                activeFile.id === file.id
+                activeFile?.id === file.id
                   ? (isActiveTab
                     ? activeFileUnderActiveTabBgr 
                     : activeFileBackground)
                   : undefined,
               borderBottom: 
-                activeFile.id === file.id 
+                activeFile?.id === file.id 
                   ? activeFileBorder
                   : undefined,
           }}> 
@@ -116,7 +136,7 @@ function Tab({tabId}: {tabId: string}) {
               ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
+                if (activeFile?.id !== file.id) switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
@@ -129,8 +149,8 @@ function Tab({tabId}: {tabId: string}) {
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
-                fontWeight: activeFile.id === file.id ? 600 : 400,
-                opacity: activeFile.id === file.id ? 1 : 0.8,
+                fontWeight: activeFile?.id === file.id ? 600 : 400,
+                opacity: activeFile?.id === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
@@ -176,15 +196,15 @@ function Tab({tabId}: {tabId: string}) {
       </div>
     </div>
 
-    {/* File Editor */}
     <div style={{ 
       flex: 1, // file editor takes up the renaming space
       minWidth: 0, // force width shrink
       minHeight: 0, // force height shrink 
-    }}
-    >
-        <NormalEditor />
+    }}>
+      {/* {renderEditorOnFileType()} */}
+      {temp()}
     </div>
+
   </div>
   </>
   )

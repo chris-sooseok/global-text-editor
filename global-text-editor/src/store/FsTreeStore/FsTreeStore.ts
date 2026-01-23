@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import { makeFolderNode, makeFileNode } from './FsTree'
+import { makeFolderNode, makeFileNode } from './FsTreeStoreHelper'
 import type { FsNode, FsNodeRow } from './FsTreeTypes'
-import type { FetchFsNodeRes } from '../../api/fsNodeApi'
+import type { FetchFsNodeRes } from 'api/fsNodeApi'
 
 /** Imuutable Rows
  * Decided to provide FsNodeRows instead of FsTree object because

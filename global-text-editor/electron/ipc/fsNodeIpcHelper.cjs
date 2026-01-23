@@ -1,16 +1,52 @@
 
+const validFileTypes = ['normal', 'markdown', 'canvas', 'page', 'diagram']
+
 function getNextSortOrder(db, parentId) {
-  // MAX(sort_order) among siblings; if none, start at 0
   const row = db
     .prepare(`
-      SELECT MAX(sort_order) AS maxSort
+      SELECT MAX(sort_order) AS maxOrder
       FROM fsNode
       WHERE parent_id IS ?
     `)
     .get(parentId ?? null)
 
-  return Number(row.maxSort) + 1
+  return (Number(row?.maxOrder) || 0) + 1
 }
 
 
-module.exports = { getNextSortOrder }
+// name must be shorter than or equal to 50 chars
+function valididateName(name) {
+  if (name.trim() === "") return false
+  if (name.length > 50) return false
+  return true
+}
+
+// folder or file is only allowed
+function validateType(type) {
+  return type === "folder" || type === "file"
+}
+
+// file must have valid file type
+function validateFile(type, fileType) {
+  if (type === 'file' && !validFileTypes.includes(fileType)) false
+  return true
+}
+
+// folder must not have any mimeType or fileType
+function validateFolder(type, mimeType, fileType) {
+  if (type === "folder" && (!mimeType || !fileType)) false
+  return true 
+}
+
+
+module.exports = {
+  getNextSortOrder,
+  valididateName,
+  validateType,
+  validateFolder,
+  validateFile,
+}
+
+
+
+

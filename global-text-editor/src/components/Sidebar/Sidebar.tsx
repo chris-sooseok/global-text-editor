@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
-import { buildFsTree } from '../../store/FsTreeStore/buildFsTree'
+import { buildFsTree } from '../../store/FsTreeStore/FsTreeStoreHelper'
 import { TabManagerStore } from '../../store/TabManagerStore/TabManagerStore'
 import type { FileNode, FolderNode, FsNode } from '../../store/FsTreeStore/FsTreeTypes'
 import { 
@@ -87,7 +87,7 @@ function Sidebar() {
       //* We make separate check conditions to prevent state update on every selection
       // when a root file is created or selected
       if (nextSelectedFile.parentId === null) { 
-        if (!selectedFolder) selectFolderHandler(null) 
+        if (!selectedFolder) selectFolderHandler(null)
       }
       // when normal file is selected, update selectedFolder to its parent
       if (nextSelectedFile.parentId !== selectedFolder?.id){

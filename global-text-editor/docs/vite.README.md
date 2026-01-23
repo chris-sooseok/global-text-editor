@@ -7,7 +7,7 @@ If you update the code in a module, Vite only reloads that modified module, not 
 
 > A __Bundler__ is a tool that takes your project files (JS modules, CSS, and images, etc) and produces a small set of output files (bundles) that browsers or apps can load efficiently
 
-## 2. Use of native ES Modules:dsadsadsasda
+## 2. Use of native ES Modules
 Vite uses native ES modules, serving the modules directly to the browser without any initial bundling. Browsers can load modules independently as changes are made, thus speeding up development process. __CRA__ does support native ES modules, but it relies on __Webpack__ to bundle and serve these modules during development, instead of serving them directly in their native form as Vite does.
 
 ## 3. RollUp as it's Bundler

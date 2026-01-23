@@ -1,91 +1,46 @@
 import { useEffect, useRef } from "react"
-import { useEditor, EditorContent } from "@tiptap/react"
+import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import StarterKit from "@tiptap/starter-kit"
-import { FontSize, FontFamily, TextStyle } from "@tiptap/extension-text-style"
-import { ListKit } from "@tiptap/extension-list"
-import Highlight from "@tiptap/extension-highlight"
-import SuperScript from "@tiptap/extension-superscript"
-import Subscript from "@tiptap/extension-subscript"
-import TextAlign from "@tiptap/extension-text-align"
-import Image from "@tiptap/extension-image"
 import NormalToolbarRenderer from "./NormalToolbarRenderer"
-import { Markdown } from '@tiptap/markdown'
 
-import Link from "@tiptap/extension-link"
+import normalEditorConfig from "./normalEditorConfig"
 const SAVE_DELAY_MS = 2000
 
-export default function NormalEditor(
+function NormalEditor({
+  fileId
+}: {
   fileId: number
-) {
-
+}) {
+  const editor = normalEditorConfig()
   const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   const editorBackground = ThemeManagerStore((s) => s.editorBackground)
-
-  // editor configuration
-  const editor = useEditor({
-    extensions: [
-      FontFamily,
-      TextStyle,
-      FontSize,
-      StarterKit.configure({
-        bulletList: false,
-        orderedList: false,
-        listItem: false,
-      }),
-      ListKit,
-      Highlight,
-      SuperScript,
-      Subscript,
-      TextAlign,
-      Image,
-      Markdown,
-    ],
-    content: "",
-    editorProps: {
-      attributes: {
-        class: "normal-editor",
-        spellcheck: "false"
-      }
-    },
-    coreExtensionOptions: {
-      // making a single newline instead of two. This prevents copy/paste from
-      // tiptap to other text editor having two lines
-      clipboardTextSerializer: {
-        blockSeparator: "\n",
-      },
-    },
-    editable: true,
-    autofocus: "start",
-    // checking schema derived from registered extensions
-    enableContentCheck: true,
-    // checking if initial content provided is not compatible with the schema =
-    onContentError(props) {
-      console.log(props.error)
-    },
-  })
-
   const saveTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!editor) return
 
-    const scheduleSave = () => {
-      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+    const onUpdate = () => {
+      // timer already scheduled -> do nothing
+      if (saveTimerRef.current) return
 
+      // schedule exactly one save
       saveTimerRef.current = window.setTimeout(() => {
         const json = JSON.stringify(editor.getJSON())
-        window.api.saveNormalEditor(json)
+        window.api.saveNormalEditor(fileId, json)
+
+        // allow next change to schedule again
+        saveTimerRef.current = null
       }, SAVE_DELAY_MS)
     }
 
-    editor.on("update", scheduleSave)
+    editor.on("update", onUpdate)
 
     return () => {
-      editor.off("update", scheduleSave)
+      editor.off("update", onUpdate)
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
     }
-  }, [editor])
+  }, [editor, fileId])
 
   return (
   <>
@@ -121,3 +76,5 @@ export default function NormalEditor(
   </>
   )
 }
+
+export default NormalEditor
