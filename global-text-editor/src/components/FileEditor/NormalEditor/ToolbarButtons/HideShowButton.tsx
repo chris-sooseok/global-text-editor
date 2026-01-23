@@ -8,11 +8,13 @@ import whiteShowIcon from "assets/NormalTypeIcons/icons8-show-white-96.png"
 
 function HideShowButton({
   editor,
+  editorTheme,
   toolbarIsVisible,
   setToolbarIsVisible,
   
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
   toolbarIsVisible: boolean
   setToolbarIsVisible: React.Dispatch<React.SetStateAction<boolean>>
 }) {
@@ -30,10 +32,12 @@ function HideShowButton({
         ? <ToolbarIcon 
           blackIcon={blackShowIcon}
           whiteIcon={whiteShowIcon}
+          editorTheme={editorTheme}
         />
         : <ToolbarIcon 
           blackIcon={blackHideIcon}
           whiteIcon={whiteHideIcon}
+          editorTheme={editorTheme}
         />
     }
 

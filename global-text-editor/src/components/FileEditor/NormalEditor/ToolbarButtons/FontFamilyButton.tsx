@@ -8,8 +8,10 @@ import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
 
 function FontFamilyButton({
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -48,6 +50,7 @@ function FontFamilyButton({
         <ToolbarIcon 
             blackIcon={blackFontIcon}
             whiteIcon={whiteFontIcon}
+            editorTheme={editorTheme}
         />
       </button>
 

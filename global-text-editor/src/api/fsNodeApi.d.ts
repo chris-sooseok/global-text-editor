@@ -4,10 +4,6 @@ type CreateFsNodeRes =
   | { ok: true; row: FsNodeRow }
   | { ok: false; message: string }
 
-type DeleteFsNodeRes = {ok: boolean}
-
-type RenameFsNodeRes = {ok: boolean}
-
 type FetchFsNodeRes =
   | { ok: true; rows: FsNodeRow[] }
   | { ok: false; message: string }
@@ -15,9 +11,13 @@ type FetchFsNodeRes =
 type FetchNormalEditorRes =
     | { ok: true; editorData: string }
     | { ok: false; message: string }
+
 type SaveNormalEditorRes =
     | { ok: true}
     | { ok: false; message: string }
+
+type loadFileConfigRes =
+  | { ok: true; toolbarIsVisible: boolean; editorTheme: "black" | "white"}
 
 declare global {
   interface Window {
@@ -30,9 +30,9 @@ declare global {
         fileType: string | null
       ): Promise<CreateFsNodeRes>
 
-      renameFsNode(id: number, newName: string): Promise<RenameFsNodeRes>
+      renameFsNode(id: number, newName: string): Promise<{ok: boolean}>
 
-      deleteFsNode(id: number): Promise<DeleteFsNodeRes>
+      deleteFsNode(id: number): Promise<{ok: boolean}>
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
@@ -42,6 +42,10 @@ declare global {
         id: number,
         editorData: string
       ): Promise<SaveNormalEditorRes>
+
+      loadFileConfig(id: number): Promise<loadFileConfigRes>
+
+      switchEditorTheme(id, theme: "black" | "white"): Promise<{ok: boolean}>
 
       exportToPDF(): Promise<>
     }

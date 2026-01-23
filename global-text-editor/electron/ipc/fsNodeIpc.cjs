@@ -49,20 +49,28 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       `)
       .run(uuid, type, parentId, name, storagePath, mimeType, fileType, now, now, nextSortOrder)
 
-      return {
-        ok: true,
-        row: {
-          id: Number(info.lastInsertRowid),
-          uuid,
-          type,
-          parentId,
-          name,
-          createdAt: now,
-          storagePath,
-          mimeType,
-          fileType,
-          sortOrder: nextSortOrder
-        },
+    const id = Number(info.lastInsertRowid)
+    if (type === "file") {
+      db.prepare(`
+        INSERT INTO fileConfig (file_id, toolbar_is_visible, editor_theme)
+        VALUES (?, ?, ?)
+      `).run(id, 0, "black")
+    }
+
+    return {
+      ok: true,
+      row: {
+        id: Number(info.lastInsertRowid),
+        uuid,
+        type,
+        parentId,
+        name,
+        createdAt: now,
+        storagePath,
+        mimeType,
+        fileType,
+        sortOrder: nextSortOrder
+      },
       }
 
   } catch (err) {
@@ -133,4 +141,40 @@ ipcMain.handle("editor:fetch", (_event, payload) => {
   }
 
   return { ok: true, editorData }
+})
+
+ipcMain.handle("editor:loadConfig", (_event, payload) => {
+  const id = payload.id
+
+  const row = db
+    .prepare(`
+      SELECT toolbar_is_visible, editor_theme
+      FROM fileConfig
+      WHERE file_id = ?
+    `)
+    .get(id)
+
+  // if missing, fall back to defaults
+  if (!row) {
+    return { ok: true, toolbarIsVisible: false, editorTheme: "black" }
+  }
+
+  return {
+    ok: true,
+    toolbarIsVisible: Boolean(row.toolbar_is_visible),
+    editorTheme: row.editor_theme === "white" ? "white" : "black",
+  }
+})
+
+ipcMain.handle("editor:switchTheme", (_event, payload) => {
+  const id = payload.id
+  const theme = payload.theme // "black" | "white"
+
+  db.prepare(`
+    UPDATE fileConfig
+    SET editor_theme = ?
+    WHERE file_id = ?
+  `).run(theme, id)
+
+  return { ok: true }
 })

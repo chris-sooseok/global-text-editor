@@ -14,10 +14,12 @@ type FileTypes = "Normal" | "Markdown" | "Canvas"
 function Tab({tabId}: {tabId: string}) {
 
   // styles
-  const fileFontSize = ThemeManagerStore((s)=>s.fileFontSize)
-  const activeFileUnderActiveTabBgr = ThemeManagerStore((s) => s.activeFileUnderActiveTabBgr)
-  const activeFileBorder = ThemeManagerStore((s)=>s.activeFileBorder)
-  const activeFileBackground = ThemeManagerStore((s)=>s.activeFileBackground)
+  const { 
+    fileFontSize, 
+    activeFileUnderActiveTabBgr, 
+    activeFileBorder, 
+    activeFileBackground 
+  } =ThemeManagerStore.getState()
 
   // dropdown
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)

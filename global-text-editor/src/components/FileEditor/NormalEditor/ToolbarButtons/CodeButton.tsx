@@ -5,8 +5,10 @@ import whiteCodeIcon from "assets/NormalTypeIcons/icons8-code-white-96.png"
 
 function CodeButton({ 
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -21,6 +23,7 @@ function CodeButton({
       <ToolbarIcon 
         blackIcon={blackCodeIcon}
         whiteIcon={whiteCodeIcon}
+        editorTheme={editorTheme}
       />
     </button>
   )

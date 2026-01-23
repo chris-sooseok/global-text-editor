@@ -6,8 +6,10 @@ import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
 
 function LinkButton({ 
   editor,
+  editorTheme
 }: {
   editor: Editor | null
+  editorTheme: "black" | "white"
 }) {
   if (!editor) return null
 
@@ -48,6 +50,7 @@ function LinkButton({
       <ToolbarIcon 
         blackIcon={blackLinkIcon}
         whiteIcon={whiteLinkIcon}
+        editorTheme={editorTheme}
       />
     </button>
   )

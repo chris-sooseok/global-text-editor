@@ -7,7 +7,8 @@ function ToolbarIcon({
   alt = "",
   size = 18,
   onlyBlackIcon = false,
-  onlyWhiteIcon = false
+  onlyWhiteIcon = false,
+  editorTheme,
 }: {
   blackIcon?: string
   whiteIcon?: string
@@ -15,12 +16,9 @@ function ToolbarIcon({
   size?: number
   onlyBlackIcon?: boolean
   onlyWhiteIcon?: boolean
+  editorTheme?: "black" | "white"
 }) {
-  let editorTheme
-  if (blackIcon && whiteIcon) {
-    editorTheme = ThemeManagerStore((s) => s.editorTheme)
-  }
-   
+    
   return (
     <img
       src={onlyBlackIcon ? blackIcon :

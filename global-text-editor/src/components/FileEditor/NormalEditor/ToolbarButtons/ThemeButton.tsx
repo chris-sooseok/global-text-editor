@@ -1,31 +1,44 @@
-
-import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import { type Dispatch, type SetStateAction } from "react"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackSunIcon from "assets/NormalTypeIcons/icons8-sun-black-96.png"
 import whiteSunIcon from "assets/NormalTypeIcons/icons8-sun-white-96.png"
 import blackMoonIcon from "assets/NormalTypeIcons/icons8-moon-black-96.png"
 import whiteMoonIcon from "assets/NormalTypeIcons/icons8-moon-white-96.png"
 
-function ThemeButton() {
+function ThemeButton({
+  fileId,
+  editorTheme,
+  setEditorTheme
+}: {
+  fileId: number
+  editorTheme: "black" | "white"
+  setEditorTheme: Dispatch<SetStateAction<"black"|"white">>
+}) {
 
-  const editorBackground = ThemeManagerStore((s) => s.editorBackground)
-  const switchEditorBackground = ThemeManagerStore((s) => s.switchEditorBackground)
   return (
     <button
       type="button"
       onMouseDown={(e) => {
         e.preventDefault()
-        switchEditorBackground()
+        if (editorTheme === "black") {
+          setEditorTheme("white")
+          window.api.switchEditorTheme(fileId, "white")
+        }else{
+          setEditorTheme("black")
+          window.api.switchEditorTheme(fileId, "black")
+        }
       }}
     >
-    {editorBackground === "black"
+    {editorTheme === "black"
       ? <ToolbarIcon 
         blackIcon={blackMoonIcon}
         whiteIcon={whiteMoonIcon}
+        editorTheme={editorTheme}
       />
       : <ToolbarIcon 
         blackIcon={blackSunIcon}
         whiteIcon={whiteSunIcon}
+        editorTheme={editorTheme}
       />
     }
 
