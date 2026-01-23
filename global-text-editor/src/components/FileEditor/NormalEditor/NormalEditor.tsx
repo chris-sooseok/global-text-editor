@@ -10,8 +10,8 @@ const SAVE_DELAY_MS = 2000
 function NormalEditor({file}: {file : FileNode}) {
   const editor = normalEditorConfig()
 
-
-  const [ editorTheme, setEditorTheme ] = useState<"black"|"white">("black")
+  const [editorTheme, setEditorTheme] = useState<"black" | "white">("black")
+  const [configLoaded, setConfigLoaded] = useState(false)
 
   const { editorBackgroundBlack, editorBackgroundWhite } = ThemeManagerStore.getState()
   const saveTimerRef = useRef<number | null>(null)
@@ -51,14 +51,17 @@ function NormalEditor({file}: {file : FileNode}) {
     }
   }, [editor, file.storagePath])
 
+
   useEffect(() => {
     let cancelled = false
+    setConfigLoaded(false)
 
     ;(async () => {
       const res = await window.api.loadFileConfig(file.id)
       if (cancelled) return
       if (!res.ok) return
 
+      setConfigLoaded(true)
       setEditorTheme(res.editorTheme) // "black" | "white"
     })()
 
@@ -66,6 +69,7 @@ function NormalEditor({file}: {file : FileNode}) {
       cancelled = true
     }
   }, [file.id])
+
 
   useEffect(() => {
     if (!editor) return
@@ -93,6 +97,8 @@ function NormalEditor({file}: {file : FileNode}) {
     }
   }, [editor, file])
 
+  if (!configLoaded) return null
+  
   return (
   <>
     {/* Toolbar and Editor Container */}

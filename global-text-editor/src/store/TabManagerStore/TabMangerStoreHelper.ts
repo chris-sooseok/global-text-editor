@@ -14,7 +14,7 @@ const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
 export function tabStateCommiter(
   nextActiveTabId: string,
   nextTabIds: string[],
-  nextActiveFileIdByTabIds: Record<string, FileNode>,
+  nextActiveFileByTabIds: Record<string, FileNode>,
   nextFilesByTabIds: Record<string, FileNode[]>,
 ) {
   const nextTabIsVisible = nextTabIds.length > 0
@@ -24,7 +24,7 @@ export function tabStateCommiter(
   localStorage.setItem(TAB_IS_VISIBLE, JSON.stringify(nextTabIsVisible))
   localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(nextActiveTabId))
   localStorage.setItem(TABS_IDS, JSON.stringify(nextTabIds))
-  localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileIdByTabIds))
+  localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
   localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
   
 
@@ -32,7 +32,7 @@ export function tabStateCommiter(
     tabIsVisible: nextTabIsVisible,
     activeTabId: nextActiveTabId,
     tabIds: nextTabIds,
-    activeFileIdByTabIds: nextActiveFileIdByTabIds,
+    activeFileByTabIds: nextActiveFileByTabIds,
     filesByTabIds: nextFilesByTabIds,
     
   }
