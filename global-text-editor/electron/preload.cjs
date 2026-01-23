@@ -23,8 +23,10 @@ contextBridge.exposeInMainWorld('api', {
   fetchFsNodes: () =>
     invokeLogged('fsNodes:fetch', {}),
 
+  fetchNormalEditor: (storagePath) =>
+    invokeLogged('editor:fetch', {storagePath}),
+
   saveNormalEditor: (id, editorData) =>
     invokeLogged('editor:save', {id, editorData}),
-  fetchNormalEditor: (storagePath) =>
-    invokeLogged('normalEditor:fetchJSON', {storagePath})
+
 })

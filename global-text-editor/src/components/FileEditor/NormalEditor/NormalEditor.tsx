@@ -4,17 +4,50 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import NormalToolbarRenderer from "./NormalToolbarRenderer"
 
 import normalEditorConfig from "./normalEditorConfig"
+import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 const SAVE_DELAY_MS = 2000
 
-function NormalEditor({
-  fileId
-}: {
-  fileId: number
-}) {
+function NormalEditor({file}: {file : FileNode}) {
   const editor = normalEditorConfig()
+  
   const editorTheme = ThemeManagerStore((s) => s.editorTheme)
   const editorBackground = ThemeManagerStore((s) => s.editorBackground)
   const saveTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!editor) return
+
+    let cancelled = false
+
+    ;(async () => {
+      const res = await window.api.fetchNormalEditor(file.storagePath)
+      if (cancelled) return
+      
+      if (!res.ok) {
+        editor.commands.setContent("", { emitUpdate: false })
+        return
+      }
+
+      const raw = res.editorData ?? ""
+      if (!raw) {
+        // IMPORTANT: clear when file has no saved data
+        editor.commands.setContent("", { emitUpdate: false })
+        return
+      }
+
+      try {
+        const json = JSON.parse(raw)
+        // load without triggering your autosave update
+        editor.commands.setContent(json, { emitUpdate: false })
+      } catch {
+        // ignore bad json
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [editor, file.storagePath])
 
   useEffect(() => {
     if (!editor) return
@@ -26,7 +59,7 @@ function NormalEditor({
       // schedule exactly one save
       saveTimerRef.current = window.setTimeout(() => {
         const json = JSON.stringify(editor.getJSON())
-        window.api.saveNormalEditor(fileId, json)
+        window.api.saveNormalEditor(file.id, json)
 
         // allow next change to schedule again
         saveTimerRef.current = null
@@ -40,7 +73,7 @@ function NormalEditor({
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
       saveTimerRef.current = null
     }
-  }, [editor, fileId])
+  }, [editor, file])
 
   return (
   <>

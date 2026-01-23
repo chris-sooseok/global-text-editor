@@ -116,6 +116,21 @@ ipcMain.handle('editor:save', (_event, payload) => {
 
   const row = db.prepare(`SELECT storage_path FROM fsNode WHERE id = ?`).get(id)
   const dirPath = path.join(app.getPath("userData"), row.storage_path)
-  fs.writeFileSync(path.join(dirPath, "normal.json"), editorData, "utf8")
+  fs.writeFileSync(path.join(dirPath, "index.json"), editorData, "utf8")
 
+})
+
+ipcMain.handle("editor:fetch", (_event, payload) => {
+  const storagePath = payload.storagePath
+  const dirPath = path.join(app.getPath("userData"), storagePath)
+  const filePath = path.join(dirPath, "index.json")
+
+  let editorData = ""
+  try {
+    editorData = fs.readFileSync(filePath, "utf8")
+  } catch {
+    editorData = "" // file not found yet
+  }
+
+  return { ok: true, editorData }
 })

@@ -12,9 +12,12 @@ type FetchFsNodeRes =
   | { ok: true; rows: FsNodeRow[] }
   | { ok: false; message: string }
 
+type FetchNormalEditorRes =
+    | { ok: true; editorData: string }
+    | { ok: false; message: string }
 type SaveNormalEditorRes =
     | { ok: true}
-    | { ok: false; message: string}
+    | { ok: false; message: string }
 
 declare global {
   interface Window {
@@ -33,7 +36,7 @@ declare global {
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
-      fetchNormalEditor(storagePath: string): Promise<string>
+      fetchNormalEditor(storagePath: string): Promise<FetchNormalEditorRes>
       
       saveNormalEditor(
         id: number,
