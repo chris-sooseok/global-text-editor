@@ -10,46 +10,45 @@ import {
 } from './SidebarHandler'
 import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
 import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
-import IconButton from './IconButton'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
+import ToolbarIcon from 'shared/ToolbarIcon'
 
-const SELECTED_FILE_KEY = String(import.meta.env.VITE_SELECTED_FILE_KEY)
-const SELECTED_FOLDER_KEY = String(import.meta.env.VITE_SELECTED_FOLDER_KEY)
-const TOGGLED_FOLDERS_KEY = String(import.meta.env.VITE_TOGGLED_FOLDERS_KEY)
+const SIDEBAR_SELECTED_FILE = String(import.meta.env.VITE_SIDEBAR_SELECTED_FILE)
+const SIDEBAR_SELECTED_FOLDER = String(import.meta.env.VITE_SIDEBAR_SELECTED_FOLDER)
+const SIDEBAR_TOGGLED_FOLDERS = String(import.meta.env.VITE_SIDEBAR_TOGGLED_FOLDERS)
 
 export type SelectedNodeType = FsNode | null
 
 function Sidebar() {
-  const nodeRows = FsTreeStore((store) => store.nodeRows)
-  const loadFsNodes = FsTreeStore((store) => store.loadFsNodes)
-  const insertFsNode = FsTreeStore((store) => store.insertFsNode)
-  const renameNode = FsTreeStore((s) => s.renameFsNode)
-  const removeNode = FsTreeStore((s) => s.removeFsNode)
-  
+  const nodeRows = FsTreeStore((s) => s.nodeRows)
+  const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
+  const { renameFsNode, removeFsNode } = FsTreeStore.getState()
   const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
+  
   /** ensure loading fsTree when mounting sidebar */
   useEffect(() => {
     void loadFsNodes(window.api)
   }, [loadFsNodes])
 
-  const openFileInActiveTab = TabManagerStore((store) => store.openFileInActiveTab)
+  // on file selection
+  const { openFileInActiveTab } = TabManagerStore.getState()
   
   /**  Separate states for selected file and folder to control highlight behaviors */
   const [selectedFile, setSelectedFile ] = useState(() => {
     return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SELECTED_FILE_KEY), null)
+    (localStorage.getItem(SIDEBAR_SELECTED_FILE), null)
   })
   
   const [selectedFolder, setSelectedFolder ] = useState(() => {
     return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SELECTED_FOLDER_KEY), null)
+    (localStorage.getItem(SIDEBAR_SELECTED_FOLDER), null)
   })
 
   /** control folder toggle */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     // localStorage only supports arr, so we make sure to conver to Set
     const arr = parseLocalStorage<number[]>
-    (localStorage.getItem(TOGGLED_FOLDERS_KEY), [])
+    (localStorage.getItem(SIDEBAR_TOGGLED_FOLDERS), [])
     return new Set(arr)
   })
 
@@ -65,14 +64,13 @@ function Sidebar() {
   const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** General Sidebar Behaviors ***/
-
   /** Control folders that are folded or expanded */
   function toggleFolderHandler(nodeId: number) {
     setToggledFolderIds((prev) => {
       const next = new Set(prev) // create a new Set so React sees a new reference
       if (next.has(nodeId)) next.delete(nodeId)
       else next.add(nodeId)
-      localStorage.setItem(TOGGLED_FOLDERS_KEY, JSON.stringify(Array.from(next)))
+      localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
       return next
     })
   }
@@ -82,7 +80,7 @@ function Sidebar() {
    * Also this is used to unhighlight folder for global click behavior: else case */ 
   function selectNodeHandler(node: FsNode) {
     if (node?.type === 'file') {
-      const nextSelectedFile: FsNode = node      
+      const nextSelectedFile: FsNode = node    
       selectFileHandler(nextSelectedFile)
       //* We make separate check conditions to prevent state update on every selection
       // when a root file is created or selected
@@ -92,7 +90,7 @@ function Sidebar() {
       // when normal file is selected, update selectedFolder to its parent
       if (nextSelectedFile.parentId !== selectedFolder?.id){
         const parentId = node.parentId
-        const parentNode = parentId === null ? null : (nodes.get(parentId) ?? null)
+        const parentNode = parentId === null ? null : nodes.get(parentId)
         if (parentNode && parentNode.type === 'folder') {
           selectFolderHandler(parentNode)
         } else {
@@ -120,7 +118,7 @@ function Sidebar() {
 
   function selectFileHandler(file: FileNode | null) {
     setSelectedFile(file)
-    localStorage.setItem(SELECTED_FILE_KEY, JSON.stringify(file))
+    localStorage.setItem(SIDEBAR_SELECTED_FILE, JSON.stringify(file))
 
     if (!file) return
     openFileInActiveTab(file)
@@ -128,7 +126,7 @@ function Sidebar() {
 
   function selectFolderHandler(folder: FolderNode | null) {
     setSelectedFolder(folder)
-    localStorage.setItem(SELECTED_FOLDER_KEY, JSON.stringify(folder))
+    localStorage.setItem(SIDEBAR_SELECTED_FOLDER, JSON.stringify(folder))
   }
 
   // TODO
@@ -137,10 +135,6 @@ function Sidebar() {
     setSelectedFile(null)
   }
 
-  // TODO
-  function renameNodeHandler(renameNode: FsNode) {
-    
-  }
 
   function cancelRenamingNode() {
     setRenameNodeId(null)
@@ -152,12 +146,7 @@ function Sidebar() {
   async function deleteNodeHandler(deleteNode: FsNode) {
     const ok = window.confirm(`Confirm to delete \n ${deleteNode.name}`)
     if (ok) {
-      try {
-        const res: {ok: string} = await window.api.deleteFsNode(deleteNode.id, deleteNode.type)
-
-      } catch (err) {
-
-      }
+      FsTreeStore.getState().removeFsNode(deleteNode.id)
     }
   }
 
@@ -204,7 +193,6 @@ function Sidebar() {
       newNodePromptInputRef,
       newNodeType, 
       selectedFolder, // identify folder under whose new node to be created
-      insertFsNode, // update FsTreeStore
       cancelNewNodePrompt, 
       selectNodeHandler, // selected newly created node
       // only folder
@@ -247,17 +235,12 @@ function Sidebar() {
       renameNodeId,
       renameInputRef,
       setRenameNodeId,
-      renameNodeHandler,
       cancelRenamingNode,
-      // support opening alredy selected file
-      openFileInActiveTab,
     )
   }
 
   /** Render FsTree */
   function renderFsTree() {
-    const highlightFsTree = (selectedFolder ? false : true)
-
     return (<>
       {roots.length === 0 ? (
           <>
@@ -276,7 +259,6 @@ function Sidebar() {
             <ul style={{ 
               margin: 0,
               paddingLeft: 2,
-              background: (highlightFsTree ? 'rgba(121, 125, 131, 0.09)' : 'transparent'),
               borderRadius: 5,
               overflow: 'hidden',
             }}>
@@ -311,24 +293,24 @@ function Sidebar() {
           <div 
             style={{ display: 'flex', gap: 6 }}
           >
-            <IconButton
-              new-node-creation-btn="true"
-              src={newFolderIcon}
-              label="Create folder"
-              buttonSize={28}
-              iconSize={16}
-              background="transparent"
+            <button
               onClick={() => createNewNode('folder')}
-            />
-            <IconButton
-              new-node-creation-btn="true"
-              src={newFileIcon}
-              label="Create file"
-              buttonSize={28}
-              iconSize={16}
-              background="transparent"
+              data-new-node-btn="true"
+            >
+              <ToolbarIcon 
+                whiteIcon={newFolderIcon}
+                onlyWhiteIcon={true}
+              />
+            </button>
+            <button
               onClick={() => createNewNode('file')}
-            />
+              data-new-node-btn="true"
+            >
+              <ToolbarIcon 
+                whiteIcon={newFileIcon}
+                onlyWhiteIcon={true}
+              />
+            </button>
           </div>
         </div>
         {/* Roots list */}

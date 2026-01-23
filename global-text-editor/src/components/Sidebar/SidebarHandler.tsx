@@ -1,16 +1,18 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FileNode, FolderNode, FsNode, FsNodeRow} from "../../store/FsTreeStore/FsTreeTypes"
+import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/FsTreeTypes"
 import type { SelectedNodeType } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import { computeMimeTypeFromName } from "./MimeType"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import { FsTreeStore } from "store/FsTreeStore/FsTreeStore"
+import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
+import ToolbarIcon from "shared/ToolbarIcon"
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
   selectedFolder: SelectedNodeType,
-  insertFsNode: (node: FsNodeRow) => FsNode,
   cancelNewNodePrompt: () => void,
   selectNodeHandler: (node: FsNode) => void, // Dispath is a function that tkaes one argument and returns void
   toggleFolderHandler: (nodeId: number) => void 
@@ -33,7 +35,7 @@ export async function submitNewNodePromptHandler(
 
     // folder where new node is to be created under
     const parentId = selectedFolder?.id ?? null
-    const mimeType = computeMimeTypeFromName(trimmed)
+    const mimeType = null
     const fileType = (newNodeType === 'file' ? "normal" : null)
     const res = await window.api.createFsNode(
       newNodeType, parentId, name, mimeType, fileType
@@ -46,8 +48,9 @@ export async function submitNewNodePromptHandler(
     if (res.ok) {
       const newNode: FsNodeRow = res.row
 
+      // ! ipc and store are separate since we need to pass FsNode only to selectNodeHandler
       // append new node to the FsTree
-      const newFsNode: FsNode = insertFsNode(newNode)
+      const newFsNode: FsNode | null = FsTreeStore.getState().insertFsNode(newNode)
       
       // highlight newly created node
       selectNodeHandler(newFsNode)
@@ -96,6 +99,7 @@ export function renderNewNodePromptHandler(
         <input
           autoFocus
           ref={newNodePromptInputRef}
+          maxLength={50}
           placeholder={newNodeType === 'folder' ? 'Folder name' : 'File name'}
           className="
             flex-1 w-0 min-w-[120px]
@@ -142,12 +146,10 @@ export function renderNodeHandler(
   renameNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
   setRenameNodeId: Dispatch<SetStateAction<number | null>>,
-  renameNodeHandler: (renameNode: FsNode) => void,
   cancelRenamingNode: () => void,
-  openFileInActiveTab: (file: FileNode) => void,
 ): ReactNode {
 
-  const fileFontSize = ThemeManagerStore.getState().fileFontSize
+  const { fileFontSize, sidebarNodeBgr } = ThemeManagerStore.getState()
 
   // if both some file and folder are selected, only highlight folder
   const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
@@ -160,33 +162,27 @@ export function renderNodeHandler(
       isExpanded = toggledFolderIds.has(node.id)
       children = Array.isArray(node.children) ? node.children : []
   }
-  const highlightFolderBgr = (!onlyFolderIsSelected && isSelectedFolder ? true : false)
 
   return (
       <li key={node.id}
-      style={{
-        paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
-        ...(highlightFolderBgr
-          ? { background: 'rgba(121, 125, 131, 0.09)', borderRadius: 5, overflow: 'hidden' }
-          : {}),
-      }}
+        style={{
+          paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
+          background: (node.type === 'folder' 
+            ? ((onlyFolderIsSelected && isSelectedFolder) ? sidebarNodeBgr : 'transparent')
+            : ((!onlyFolderIsSelected && isSelectedFile)  ? sidebarNodeBgr : 'transparent')),
+            borderRadius: 5,
+            padding: "2px 0px" 
+        }}
       >
+        {/* Node Logics */}
         <div 
           tabIndex={-1} // make focusable, not tabbable
           data-node-id={node.id}
           style={{ 
-            // paddingLeft: (node.type === 'folder' ? depth : depth * 40),
             cursor: 'pointer',
             fontWeight: (node.type === 'folder' 
               ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
               : (!onlyFolderIsSelected && isSelectedFile ? 700 : 400)),
-            userSelect: 'none',
-            background: (node.type === 'folder' 
-              ? ((onlyFolderIsSelected && isSelectedFolder) ? 'rgba(67, 102, 158, 0.18)' : 'transparent')
-              : ((!onlyFolderIsSelected && isSelectedFile)  ? 'rgba(30, 91, 189, 0.18)' : 'transparent')),
-            borderRadius: 5,
-            paddingTop: 2,
-            paddingBottom: 2,
             outline: 'none'
           }}
           onClick={() =>
@@ -199,7 +195,6 @@ export function renderNodeHandler(
                 selectNodeHandler,
                 selectFolderHandler,
                 nodes,
-                openFileInActiveTab,
               )
             }
             // Folder selection logic
@@ -215,7 +210,7 @@ export function renderNodeHandler(
               )
             }}
           }}
-          // on rename initiate
+          // on remove or rename initiate -> activation below
           onKeyDown={(e) => {
             e.stopPropagation()
             if (renameNodeId === null) {
@@ -232,23 +227,22 @@ export function renderNodeHandler(
           // Allow setting folder to root
           onBlur={(e) => {
             const next = e.relatedTarget as HTMLElement | null
-            const clickedIconButton = !!next?.closest('[new-node-creation-btn="true"]')
+            const clickedIconButton = !!next?.closest('[data-new-node-btn="true"]')
             // focus on other node should not set folder to null
             const focusWentToNode = !!next?.closest?.('[data-node-id]')
             if (!clickedIconButton && !focusWentToNode && selectedFolder) selectFolderHandler(null)
           }}
         >
+          {/* Node Logo and Name Container */}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, width: '100%' }}>
             {node.type === 'folder' 
               ? <span aria-hidden="true" style={{ width: 12, display: 'inline-block' }}>
                     {isExpanded ? '▾' : '▸'}
                 </span>
               : undefined}
-            <img
-              src={node.type === 'folder' ? folderIcon : fileIcon}
-              alt=""
-              aria-hidden="true"
-              style={{ width: 18, height: 18, display: 'block' }}
+            <ToolbarIcon
+              whiteIcon={node.type === 'folder' ? folderIcon : fileIcon}
+              onlyWhiteIcon={true}
             />
 
             {/* Renaming mode is activated */}
@@ -272,7 +266,10 @@ export function renderNodeHandler(
                   // on rename save
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    renameNodeHandler(node)
+                    if (renameInputRef.current) {
+                      FsTreeStore.getState().renameFsNode(node, renameInputRef.current.value)
+                    }
+
                     setTimeout(() => nodeEl?.focus(), 0)
                     return
                   }
@@ -284,6 +281,7 @@ export function renderNodeHandler(
                     return
                   }
                 }}
+                // pressing enter or clicking outside cancels
                 onBlur={() => {cancelRenamingNode()}}
               />
             ): (
@@ -320,15 +318,15 @@ function onClickFileHandler (
   selectNodeHandler:  (node: FsNode) => void,
   selectFolderHandler: (folder: FolderNode | null) => void,
   nodes: Map<number, FsNode>, // to get parent Node
-  openFileInActiveTab: (file: FileNode) => void,
 ): void {
 
   // if file is already highlighted, no need to highlight
   // but make sure to update selectedFolder to its parent when
   // selectedFolder is null due to global click behavior
   if (isSelectedFile && node.parentId !== selectedFolder?.id) {
-      // still open the file
-      openFileInActiveTab(node as FileNode)
+      // still trigger opening file 
+      TabManagerStore.getState().openFileInActiveTab(node as FileNode)
+
       const parentNode = nodes.get(node.parentId) ?? null
       if (parentNode && parentNode.type === 'folder') {
 

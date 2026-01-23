@@ -5,7 +5,9 @@ const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
+const SIDEBAR_NODE_BGR = import.meta.env.VITE_SIDEBAR_NODE_BGR
 const FILE_FONT_SIZE = import.meta.env.VITE_FILE_FONT_SIZE
+
 const ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND = import.meta.env.VITE_ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND
 const ACTIVE_FILE_BORDER = import.meta.env.VITE_ACTIVE_FILE_BORDER
 const ACTIVE_FILE_BACKGROUND = import.meta.env.VITE_ACTIVE_FILE_BACKGROUND
@@ -21,6 +23,8 @@ type ThemeManagerStoreType = {
     toolbarBackgroundBlack: string,
     editorBackgroundWhite: string,
     toolbarBackgroundWhite: string,
+
+    sidebarNodeBgr: string,
     fileFontSize: string,
     activeFileUnderActiveTabBgr: string,
     activeFileBorder: string,
@@ -40,6 +44,7 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>(() => {
     editorBackgroundWhite: EDITOR_BACKGROUND_WHITE,
     toolbarBackgroundWhite: TOOLBAR_BACKGROUND_WHITE,
 
+    sidebarNodeBgr: SIDEBAR_NODE_BGR,
     fileFontSize: FILE_FONT_SIZE,
 
     activeFileUnderActiveTabBgr: ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND,

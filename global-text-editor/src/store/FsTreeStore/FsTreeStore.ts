@@ -18,8 +18,8 @@ type FsTreeStore = {
   nodeRows: FsNodeRow[]
   loadFsNodes: (api: Window['api']) => Promise<void>
   insertFsNode: (newNode: FsNodeRow) => FsNode
-  renameFsNode: (renameNode: FsNode) => void
-  removeFsNode: (removeNode: FsNode) => void
+  renameFsNode: (node: FsNode, newName: string) => void
+  removeFsNode: (nodeId: number) => void
 }
 
 export const FsTreeStore = create<FsTreeStore>((set) => {
@@ -49,12 +49,34 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       return newFsNode
     },
 
-    renameFsNode: (_renameNode: FsNode) => {
-      // TODO
+    renameFsNode: async (node: FsNode, newName: string) => {
+      if (newName.trim() === '') return
+      if (node.name === newName) return
+
+      const res = await window.api.renameFsNode(node.id, newName)
+
+      if (!res.ok) return
+
+      set((state) => ({
+        nodeRows: state.nodeRows.map((r) =>
+          r.id === node.id
+            ? {
+                ...r,
+                name: newName,
+                updatedAt: Date.now(),
+              }
+            : r
+        ),
+      }))
     },
 
-    removeFsNode: (_deleteNode: FsNode) => {
-      // TODO
+    removeFsNode: async (nodeId) => {
+      const res = await window.api.removeFsNode(nodeId)
+      if (!res.ok) return
+
+      set((state) => ({
+        nodeRows: state.nodeRows.filter((r) => r.id !== nodeId),
+      }))
     },
   }
 })

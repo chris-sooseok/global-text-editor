@@ -26,7 +26,12 @@ function ToolbarIcon({
             editorTheme === "black" ? whiteIcon : blackIcon}
       alt={alt}
       aria-hidden={alt === ""}
-      style={{ width: size, height: size, display: "block" }}
+      style={{ 
+        width: size,
+        height: size,
+        display: "block",
+        cursor: 'pointer'
+      }}
     />
   )
 }

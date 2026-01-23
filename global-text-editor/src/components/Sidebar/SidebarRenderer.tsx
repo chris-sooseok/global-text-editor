@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import IconButton from './IconButton'
 import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
+import ToolbarIcon from 'shared/ToolbarIcon'
 
-const DEFAULT_SIDEBAR_WIDTH = Number(import.meta.env.VITE_DEFAULT_SIDEBAR_WIDTH)
+const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
 const SIDEBAR_MAX_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MAX_WIDTH)
-const COLLAPSED_WIDTH = Number(import.meta.env.VITE_COLLAPSED_WIDTH)
+const SIDEBAR_COLLAPSED_WIDTH = Number(import.meta.env.VITE_SIDEBAR_COLLAPSED_WIDTH)
 
 const SIDEBAR_WIDTH = String(import.meta.env.VITE_SIDEBAR_WIDTH)
 const SIDEBAR_COLLAPSED = String(import.meta.env.VITE_SIDEBAR_COLLAPSED)
@@ -15,15 +15,16 @@ const SIDEBAR_COLLAPSED = String(import.meta.env.VITE_SIDEBAR_COLLAPSED)
 function SidebarRenderer() {
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     return parseLocalStorage<number>
-    (localStorage.getItem(SIDEBAR_WIDTH), DEFAULT_SIDEBAR_WIDTH)
+    (localStorage.getItem(SIDEBAR_WIDTH), SIDEBAR_DEFAULT_WIDTH)
   })
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     return parseLocalStorage<boolean>
     (localStorage.getItem(SIDEBAR_COLLAPSED), false)
   })
+
   // on setSidebarCollapsedHandler, get appliedWidth
-  const appliedWidth = sidebarCollapsed ? COLLAPSED_WIDTH : sidebarWidth
+  const appliedWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth
   const isDraggingRef = useRef(false)
   const startXRef = useRef(0) // mouse X position when dragging
   const startWidthRef = useRef(0) // current sidebar width when dragging
@@ -92,7 +93,7 @@ function SidebarRenderer() {
         width: appliedWidth,
         height: '100%',
         position: 'relative',
-        borderRight: '2px solid rgba(0,0,0,0.15)',
+        borderRight: '2px solid rgba(255, 255, 255, 0.15)',
         flexShrink: 0,
         overflow: 'hidden',
         display: 'flex',
@@ -103,27 +104,27 @@ function SidebarRenderer() {
       {/* Topbar above sidebar content */}
       <div
         style={{
-          height: 44,
+          height: 45,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
           padding: '8px 12px',
           flexShrink: 0,
-          borderBottom: '2px solid rgba(0,0,0,0.15)',
         }}
       >
-        <IconButton
-          src={hideIcon}
-          label={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-          buttonSize={30}
-          iconSize={20}
-          background="transparent"
-          onClick={setSidebarCollapsedHandler}
-        />
+        <button
+          type="button"
+          onClick={setSidebarCollapsedHandler}  
+        >
+          <ToolbarIcon
+            whiteIcon={hideIcon}
+            onlyWhiteIcon={true}
+            size={20}
+          />
+        </button>
       </div>
 
       {/* Sidebar content */}
-      {/* by controlling opacity, sidebar remounting is not neccessary */}
       <div style={{ flex: 1, overflow: "hidden" }}>
         <div
           style={{

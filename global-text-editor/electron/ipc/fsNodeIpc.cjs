@@ -82,6 +82,30 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   } 
 })
 
+ipcMain.handle("fsNodes:rename", (_event, payload) => {
+  const id = payload.id
+  const newName = payload.newName
+
+  if (!valididateName(newName)) return { ok: false }
+
+  const now = Date.now()
+
+  db.prepare(`
+    UPDATE fsNode
+    SET name = ?, updated_at = ?
+    WHERE id = ?
+  `).run(newName, now, id)
+
+  return { ok: true }
+})
+
+ipcMain.handle("fsNodes:remove", (_event, payload) => {
+  const id = payload.id
+
+  db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
+
+  return { ok: true }
+})
 
 
 // fetch entire row of fsNodes to construct fsTree
