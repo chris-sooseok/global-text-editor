@@ -32,7 +32,7 @@ declare global {
 
       renameFsNode(id: number, newName: string): Promise<{ok: boolean}>
 
-      deleteFsNode(id: number): Promise<{ok: boolean}>
+      removeFsNode(id: number): Promise<{ok: boolean}>
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
