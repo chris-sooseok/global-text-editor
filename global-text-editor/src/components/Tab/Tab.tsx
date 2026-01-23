@@ -1,5 +1,5 @@
 // TabGroup.tsx
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import NormalEditor from "../FileEditor/NormalEditor/NormalEditor"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
@@ -27,7 +27,7 @@ function Tab({tabId}: {tabId: string}) {
   const activeTabId = TabManagerStore((s) => s.activeTabId)
   const activeFileByTabIds = TabManagerStore((s) => s.activeFileByTabIds)
   const filesByTabIds = TabManagerStore((s) => s.filesByTabIds)
-  const activeFile = activeFileByTabIds[tabId]
+  const activeFile: FileNode = activeFileByTabIds[tabId]
   const files = filesByTabIds[tabId] ?? []
   const isActiveTab = tabId === activeTabId
 
@@ -36,7 +36,6 @@ function Tab({tabId}: {tabId: string}) {
   const openNewTab = TabManagerStore((s) => s.openNewTab)
   const closeFile = TabManagerStore((s) => s.closeFile)
   const closeTab = TabManagerStore((s) => s.closeTab)
-
 
   function renderEditorOnFileType() {
     return <>
@@ -59,8 +58,9 @@ function Tab({tabId}: {tabId: string}) {
   }
 
   function temp() {
+    console.log(activeFile)
     return <>
-        {activeFile ? <NormalEditor key="normal" fileId={activeFile?.id}/> : null}
+        {activeFile ? <NormalEditor key="normal" file={activeFile}/> : null}
     </>
   }
 
@@ -127,7 +127,7 @@ function Tab({tabId}: {tabId: string}) {
                     : activeFileBackground)
                   : undefined,
               borderBottom: 
-                activeFile?.id === file.id 
+                activeFile.id === file.id 
                   ? activeFileBorder
                   : undefined,
           }}> 
@@ -136,7 +136,7 @@ function Tab({tabId}: {tabId: string}) {
               ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFile?.id !== file.id) switchActiveFile(tabId, file)
+                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
@@ -149,8 +149,8 @@ function Tab({tabId}: {tabId: string}) {
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
-                fontWeight: activeFile?.id === file.id ? 600 : 400,
-                opacity: activeFile?.id === file.id ? 1 : 0.8,
+                fontWeight: activeFile.id === file.id ? 600 : 400,
+                opacity: activeFile.id === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
