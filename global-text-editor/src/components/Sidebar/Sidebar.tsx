@@ -22,7 +22,6 @@ export type SelectedNodeType = FsNode | null
 function Sidebar() {
   const nodeRows = FsTreeStore((s) => s.nodeRows)
   const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
-  const { renameFsNode, removeFsNode } = FsTreeStore.getState()
   const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
   
   /** ensure loading fsTree when mounting sidebar */

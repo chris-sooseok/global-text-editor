@@ -3,7 +3,6 @@ import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/F
 import type { SelectedNodeType } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
-import { computeMimeTypeFromName } from "./MimeType"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { FsTreeStore } from "store/FsTreeStore/FsTreeStore"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
@@ -153,14 +152,14 @@ export function renderNodeHandler(
 
   // if both some file and folder are selected, only highlight folder
   const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
-  
   const isSelectedFile = node.id === selectedFile?.id
   const isSelectedFolder = node.id === selectedFolder?.id
+
   let isExpanded = false
   let children: FsNode[]= []
   if (node.type === 'folder'){
       isExpanded = toggledFolderIds.has(node.id)
-      children = Array.isArray(node.children) ? node.children : []
+      children = node.children ?? []
   }
 
   return (
@@ -297,7 +296,7 @@ export function renderNodeHandler(
             )}    
           </span>
         </div>
-
+            
         {isExpanded && node.type === 'folder' ?
           <ul style={{ margin: 0, paddingLeft: 6 }}>
             {children.map((child) => renderNode(child, depth + 1))}
@@ -306,7 +305,6 @@ export function renderNodeHandler(
           </ul>
           : undefined
         }
-
       </li>
     )
 }

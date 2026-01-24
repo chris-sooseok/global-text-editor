@@ -88,13 +88,11 @@ ipcMain.handle("fsNodes:rename", (_event, payload) => {
 
   if (!valididateName(newName)) return { ok: false }
 
-  const now = Date.now()
-
   db.prepare(`
     UPDATE fsNode
-    SET name = ?, updated_at = ?
+    SET name = ?
     WHERE id = ?
-  `).run(newName, now, id)
+  `).run(newName, id)
 
   return { ok: true }
 })
@@ -105,6 +103,11 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
   db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
 
   return { ok: true }
+})
+
+ipcMain.handle("fsNodes:move", (_event, payload) => {
+
+  
 })
 
 
