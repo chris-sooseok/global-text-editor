@@ -12,6 +12,9 @@ type FetchNormalEditorRes =
     | { ok: true; editorData: string }
     | { ok: false; message: string }
 
+type MoveFsNodePayload = {node: FsNode, targetNode: FsNode, newParentId: number | null,
+  dropPosition: "before" | "inside" | "after"}
+
 type SaveNormalEditorRes =
     | { ok: true}
     | { ok: false; message: string }
@@ -34,8 +37,12 @@ declare global {
 
       removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>
 
-      moveFsNode(id: number, newParentId: number): 
-        Promise<{ok: true, parentId: number, sortOrder: number}| {ok: false}>
+      moveFsNode(
+        node: FsNode,
+        targetNode: FsNode,
+        newParentId: number | null,
+        dropPosition: "before" | "inside" | "after"
+      ): Promise<{ok: boolean}>
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
