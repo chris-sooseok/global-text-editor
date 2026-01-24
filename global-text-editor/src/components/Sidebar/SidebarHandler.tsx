@@ -145,7 +145,6 @@ export function renderNodeHandler(
   renameNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
   setRenameNodeId: Dispatch<SetStateAction<number | null>>,
-  cancelRenamingNode: () => void,
   // dragging
   dragState: DragState | null,
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
@@ -169,7 +168,7 @@ export function renderNodeHandler(
   const isDropTargetFile = (node.type === 'file' && node.id === dragState?.targetNodeId 
     && node.id !== dragState?.draggingNode.id)
 
-  const isDraggingNode = dragState?.draggingNode.id === node.id
+  const isDraggingNode = dragState?.draggingNode?.id === node.id
 
   return (
       <li key={node.id}
@@ -274,7 +273,7 @@ export function renderNodeHandler(
                 defaultValue={node.name}
                 onKeyDown={(e) => {
                   e.stopPropagation()
-                  // to re-focus the node
+                  // to re-focus the node; this is different from selectNodeHandler
                   const nodeEl = (e.currentTarget as HTMLElement).closest(`[data-node-id="${node.id}"]`) as HTMLElement | null
                   // on rename save
                   if (e.key === 'Enter') {
@@ -282,20 +281,23 @@ export function renderNodeHandler(
                     if (renameInputRef.current) {
                       FsTreeStore.getState().renameFsNode(node, renameInputRef.current.value)
                     }
-
                     setTimeout(() => nodeEl?.focus(), 0)
                     return
                   }
                   // on rename escape
                   if (e.key === 'Escape') {
                     e.preventDefault()
-                    cancelRenamingNode()
+                    setRenameNodeId(null)
+                    if (renameInputRef.current) renameInputRef.current.value = ''
                     setTimeout(() => nodeEl?.focus(), 0)
                     return
                   }
                 }}
-                // pressing enter or clicking outside cancels
-                onBlur={() => {cancelRenamingNode()}}
+                // clicking outside cancels rename, or on save as losing focus
+                onBlur={() => {
+                  setRenameNodeId(null)
+                  if (renameInputRef.current) renameInputRef.current.value = ''
+                }}
               />
             ): (
               <span style={{ 

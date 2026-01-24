@@ -36,28 +36,37 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   if (!validateFile(type, fileType)) return { ok: false, message: "Invalid file"}
   if (!validateFolder(type, mimeType, fileType)) return { ok: false, message: "Invalid folder"}
   
-  if (type === 'file') {
-    storagePath = `nodes/${uuid}`
-    absStoragePath = path.join(app.getPath("userData"), storagePath)
-    fs.mkdirSync(absStoragePath, { recursive: true})
-  }
+  /** if file
+   * 1. store file in db
+   * 2. create file config
+   * 3. create disk path
+   * 
+   * if folder
+   * 1. simply store folder in db
+   */
 
-  try {
+  const tsx = db.transaction(() => {
     const info = db
       .prepare(`
         INSERT INTO fsNode (uuid, type, parent_id, name, storage_path, mime_type, file_type, created_at, updated_at, sort_order)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(uuid, type, parentId, name, storagePath, mimeType, fileType, now, now, nextSortOrder)
-
     const id = Number(info.lastInsertRowid)
     if (type === "file") {
       db.prepare(`
         INSERT INTO fileConfig (file_id, toolbar_is_visible, editor_theme)
         VALUES (?, ?, ?)
       `).run(id, 0, "black")
+
+      storagePath = `nodes/${uuid}`
+      absStoragePath = path.join(app.getPath("userData"), storagePath)
+      fs.mkdirSync(absStoragePath, { recursive: true})
     }
 
+  })
+  try {
+    tsx()
     return {
       ok: true,
       row: {
@@ -73,7 +82,6 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         sortOrder: nextSortOrder
       },
       }
-
   } catch (err) {
     if (type === "file" && absStoragePath) {
       fs.rmSync(absStoragePath, { recursive: true, force: true })
@@ -86,15 +94,12 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
 ipcMain.handle("fsNodes:rename", (_event, payload) => {
   const id = payload.id
   const newName = payload.newName
-
   if (!valididateName(newName)) return { ok: false }
-
   db.prepare(`
     UPDATE fsNode
     SET name = ?
     WHERE id = ?
   `).run(newName, id)
-
   return { ok: true }
 })
 
@@ -105,7 +110,11 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
   const id = removeNode.id
 
   const tsx = db.transaction(() => {
-    // if file, simply delete it from db, delete its files, and reorder
+    /** if file
+     * 1. simply delete it from db
+     * 2. delete disk files
+     * 3. reorder siblings
+     */
     if (type === "file") {
       db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
       const abs = path.join(app.getPath("userData"), removeNode.storagePath)
@@ -114,7 +123,12 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
       return
     }
 
-    // if folders, collect all child storage paths
+    /** if folder
+     * 1. get storage path of all its child
+     * 2. cascade delete all children
+     * 3. delete disk files of all children
+     * 4. reorder siblings
+     */
     const storageRows = db
       .prepare(`
         WITH RECURSIVE subtree(id) AS (
@@ -130,14 +144,11 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
           AND storage_path IS NOT NULL
       `)
       .all(id)
-    // deleting folder cascade delete all child
     db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
-    // delete folders on disk for all collected storage paths
     for (const r of storageRows) {
       const abs = path.join(app.getPath("userData"), r.storagePath)
       fs.rmSync(abs, { recursive: true, force: true })
     }
-    // reorder sibilings
     reorderSiblings(db, parentId)
   })
 
@@ -161,6 +172,7 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
 // fetch entire row of fsNodes to construct fsTree
 ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
   try {
+    // order by parent and sort_order
     const rows = db
       .prepare(`
         SELECT 
@@ -181,7 +193,6 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
         ORDER BY parent_id, sort_order
         `)
         .all()
-
      return { ok: true, rows}
 
   } catch (err) {
