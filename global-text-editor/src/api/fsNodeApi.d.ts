@@ -30,9 +30,12 @@ declare global {
         fileType: string | null
       ): Promise<CreateFsNodeRes>
 
-      renameFsNode(id: number, newName: string): Promise<{ok: boolean}>
+      renameFsNode(id: number, newName: string): Promise<{ok: true}>
 
       removeFsNode(id: number): Promise<{ok: boolean}>
+
+      moveFsNode(id: number, newParentId: number): 
+        Promise<{ok: true, parentId: number, sortOrder: number}| {ok: false}>
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 

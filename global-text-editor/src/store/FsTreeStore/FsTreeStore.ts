@@ -20,6 +20,7 @@ type FsTreeStore = {
   insertFsNode: (newNode: FsNodeRow) => FsNode
   renameFsNode: (node: FsNode, newName: string) => void
   removeFsNode: (nodeId: number) => void
+  moveFsNode: (node: FsNode, newParentId: number) => void
 }
 
 export const FsTreeStore = create<FsTreeStore>((set) => {
@@ -62,8 +63,7 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
           r.id === node.id
             ? {
                 ...r,
-                name: newName,
-                updatedAt: Date.now(),
+                name: newName
               }
             : r
         ),
@@ -78,5 +78,27 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
         nodeRows: state.nodeRows.filter((r) => r.id !== nodeId),
       }))
     },
+
+    moveFsNode: async (node: FsNode, newParentId: number ) => {
+
+      // files and folders can be moved within the parent dir to change order
+      
+      const res = await window.api.moveFsNode(node.id, newParentId)
+      if (!res.ok) return
+
+      
+      // ! also need to update the sort order of existing node
+      set((state) => ({
+        nodeRows: state.nodeRows.map((r) =>
+          r.id === node.id
+            ? {
+              ...r,
+              parentId: res.parentId,
+              sortOrder: res.sortOrder
+            }
+            : r
+        )
+      }))
+    }
   }
 })
