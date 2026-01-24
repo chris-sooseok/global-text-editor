@@ -145,6 +145,7 @@ export function renderNodeHandler(
   renameNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
   setRenameNodeId: Dispatch<SetStateAction<number | null>>,
+  renameNodeHandler: (renameNode: FsNode, newName: string) => void,
   // dragging
   dragState: DragState | null,
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
@@ -266,6 +267,9 @@ export function renderNodeHandler(
                 key={`__rename__:${node.id}`}
                 ref={renameInputRef}
                 autoFocus
+                onFocus={(e) => {
+                  e.currentTarget.select()
+                }}
                 className="
                   flex-1 w-0 min-w-[120px]
                   bg-transparent
@@ -282,7 +286,7 @@ export function renderNodeHandler(
                   if (e.key === 'Enter') {
                     e.preventDefault()
                     if (renameInputRef.current) {
-                      FsTreeStore.getState().renameFsNode(node, renameInputRef.current.value)
+                      renameNodeHandler(node, renameInputRef.current.value)
                     }
                     setTimeout(() => nodeEl?.focus(), 0)
                     return

@@ -187,7 +187,6 @@ function Sidebar() {
           if (targetNode) {
             FsTreeStore.getState().moveFsNode(draggingNode, targetNode, targetParentId, dropPosition)
           }
-          
         }
       }
 
@@ -269,21 +268,30 @@ function Sidebar() {
     localStorage.setItem(SIDEBAR_SELECTED_FOLDER, JSON.stringify(folder))
   }
 
-  // TODO
-  /** If there should be no active file selected (e.g. file is deleted) */
-  function unhighlightFile() {
-    setSelectedFile(null)
-  }
+  function renameNodeHandler(renameNode: FsNode, newName: string) {
+    FsTreeStore.getState().renameFsNode(renameNode, newName)
 
+    // only files appear in tabs
+    if (renameNode.type !== "file") return
+
+    const { filesByTabIds } = TabManagerStore.getState()
+
+    // update file name in every tab that has it
+    for (const [tabId, files] of Object.entries(filesByTabIds)) {
+      if (files.some((f) => f.id === renameNode.id)) {
+        TabManagerStore.getState().renameFileInTab(tabId, renameNode.id, newName)
+      }
+    }
+  }
 
   function removeNodeHandler(removeNode: FsNode) {
     const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
     if (!ok) return
-    unhighlightFile()
-    FsTreeStore.getState().removeFsNode(removeNode)
 
+    FsTreeStore.getState().removeFsNode(removeNode)
     // if folder is removed, delete it from toggled list
     if (removeNode.type !== "file") {
+      setSelectedFolder(null)
       setToggledFolderIds((prev) => {
         if (!prev.has(removeNode.id)) return prev
         const next = new Set(prev)
@@ -294,6 +302,7 @@ function Sidebar() {
       return
     }
 
+    setSelectedFile(null)
     // close the file in tabs on remove
     const { filesByTabIds } = TabManagerStore.getState()
     const tabIdsToCloseIn: string[] = []
@@ -305,7 +314,7 @@ function Sidebar() {
     for (const tabId of tabIdsToCloseIn) {
       TabManagerStore.getState().closeFile(tabId, removeNode as FileNode)
     }
-}
+  }
 
   /** ! New Prompt Behavior for creating new FsNode */
   /** 
@@ -391,6 +400,7 @@ function Sidebar() {
       renameNodeId,
       renameInputRef,
       setRenameNodeId,
+      renameNodeHandler,
       // dragging
       dragState,
       onPointerDownNode
