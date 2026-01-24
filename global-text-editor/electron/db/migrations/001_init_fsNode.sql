@@ -18,14 +18,3 @@ CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
 -- enforce: unique names under same dir including case
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_name_nocase
 ON fsNode(COALESCE(parent_id, -1), name COLLATE NOCASE);
-
--- trigger that updates updated_at
-CREATE TRIGGER IF NOT EXISTS trg_fsNode_updated_at
-AFTER UPDATE ON fsNode
-FOR EACH ROW
-WHEN NEW.updated_at = OLD.updated_at
-BEGIN
-  UPDATE fsNode
-  SET updated_at = strftime('%s','now')*1000
-  WHERE id = OLD.id;
-END;

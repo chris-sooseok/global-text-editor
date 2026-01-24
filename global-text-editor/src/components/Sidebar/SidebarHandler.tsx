@@ -150,7 +150,7 @@ export function renderNodeHandler(
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
 ): ReactNode {
 
-  const { fileFontSize, sidebarNodeBgr } = ThemeManagerStore.getState()
+  const { fileFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
 
   // if both some file and folder are selected, only highlight folder
   const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
@@ -164,9 +164,11 @@ export function renderNodeHandler(
       children = node.children ?? []
   }
 
-  const isDropTargetFolder = (node.type === 'folder' && node.id === dragState?.targetNodeId)
-  const isDropTargetFile = (node.type === 'file' && node.id === dragState?.targetNodeId 
-    && node.id !== dragState?.draggingNode.id)
+  const dropPosition = dragState?.dropPosition
+  const isDropTargetFolder = (node.type === 'folder' && node.id === dragState?.targetNodeId
+    && node.id === dragState?.targetParentId)
+  const isDropTargetNode = (node.id === dragState?.targetNodeId 
+    && node.parentId === dragState?.targetParentId)
 
   const isDraggingNode = dragState?.draggingNode?.id === node.id
 
@@ -174,7 +176,7 @@ export function renderNodeHandler(
       <li key={node.id}
         style={{
           paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
-          userSelect: "none"
+          userSelect: "none",
         }}
       >
         {/* Node Logics */}
@@ -189,11 +191,12 @@ export function renderNodeHandler(
             background: (node.type === 'folder' 
             ? ((onlyFolderIsSelected && isSelectedFolder) ? sidebarNodeBgr : 'transparent')
             : ((!onlyFolderIsSelected && isSelectedFile)  ? sidebarNodeBgr : 'transparent')),
-            borderRadius: 5,
+            borderRadius: 1,
             padding: "2px 0px" ,
             opacity: isDraggingNode ? 0.35 : 1,
-            outline: isDropTargetFolder ? "2px solid rgba(120,120,255,0.6)" : "none",
-            borderBottom: isDropTargetFile ? "2px solid rgba(120,120,255,0.6)" : "none",
+            outline: (isDropTargetFolder && dropPosition === "inside" ? sidebar_node_drag_target: "none"),
+            borderBottom: (isDropTargetNode && dropPosition === "after" ? sidebar_node_drag_target: "none"),
+            borderTop: (isDropTargetNode && dropPosition === "before" ? sidebar_node_drag_target : "none")
           }}
           onClick={() =>
             // File selection logic

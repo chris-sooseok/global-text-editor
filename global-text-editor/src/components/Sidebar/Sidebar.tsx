@@ -12,6 +12,7 @@ import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
 import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
+import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
 
 const SIDEBAR_SELECTED_FILE = String(import.meta.env.VITE_SIDEBAR_SELECTED_FILE)
 const SIDEBAR_SELECTED_FOLDER = String(import.meta.env.VITE_SIDEBAR_SELECTED_FOLDER)
@@ -25,12 +26,14 @@ export type DragState = {
     y: number
     targetNodeId: number | null // node being hovered on
     targetParentId: number | null // the computed destination
+    dropPosition: "before" | "inside" | "after"
   }
 
 function Sidebar() {
   const nodeRows = FsTreeStore((s) => s.nodeRows)
   const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
   const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
+  const { fileFontSize } = ThemeManagerStore.getState()
   
   /** ensure loading fsTree when mounting sidebar */
   useEffect(() => {
@@ -71,14 +74,13 @@ function Sidebar() {
   const renameInputRef = useRef<HTMLInputElement | null>(null)
 
   /*** Node Dragging Control  ***/
+  const [dragState, setDragState] = useState<DragState | null>(null)
 
-  const draggingNodeRef = useRef<{
+  const dragNodeRef = useRef<{
     draggingNode: FsNode
     startX: number
     startY: number
   } | null>(null)
-
-  const [dragState, setDragState] = useState<DragState | null>(null)
 
   // when a node is selected, update the position of the selected node to ref
   function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
@@ -87,32 +89,39 @@ function Sidebar() {
     // not applicable during rename
     if (renameNodeId !== null) return
 
-    draggingNodeRef.current = {
+    dragNodeRef.current = {
       draggingNode: node,
       startX: e.clientX,
       startY: e.clientY,
     }
   }
 
-  /** Global listener on pointer move and pointer up */
+  /** Global listener for moving nodes
+   * If a node is moved into a folder
+   * - dropPosition must be "inside" and targetNode and targetParent is the folder
+   * ! folder can't be moved into its child folder 
+   * If a node is moved adjacent any node
+   * - dropPosition must be either "before" or "after" and tartgetNode is the adjacent node
+   *  and targetParent has to match with the targetNode's parent
+    */
   useEffect(() => {
-    // listens to every pointer move
+
     function onMove(e: PointerEvent) {
       // if no node is selected, bail out
-      const dragRef = draggingNodeRef.current
-      if (!dragRef && !dragState) return
+      if (!dragNodeRef.current && !dragState) return
 
       // initiate dragState once selected node is dragged out
-      if (dragRef && !dragState) {
-        const dx = e.clientX - dragRef.startX
-        const dy = e.clientY - dragRef.startY
+      if (dragNodeRef.current && !dragState) {
+        const dx = e.clientX - dragNodeRef.current.startX
+        const dy = e.clientY - dragNodeRef.current.startY
         if (Math.hypot(dx, dy) < 6) return
         setDragState({
-          draggingNode: dragRef.draggingNode,
+          draggingNode: dragNodeRef.current.draggingNode,
           x: e.clientX,
           y: e.clientY,
           targetNodeId: null,
           targetParentId: null,
+          dropPosition: "after",
         })
         return
       }
@@ -122,16 +131,36 @@ function Sidebar() {
         if (!prev) return prev
 
         const mouseTarget = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
-        const targetNode = mouseTarget?.closest?.("[data-node-id]") as HTMLElement | null
+        const targetNodeEl = mouseTarget?.closest?.("[data-node-id]") as HTMLElement | null
         // read node id at the target
-        const targetNodeId = targetNode ? Number(targetNode.getAttribute("data-node-id")) : null
+        const targetNodeId = targetNodeEl ? Number(targetNodeEl.getAttribute("data-node-id")) : null
+        
         let targetParentId: number | null = null
-        // if it is a proper node target, update dragState
-        // don't update if targetNode is the draggingNode itself
-        if (targetNodeId !== null && targetNodeId !== prev.draggingNode.id) {
+        let dropPosition: "before" | "inside" | "after" = "after"
+      
+        // draggingNode can't be targetNode
+        if (targetNodeId != null && targetNodeId !== prev.draggingNode.id) {
+          // get targetNode at where cursor is pointing
           const targetNode = nodes.get(targetNodeId) ?? null
+
           if (targetNode) {
-            targetParentId = targetNode.parentId
+            // r gives top and height of the target element
+            const r = targetNodeEl!.getBoundingClientRect()
+            const relativePos = (e.clientY - r.top) / r.height
+            // compute relative position on targetNode
+            if (targetNode.type === 'folder') {
+              if (relativePos < 0.25) dropPosition = "before"
+              else if (relativePos > 0.75) dropPosition = "after"
+              else dropPosition = "inside"
+            } else {
+              dropPosition = relativePos < 0.5 ? "before" : "after"
+            }
+            // if targetNode is a folder, set it to the targetParent
+            if (dropPosition === "inside" && targetNode.type === "folder") {
+              targetParentId = targetNode.id
+            } else {
+              targetParentId = targetNode.parentId ?? null
+            }
           }
         }
 
@@ -141,36 +170,28 @@ function Sidebar() {
             y: e.clientY,
             targetNodeId,
             targetParentId,
-          }
-        })
-      }
+            dropPosition,
+        }
+      })
+    }
 
     async function onUp() {
-      // finalize move
       if (dragState) {
         const draggingNode = dragState.draggingNode
         const targetNodeId = dragState.targetNodeId
         const targetParentId = dragState.targetParentId
+        const dropPosition = dragState.dropPosition
 
-        /** Cases
-         * File
-         * 1. targetNodeId === draggingNode.id -> do nothing
-         * 
-         * 2. targetNodeId.parentId === draggingNode.parentId 
-         * tartget needs to update sortOrder
-         * 
-         */
-        if (draggingNode && targetNodeId && targetParentId) {
-
-        }
-        // (frontend only) call backend later; leaving hook here
-        if (targetParentId !== null && targetParentId !== draggingNode.parentId) {
-          // await window.api.moveFsNode(movingNode, newParentId)
-          console.log("MOVE", { id: draggingNode.id, newParentId: targetParentId })
+        if (draggingNode && targetNodeId) {
+          const targetNode = nodes.get(targetNodeId)
+          if (targetNode) {
+            FsTreeStore.getState().moveFsNode(draggingNode, targetNode, targetParentId, dropPosition)
+          }
+          
         }
       }
 
-      draggingNodeRef.current = null
+      dragNodeRef.current = null
       setDragState(null)
     }
 
@@ -260,7 +281,18 @@ function Sidebar() {
     if (!ok) return
     unhighlightFile()
     FsTreeStore.getState().removeFsNode(removeNode)
-    if (removeNode.type !== "file") return
+
+    // if folder is removed, delete it from toggled list
+    if (removeNode.type !== "file") {
+      setToggledFolderIds((prev) => {
+        if (!prev.has(removeNode.id)) return prev
+        const next = new Set(prev)
+        next.delete(removeNode.id)
+        localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
+        return next
+      })
+      return
+    }
 
     // close the file in tabs on remove
     const { filesByTabIds } = TabManagerStore.getState()
@@ -400,7 +432,7 @@ function Sidebar() {
 
   return (
     <>
-      {/* Sidebar safe */}
+      {/* Sidebar Container */}
       <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden'}}>
         {/* Top-right icon buttons */}
         <div
@@ -442,6 +474,7 @@ function Sidebar() {
         {/* Roots list */}
         {renderFsTree()}
 
+        {/* Dragging Node Name */}
         {dragState ? (
           <div
             style={{
@@ -451,9 +484,8 @@ function Sidebar() {
               pointerEvents: "none",
               zIndex: 99999,
               padding: "4px 8px",
-              borderRadius: 6,
-              background: "rgba(0,0,0,0.65)",
-              fontSize: 12,
+              background: "transparent",
+              fontSize: fileFontSize,
               whiteSpace: "nowrap",
             }}
           >

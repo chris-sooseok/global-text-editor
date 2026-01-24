@@ -20,7 +20,12 @@ type FsTreeStore = {
   insertFsNode: (newNode: FsNodeRow) => FsNode
   renameFsNode: (node: FsNode, newName: string) => void
   removeFsNode: (nodeId: FsNode) => void
-  moveFsNode: (node: FsNode, newParentId: number) => void
+  moveFsNode: (
+    node: FsNode,
+    targetNode: FsNode,
+    newParentId: number | null,
+    dropPostion: "before" | "inside" | "after"
+  ) => void
 }
 
 export const FsTreeStore = create<FsTreeStore>((set) => {
@@ -28,7 +33,6 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
 
   return {
     nodeRows,
-
     loadFsNodes: async (api) => {
       try {
         const res: FetchFsNodeRes = await api.fetchFsNodes()
@@ -76,29 +80,31 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
 
       // deleting possibly requires having to delete child node for folders
       // and reordering nodes, thus simply reload the FsNodes
+      // making sure sortOrder is sane is also important for moveFsNode
       await FsTreeStore.getState().loadFsNodes(window.api)
     },
 
-    moveFsNode: async (node: FsNode, newParentId: number ) => {
-
-      // files and folders can be moved within the parent dir to change order
+    moveFsNode: async (
+      node: FsNode,
+      targetNode: FsNode,
+      newParentId: number | null,
+      dropPostion: "before" | "inside" | "after"
+    ) => {
       
-      const res = await window.api.moveFsNode(node.id, newParentId)
+      // case 1: when moving into folder, if already exists -> return
+      if (dropPostion === 'inside' && node.parentId === newParentId) return
+
+      // case 4: if moved into the same position -> return
+      if (node.parentId === newParentId && dropPostion === "after" 
+        && node.sortOrder - 1 === targetNode.sortOrder) return
+      if (node.parentId === newParentId && dropPostion === "before"
+        && node.sortOrder+ 1 === targetNode.sortOrder) return
+      
+      const res = await window.api.moveFsNode(node, targetNode, newParentId, dropPostion)
+
       if (!res.ok) return
 
-
-      // ! also need to update the sort order of existing node
-      set((state) => ({
-        nodeRows: state.nodeRows.map((r) =>
-          r.id === node.id
-            ? {
-              ...r,
-              parentId: res.parentId,
-              sortOrder: res.sortOrder
-            }
-            : r
-        )
-      }))
+      await FsTreeStore.getState().loadFsNodes(window.api)
     }
   }
 })
