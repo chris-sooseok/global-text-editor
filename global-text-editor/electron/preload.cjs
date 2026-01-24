@@ -18,8 +18,8 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('fsNodes:create', { type, parentId, name, mimeType, fileType}),
   renameFsNode: (id, newName) =>
     invokeLogged('fsNodes:rename', { id, newName}),
-  removeFsNode: (id) =>
-    invokeLogged('fsNodes:remove', { id }),
+  removeFsNode: (removeNode) =>
+    invokeLogged('fsNodes:remove', { removeNode }),
   moveFsNode: (id, newParentId) =>
     invokeLogged("fsNodes:move", { id, newParentId }),
   fetchFsNodes: () =>

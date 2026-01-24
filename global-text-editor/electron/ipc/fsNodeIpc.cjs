@@ -6,6 +6,7 @@ const fs = require("node:fs")
 
 const {
   getNextSortOrder,
+  reorderSiblings,
   valididateName,
   validateType,
   validateFolder,
@@ -98,16 +99,62 @@ ipcMain.handle("fsNodes:rename", (_event, payload) => {
 })
 
 ipcMain.handle("fsNodes:remove", (_event, payload) => {
-  const id = payload.id
+  const removeNode = payload.removeNode
+  const parentId = removeNode.parentId
+  const type = removeNode.type
+  const id = removeNode.id
 
-  db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
+  const tsx = db.transaction(() => {
+    // if file, simply delete it from db, delete its files, and reorder
+    if (type === "file") {
+      db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
+      const abs = path.join(app.getPath("userData"), removeNode.storagePath)
+      fs.rmSync(abs, { recursive: true, force: true })
+      reorderSiblings(db, parentId)
+      return
+    }
 
-  return { ok: true }
+    // if folders, collect all child storage paths
+    const storageRows = db
+      .prepare(`
+        WITH RECURSIVE subtree(id) AS (
+          SELECT id FROM fsNode WHERE id = ?
+          UNION ALL
+          SELECT f.id
+          FROM fsNode f
+          JOIN subtree s ON f.parent_id = s.id
+        )
+        SELECT storage_path AS storagePath
+        FROM fsNode
+        WHERE id IN (SELECT id FROM subtree)
+          AND storage_path IS NOT NULL
+      `)
+      .all(id)
+    // deleting folder cascade delete all child
+    db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
+    // delete folders on disk for all collected storage paths
+    for (const r of storageRows) {
+      const abs = path.join(app.getPath("userData"), r.storagePath)
+      fs.rmSync(abs, { recursive: true, force: true })
+    }
+    // reorder sibilings
+    reorderSiblings(db, parentId)
+  })
+
+  try {
+    tsx()
+    return { ok: true }
+  } catch (err) {
+    console.error("[fsNodes:remove] failed:", err)
+    return { ok: false }
+  }
 })
+
+
 
 ipcMain.handle("fsNodes:move", (_event, payload) => {
 
-  
+
 })
 
 

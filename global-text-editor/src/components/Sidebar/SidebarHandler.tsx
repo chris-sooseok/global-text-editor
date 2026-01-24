@@ -1,6 +1,6 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/FsTreeTypes"
-import type { SelectedNodeType } from "./Sidebar"
+import type { SelectedNodeType, DragState } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
@@ -140,12 +140,15 @@ export function renderNodeHandler(
   toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
   // delete
-  deleteNodeHandler: (deletingNode: FsNode) => void,
+  removeNodeHandler: (deletingNode: FsNode) => void,
   // renaming
   renameNodeId: number | null,
   renameInputRef: RefObject<HTMLInputElement | null>,
   setRenameNodeId: Dispatch<SetStateAction<number | null>>,
   cancelRenamingNode: () => void,
+  // dragging
+  dragState: DragState | null,
+  onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
 ): ReactNode {
 
   const { fileFontSize, sidebarNodeBgr } = ThemeManagerStore.getState()
@@ -162,15 +165,17 @@ export function renderNodeHandler(
       children = node.children ?? []
   }
 
+  const isDropTargetFolder = (node.type === 'folder' && node.id === dragState?.targetNodeId)
+  const isDropTargetFile = (node.type === 'file' && node.id === dragState?.targetNodeId 
+    && node.id !== dragState?.draggingNode.id)
+
+  const isDraggingNode = dragState?.draggingNode.id === node.id
+
   return (
       <li key={node.id}
         style={{
           paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
-          background: (node.type === 'folder' 
-            ? ((onlyFolderIsSelected && isSelectedFolder) ? sidebarNodeBgr : 'transparent')
-            : ((!onlyFolderIsSelected && isSelectedFile)  ? sidebarNodeBgr : 'transparent')),
-            borderRadius: 5,
-            padding: "2px 0px" 
+          userSelect: "none"
         }}
       >
         {/* Node Logics */}
@@ -182,7 +187,14 @@ export function renderNodeHandler(
             fontWeight: (node.type === 'folder' 
               ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
               : (!onlyFolderIsSelected && isSelectedFile ? 700 : 400)),
-            outline: 'none'
+            background: (node.type === 'folder' 
+            ? ((onlyFolderIsSelected && isSelectedFolder) ? sidebarNodeBgr : 'transparent')
+            : ((!onlyFolderIsSelected && isSelectedFile)  ? sidebarNodeBgr : 'transparent')),
+            borderRadius: 5,
+            padding: "2px 0px" ,
+            opacity: isDraggingNode ? 0.35 : 1,
+            outline: isDropTargetFolder ? "2px solid rgba(120,120,255,0.6)" : "none",
+            borderBottom: isDropTargetFile ? "2px solid rgba(120,120,255,0.6)" : "none",
           }}
           onClick={() =>
             // File selection logic
@@ -214,7 +226,7 @@ export function renderNodeHandler(
             e.stopPropagation()
             if (renameNodeId === null) {
               if (e.key === 'Backspace') {
-                deleteNodeHandler(node)
+                removeNodeHandler(node)
               }
 
               // initiate rename update
@@ -231,6 +243,8 @@ export function renderNodeHandler(
             const focusWentToNode = !!next?.closest?.('[data-node-id]')
             if (!clickedIconButton && !focusWentToNode && selectedFolder) selectFolderHandler(null)
           }}
+          // Dragging
+          onPointerDown={(e) => onPointerDownNode(e, node)}
         >
           {/* Node Logo and Name Container */}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, width: '100%' }}>
@@ -296,7 +310,7 @@ export function renderNodeHandler(
             )}    
           </span>
         </div>
-            
+
         {isExpanded && node.type === 'folder' ?
           <ul style={{ margin: 0, paddingLeft: 6 }}>
             {children.map((child) => renderNode(child, depth + 1))}
