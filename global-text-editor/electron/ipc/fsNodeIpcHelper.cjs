@@ -24,15 +24,14 @@ function reorderSiblings(db, parentId) {
     `)
     .all(parentId ?? null)
 
-  const upd = db.prepare(`
+  const prepUpdate = db.prepare(`
     UPDATE fsNode
     SET sort_order = ?
     WHERE id = ?
   `)
 
-  // keep it simple: 1,2,3,...
   for (let i = 0; i < siblings.length; i++) {
-    upd.run(i + 1, siblings[i].id)
+    prepUpdate.run(i + 1, siblings[i].id)
   }
 }
 

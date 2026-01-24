@@ -74,31 +74,9 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       const res = await window.api.removeFsNode(removeNode)
       if (!res.ok) return
 
-      // update nodeRows on remove
-      set((state) => {
-        // if removeNode is a file, simply remove
-        if (removeNode.type === 'file')  {
-          return {nodeRows: state.nodeRows.filter((r) => r.id !== removeNode.id)}
-        }
-
-        // build parent map from current nodeRows
-        const parentById = new Map<number, number | null>()
-        for (const r of state.nodeRows) parentById.set(r.id, r.parentId ?? null)
-
-        // loop through the map to find child node that eventually reaches removeNode
-        const mustRemove = (id: number) => {
-          let parentId: number | null | undefined = id
-          while (parentId != null) {
-            if (parentId === removeNode.id) return true
-            parentId = parentById.get(parentId)
-          }
-          return false
-        }
-
-        return {
-          nodeRows: state.nodeRows.filter((r) => !mustRemove(r.id)),
-        }
-      })
+      // deleting possibly requires having to delete child node for folders
+      // and reordering nodes, thus simply reload the FsNodes
+      await FsTreeStore.getState().loadFsNodes(window.api)
     },
 
     moveFsNode: async (node: FsNode, newParentId: number ) => {

@@ -217,7 +217,6 @@ function Sidebar() {
           selectFolderHandler(null)
         }
       }
-      return
     } 
     
     if (node?.type === 'folder') {
@@ -256,16 +255,10 @@ function Sidebar() {
   }
 
 
-  function cancelRenamingNode() {
-    setRenameNodeId(null)
-    if (renameInputRef.current) renameInputRef.current.value = ''
-    
-  }
-
-
   function removeNodeHandler(removeNode: FsNode) {
     const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
     if (!ok) return
+    unhighlightFile()
     FsTreeStore.getState().removeFsNode(removeNode)
     if (removeNode.type !== "file") return
 
@@ -366,7 +359,6 @@ function Sidebar() {
       renameNodeId,
       renameInputRef,
       setRenameNodeId,
-      cancelRenamingNode,
       // dragging
       dragState,
       onPointerDownNode
