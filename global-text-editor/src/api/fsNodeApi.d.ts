@@ -32,7 +32,7 @@ declare global {
 
       renameFsNode(id: number, newName: string): Promise<{ok: true}>
 
-      removeFsNode(id: number): Promise<{ok: boolean}>
+      removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>
 
       moveFsNode(id: number, newParentId: number): 
         Promise<{ok: true, parentId: number, sortOrder: number}| {ok: false}>

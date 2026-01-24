@@ -19,6 +19,14 @@ const SIDEBAR_TOGGLED_FOLDERS = String(import.meta.env.VITE_SIDEBAR_TOGGLED_FOLD
 
 export type SelectedNodeType = FsNode | null
 
+export type DragState = {
+    draggingNode: FsNode
+    x: number
+    y: number
+    targetNodeId: number | null // node being hovered on
+    targetParentId: number | null // the computed destination
+  }
+
 function Sidebar() {
   const nodeRows = FsTreeStore((s) => s.nodeRows)
   const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
@@ -61,6 +69,119 @@ function Sidebar() {
   /** Used to allow update node names */
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
+
+  /*** Node Dragging Control  ***/
+
+  const draggingNodeRef = useRef<{
+    draggingNode: FsNode
+    startX: number
+    startY: number
+  } | null>(null)
+
+  const [dragState, setDragState] = useState<DragState | null>(null)
+
+  // when a node is selected, update the position of the selected node to ref
+  function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
+    // only left click
+    if (e.button !== 0) return
+    // not applicable during rename
+    if (renameNodeId !== null) return
+
+    draggingNodeRef.current = {
+      draggingNode: node,
+      startX: e.clientX,
+      startY: e.clientY,
+    }
+  }
+
+  /** Global listener on pointer move and pointer up */
+  useEffect(() => {
+    // listens to every pointer move
+    function onMove(e: PointerEvent) {
+      // if no node is selected, bail out
+      const dragRef = draggingNodeRef.current
+      if (!dragRef && !dragState) return
+
+      // initiate dragState once selected node is dragged out
+      if (dragRef && !dragState) {
+        const dx = e.clientX - dragRef.startX
+        const dy = e.clientY - dragRef.startY
+        if (Math.hypot(dx, dy) < 6) return
+        setDragState({
+          draggingNode: dragRef.draggingNode,
+          x: e.clientX,
+          y: e.clientY,
+          targetNodeId: null,
+          targetParentId: null,
+        })
+        return
+      }
+
+      // during drag activation, constantly update dragState to reflect its position
+      setDragState((prev) => {
+        if (!prev) return prev
+
+        const mouseTarget = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+        const targetNode = mouseTarget?.closest?.("[data-node-id]") as HTMLElement | null
+        // read node id at the target
+        const targetNodeId = targetNode ? Number(targetNode.getAttribute("data-node-id")) : null
+        let targetParentId: number | null = null
+        // if it is a proper node target, update dragState
+        // don't update if targetNode is the draggingNode itself
+        if (targetNodeId !== null && targetNodeId !== prev.draggingNode.id) {
+          const targetNode = nodes.get(targetNodeId) ?? null
+          if (targetNode) {
+            targetParentId = targetNode.parentId
+          }
+        }
+
+        return {
+            ...prev,
+            x: e.clientX,
+            y: e.clientY,
+            targetNodeId,
+            targetParentId,
+          }
+        })
+      }
+
+    async function onUp() {
+      // finalize move
+      if (dragState) {
+        const draggingNode = dragState.draggingNode
+        const targetNodeId = dragState.targetNodeId
+        const targetParentId = dragState.targetParentId
+
+        /** Cases
+         * File
+         * 1. targetNodeId === draggingNode.id -> do nothing
+         * 
+         * 2. targetNodeId.parentId === draggingNode.parentId 
+         * tartget needs to update sortOrder
+         * 
+         */
+        if (draggingNode && targetNodeId && targetParentId) {
+
+        }
+        // (frontend only) call backend later; leaving hook here
+        if (targetParentId !== null && targetParentId !== draggingNode.parentId) {
+          // await window.api.moveFsNode(movingNode, newParentId)
+          console.log("MOVE", { id: draggingNode.id, newParentId: targetParentId })
+        }
+      }
+
+      draggingNodeRef.current = null
+      setDragState(null)
+    }
+
+      window.addEventListener("pointermove", onMove, true)
+      window.addEventListener("pointerup", onUp, true)
+
+      return () => {
+        window.removeEventListener("pointermove", onMove, true)
+        window.removeEventListener("pointerup", onUp, true)
+      }
+   }, [nodes, dragState])
 
   /*** General Sidebar Behaviors ***/
   /** Control folders that are folded or expanded */
@@ -141,13 +262,25 @@ function Sidebar() {
     
   }
 
-  // TODO
-  async function deleteNodeHandler(deleteNode: FsNode) {
-    const ok = window.confirm(`Confirm to delete \n ${deleteNode.name}`)
-    if (ok) {
-      FsTreeStore.getState().removeFsNode(deleteNode.id)
+
+  function removeNodeHandler(removeNode: FsNode) {
+    const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
+    if (!ok) return
+    FsTreeStore.getState().removeFsNode(removeNode)
+    if (removeNode.type !== "file") return
+
+    // close the file in tabs on remove
+    const { filesByTabIds } = TabManagerStore.getState()
+    const tabIdsToCloseIn: string[] = []
+    for (const [tabId, files] of Object.entries(filesByTabIds)) {
+      if (files.some((f) => f.id === removeNode.id)) {
+        tabIdsToCloseIn.push(tabId)
+      }
     }
-  }
+    for (const tabId of tabIdsToCloseIn) {
+      TabManagerStore.getState().closeFile(tabId, removeNode as FileNode)
+    }
+}
 
   /** ! New Prompt Behavior for creating new FsNode */
   /** 
@@ -209,7 +342,6 @@ function Sidebar() {
 
 
   /*** FsTree and DOM display behaviors ***/
-
   /** Render entire node in FsTree, including roots and their children */
   function renderNode(node: FsNode, depth = 0) {
     return renderNodeHandler(
@@ -228,13 +360,16 @@ function Sidebar() {
       toggledFolderIds, // keep track of folder node ids to expand
       toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
-      // delete
-      deleteNodeHandler,
+      // remove
+      removeNodeHandler,
       // renaming
       renameNodeId,
       renameInputRef,
       setRenameNodeId,
       cancelRenamingNode,
+      // dragging
+      dragState,
+      onPointerDownNode
     )
   }
 
@@ -314,6 +449,25 @@ function Sidebar() {
         </div>
         {/* Roots list */}
         {renderFsTree()}
+
+        {dragState ? (
+          <div
+            style={{
+              position: "fixed",
+              left: dragState.x + 12,
+              top: dragState.y + 12,
+              pointerEvents: "none",
+              zIndex: 99999,
+              padding: "4px 8px",
+              borderRadius: 6,
+              background: "rgba(0,0,0,0.65)",
+              fontSize: 12,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {dragState.draggingNode.name}
+          </div>
+        ) : null}
       </aside>
     </>
   )

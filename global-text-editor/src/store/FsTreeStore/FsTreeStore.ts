@@ -19,7 +19,7 @@ type FsTreeStore = {
   loadFsNodes: (api: Window['api']) => Promise<void>
   insertFsNode: (newNode: FsNodeRow) => FsNode
   renameFsNode: (node: FsNode, newName: string) => void
-  removeFsNode: (nodeId: number) => void
+  removeFsNode: (nodeId: FsNode) => void
   moveFsNode: (node: FsNode, newParentId: number) => void
 }
 
@@ -70,13 +70,35 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       }))
     },
 
-    removeFsNode: async (nodeId) => {
-      const res = await window.api.removeFsNode(nodeId)
+    removeFsNode: async (removeNode: FsNode) => {
+      const res = await window.api.removeFsNode(removeNode)
       if (!res.ok) return
 
-      set((state) => ({
-        nodeRows: state.nodeRows.filter((r) => r.id !== nodeId),
-      }))
+      // update nodeRows on remove
+      set((state) => {
+        // if removeNode is a file, simply remove
+        if (removeNode.type === 'file')  {
+          return {nodeRows: state.nodeRows.filter((r) => r.id !== removeNode.id)}
+        }
+
+        // build parent map from current nodeRows
+        const parentById = new Map<number, number | null>()
+        for (const r of state.nodeRows) parentById.set(r.id, r.parentId ?? null)
+
+        // loop through the map to find child node that eventually reaches removeNode
+        const mustRemove = (id: number) => {
+          let parentId: number | null | undefined = id
+          while (parentId != null) {
+            if (parentId === removeNode.id) return true
+            parentId = parentById.get(parentId)
+          }
+          return false
+        }
+
+        return {
+          nodeRows: state.nodeRows.filter((r) => !mustRemove(r.id)),
+        }
+      })
     },
 
     moveFsNode: async (node: FsNode, newParentId: number ) => {
@@ -86,7 +108,7 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       const res = await window.api.moveFsNode(node.id, newParentId)
       if (!res.ok) return
 
-      
+
       // ! also need to update the sort order of existing node
       set((state) => ({
         nodeRows: state.nodeRows.map((r) =>

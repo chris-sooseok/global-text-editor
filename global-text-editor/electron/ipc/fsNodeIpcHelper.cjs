@@ -13,6 +13,28 @@ function getNextSortOrder(db, parentId) {
   return (Number(row?.maxOrder) || 0) + 1
 }
 
+// reorder siblings of a deleting node
+function reorderSiblings(db, parentId) {
+  const siblings = db
+    .prepare(`
+      SELECT id
+      FROM fsNode
+      WHERE parent_id IS ?
+      ORDER BY sort_order, id
+    `)
+    .all(parentId ?? null)
+
+  const upd = db.prepare(`
+    UPDATE fsNode
+    SET sort_order = ?
+    WHERE id = ?
+  `)
+
+  // keep it simple: 1,2,3,...
+  for (let i = 0; i < siblings.length; i++) {
+    upd.run(i + 1, siblings[i].id)
+  }
+}
 
 // name must be shorter than or equal to 50 chars
 function valididateName(name) {
@@ -41,6 +63,7 @@ function validateFolder(type, mimeType, fileType) {
 
 module.exports = {
   getNextSortOrder,
+  reorderSiblings,
   valididateName,
   validateType,
   validateFolder,
