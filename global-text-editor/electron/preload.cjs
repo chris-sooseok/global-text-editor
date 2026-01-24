@@ -14,6 +14,7 @@ async function invokeLogged(channel, payload) {
 }
 
 contextBridge.exposeInMainWorld('api', {
+  /* Sidebar Apis */
   createFsNode: (type, parentId, name, mimeType, fileType) =>
     invokeLogged('fsNodes:create', { type, parentId, name, mimeType, fileType}),
   renameFsNode: (id, newName) =>
@@ -25,15 +26,12 @@ contextBridge.exposeInMainWorld('api', {
   fetchFsNodes: () =>
     invokeLogged('fsNodes:fetch', {}),
 
-
+  /* Editor Apis */
   fetchNormalEditor: (storagePath) =>
     invokeLogged('editor:fetch', {storagePath}),
-
   saveNormalEditor: (id, editorData) =>
     invokeLogged('editor:save', {id, editorData}),
-
   loadFileConfig: (id) => invokeLogged('editor:loadConfig', {id}),
-
   switchEditorTheme: (id, theme) => invokeLogged('editor:switchTheme', {id, theme})
 
 })

@@ -20,6 +20,7 @@ type tabManagerStore = {
   filesByTabIds: Record<string, FileNode[]>
   // Sidebar
   openFileInActiveTab: (file: FileNode) => void
+  renameFileInTab: (tabId: string, renameNodeId: number, newName: string) => void
   // TabRenderer
   switchActiveTab: (nextTabId: string) => void
   // Tab
@@ -116,6 +117,20 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         }
       })
     },
+
+    renameFileInTab: (tabId: string, renameNodeId: number, newName: string) =>
+      set((state) => {
+        const nextFilesByTabIds = {
+          ...state.filesByTabIds,
+          [tabId]: (state.filesByTabIds[tabId] ?? []).map((f) =>
+            f.id === renameNodeId ? { ...f, name: newName } : f
+          ),
+        }
+
+      localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
+
+      return { filesByTabIds: nextFilesByTabIds }
+    }),
 
     switchActiveTab: (nextTabId: string) => {
       set((state) => {
@@ -358,6 +373,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds)  
       })
     },
-
+      
   }
 })

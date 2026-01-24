@@ -109,6 +109,8 @@ function Tab({tabId}: {tabId: string}) {
           gap: 1, // little space between files
           overflowX: "auto", // horizontal scroll
           overflowY: "hidden",
+          flex: 1,
+          minWidth: 0,
         }}
       >
         {/* filename and file close button */}
@@ -131,6 +133,7 @@ function Tab({tabId}: {tabId: string}) {
                 activeFile?.id === file.id 
                   ? activeFileBorder
                   : undefined,
+              flexShrink: 0 // prevent shrinking
           }}> 
             {/* filename */}
             <button
