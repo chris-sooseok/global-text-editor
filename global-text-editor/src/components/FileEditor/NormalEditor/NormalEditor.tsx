@@ -186,18 +186,21 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
         style={{
           flex: 1,
           minHeight: 0,
-          overflowY: "auto",
+          overflowY: "auto", 
           overflowX: "auto",
           width: "100%",
         }}
       >
-        {/* Full-width rail so centering is computed against the real tab width */}
-        <div style={{ minWidth: "100%", minHeight: "100%" }}>
-          {/* Fixed 794 page: centered when possible, left-aligned when not */}
+        {/* Allows centering editor always */}
+        <div style={{ 
+          minWidth: "100%", 
+          minHeight: "100%" 
+        }}>
+          {/* Editor is always 794px width and centered */}
           <div
             style={{
               width: 794,
-              margin: "0 auto",
+              margin: "0 auto", // center editor
               minHeight: "100%",
               display: "flex",
             }}
@@ -206,10 +209,10 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
               editor={editor}
               className={
                 editorTheme === "black"
-                  ? "prose prose-invert max-w-none [&_.ProseMirror]:min-h-full"
-                  : "prose max-w-none [&_.ProseMirror]:min-h-full"
+                  ? "prose prose-invert max-w-none "
+                  : "prose max-w-none"
               }
-              style={{ flex: 1, minWidth: 0, minHeight: "100%" }}
+              style={{ flex: 1 }}
             />
           </div>
         </div>

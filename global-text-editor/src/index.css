@@ -22,7 +22,7 @@ body {
 .normal-editor {
   padding: 20px 16px;
   min-height: 100%;
-  outline: none;
+  /* outline: none; */
   font-size: 16px;
   line-height: 1.0;
 }
