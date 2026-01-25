@@ -61,7 +61,7 @@ function Tab({tabId}: {tabId: string}) {
 
   function temp() {
     return <>
-        {activeFile ? <NormalEditor key="normal" activeFile={activeFile}/> : null}
+        <NormalEditor key="normal" activeFile={activeFile}/>
     </>
   }
 
@@ -123,13 +123,13 @@ function Tab({tabId}: {tabId: string}) {
               gap: 6, // gap between filename and file close button
               // active file highlight under active or non-active tab
               background:
-                activeFile?.id === file.id
+                activeFile.id === file.id
                   ? (isActiveTab
                     ? activeFileUnderActiveTabBgr 
                     : activeFileBackground)
                   : undefined,
               borderBottom: 
-                activeFile?.id === file.id 
+                activeFile.id === file.id 
                   ? activeFileBorder
                   : undefined,
               flexShrink: 0 // prevent shrinking
@@ -139,7 +139,7 @@ function Tab({tabId}: {tabId: string}) {
               ref={btnRef}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFile?.id !== file.id) switchActiveFile(tabId, file)
+                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
@@ -152,8 +152,8 @@ function Tab({tabId}: {tabId: string}) {
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
-                fontWeight: activeFile?.id === file.id ? 600 : 400,
-                opacity: activeFile?.id === file.id ? 1 : 0.8,
+                fontWeight: activeFile.id === file.id ? 600 : 400,
+                opacity: activeFile.id === file.id ? 1 : 0.8,
               }}
             >
               {file.name}
