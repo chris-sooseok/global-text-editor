@@ -89,9 +89,9 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
   useEffect(() => {
     let cancelled = false
 
-    function focusStartSoon() {
-    setTimeout(() => {
-      if (!cancelled) editor.commands.focus("start")
+    function focusEditor() {
+      setTimeout(() => {
+        if (!cancelled) editor.commands.focus("start")
       }, 0)
     }
 
@@ -124,6 +124,8 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
             // focusStartSoon()
           }
         }
+
+        
       }
     void loadFileContent()  
 
@@ -134,16 +136,18 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
 
   {/* Update File Content */}
   useEffect(() => {
-    const onUpdate = () => {
-      // timer already scheduled -> do nothing
-      if (saveTimerRef.current) return
 
-      // schedule exactly one save
+    function saveNow() {
+      const fileContent = JSON.stringify(editor.getJSON())
+      void window.api.saveFileContent(activeFile.storagePath, fileContent)
+    }
+
+    function onUpdate(){
+      // reset timer on every change
+      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+      // set new timer
       saveTimerRef.current = window.setTimeout(() => {
-        const fileContent = JSON.stringify(editor.getJSON())
-        window.api.saveFileContent(activeFile.storagePath, fileContent)
-
-        // allow next change to schedule again
+        saveNow()
         saveTimerRef.current = null
       }, 3000)
     }
@@ -152,8 +156,13 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
 
     return () => {
       editor.off("update", onUpdate)
-      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = null
+
+      // on unmount or file change, flush
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+        saveNow()
+      }
     }
   }, [editor, activeFile])
 
