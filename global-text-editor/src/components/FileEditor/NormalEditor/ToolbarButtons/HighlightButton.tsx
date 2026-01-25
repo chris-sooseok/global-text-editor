@@ -6,10 +6,10 @@ import whiteHighlightIcon from "assets/NormalTypeIcons/icons8-highlight-white-96
 
 function HighlightButton({ 
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -24,7 +24,7 @@ function HighlightButton({
       <ToolbarIcon 
         blackIcon={blackHighlightIcon}
         whiteIcon={whiteHighlightIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
     </button>
   )

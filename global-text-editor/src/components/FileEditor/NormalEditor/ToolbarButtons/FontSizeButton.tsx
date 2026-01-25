@@ -1,13 +1,14 @@
 import { useState } from "react"
 import type { Editor } from "@tiptap/core"
-import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import type { EditorTheme } from "store/ThemeStore/ThemeManagerStore"
+
 
 function FontSizeButton({
   editor,
   editorTheme
 }: {
-  editor: Editor | null
-  editorTheme: "black" | "white"
+  editor: Editor 
+  editorTheme: EditorTheme
 }) {
 
   const [value, setValue] = useState("16")

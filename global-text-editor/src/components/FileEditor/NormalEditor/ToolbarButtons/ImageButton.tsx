@@ -6,10 +6,10 @@ import whiteImageIcon from "assets/NormalTypeIcons/icons8-add-image-white-96.png
 
 function ImageButton({ 
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -26,7 +26,7 @@ function ImageButton({
       <ToolbarIcon 
         blackIcon={blackImageIcon}
         whiteIcon={whiteImageIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
     </button>
   )

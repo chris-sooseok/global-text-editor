@@ -9,11 +9,9 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
 function HideShowButton({
   fileId,
-  editorTheme,
   toolbarIsVisible,  
 }: {
   fileId: number
-  editorTheme: "black" | "white"
   toolbarIsVisible: boolean
 }) {
 

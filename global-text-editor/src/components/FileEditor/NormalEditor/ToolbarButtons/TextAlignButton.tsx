@@ -14,10 +14,10 @@ import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-w
 
 function TextAlignButton({
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
     if (!editor) return null
 
@@ -51,7 +51,7 @@ function TextAlignButton({
         <ToolbarIcon 
           blackIcon={activeAlignIcons.black}
           whiteIcon={activeAlignIcons.white}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
       </button>
 

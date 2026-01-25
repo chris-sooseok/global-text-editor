@@ -8,10 +8,10 @@ import whiteHIcon from "assets/NormalTypeIcons/icons8-h-white-96.png"
 
 function HeadingButton({
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -51,7 +51,7 @@ function HeadingButton({
         <ToolbarIcon
           blackIcon={blackHIcon}
           whiteIcon={whiteHIcon}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
 
         {activeLevel ? (

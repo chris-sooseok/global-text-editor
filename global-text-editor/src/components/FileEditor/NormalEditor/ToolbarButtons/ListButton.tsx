@@ -12,10 +12,10 @@ import whiteTaskIcon from "assets/NormalTypeIcons/icons8-task-list-white-96.png"
 
 function ListButton({
   editor,
-  editorTheme
+  fileId,
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -48,7 +48,7 @@ function ListButton({
         <ToolbarIcon 
           blackIcon={activeIcons.black}
           whiteIcon={activeIcons.white}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
       </button>
 

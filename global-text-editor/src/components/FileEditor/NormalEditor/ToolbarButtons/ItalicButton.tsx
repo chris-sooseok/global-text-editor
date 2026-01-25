@@ -6,10 +6,10 @@ import whiteItalicIcon from "assets/NormalTypeIcons/icons8-italic-white-96.png"
 
 function ItalicButton({ 
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -24,7 +24,7 @@ function ItalicButton({
       <ToolbarIcon 
         blackIcon={blackItalicIcon}
         whiteIcon={whiteItalicIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
     </button>
   )

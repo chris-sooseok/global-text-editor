@@ -6,10 +6,10 @@ import whiteSuperscriptIcon from "assets/NormalTypeIcons/superscript-white.png"
 
 function SuperscriptButton({ 
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -25,7 +25,7 @@ function SuperscriptButton({
         <ToolbarIcon 
           blackIcon={blackSuperscriptIcon}
           whiteIcon={whiteSuperscriptIcon}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
       </button>
   )
