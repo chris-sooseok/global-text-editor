@@ -21,7 +21,6 @@ export async function submitNewNodePromptHandler(
     cancelNewNodePrompt()
     return
   }
-
   // if name is not provided, cancel newNodePrompt
   const name = newNodePromptInputRef.current.value
   const trimmed = name.trim()
@@ -41,15 +40,13 @@ export async function submitNewNodePromptHandler(
     )
 
     // once submitted, cancel newNodePrompt
-    //* Here we can consider error message later for naming, instad just canceling
     cancelNewNodePrompt()
 
     if (res.ok) {
       const newNode: FsNodeRow = res.row
 
       // ! ipc and store are separate since we need to pass FsNode only to selectNodeHandler
-      // append new node to the FsTree
-      const newFsNode: FsNode | null = FsTreeStore.getState().insertFsNode(newNode)
+      const newFsNode: FsNode = FsTreeStore.getState().insertFsNode(newNode)
       
       // highlight newly created node
       selectNodeHandler(newFsNode)
@@ -343,18 +340,12 @@ function onClickFileHandler (
 
   // if file is already highlighted, no need to highlight
   // but make sure to update selectedFolder to its parent when
-  // selectedFolder is null due to global click behavior
   if (isSelectedFile && node.parentId !== selectedFolder?.id) {
       // still trigger opening file 
       TabManagerStore.getState().openFileInActiveTab(node as FileNode)
 
-      const parentNode = nodes.get(node.parentId) ?? null
-      if (parentNode && parentNode.type === 'folder') {
-
-        selectFolderHandler(parentNode)
-      } else {
-        selectFolderHandler(null)
-      }
+      const parentNode = nodes.get(node.parentId) as FolderNode ?? null
+      selectFolderHandler(parentNode)
       return
   }
   
