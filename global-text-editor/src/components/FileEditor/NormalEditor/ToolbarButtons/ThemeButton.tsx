@@ -32,12 +32,12 @@ function ThemeButton({
       ? <ToolbarIcon 
         blackIcon={blackMoonIcon}
         whiteIcon={whiteMoonIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
       : <ToolbarIcon 
         blackIcon={blackSunIcon}
         whiteIcon={whiteSunIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
     }
 

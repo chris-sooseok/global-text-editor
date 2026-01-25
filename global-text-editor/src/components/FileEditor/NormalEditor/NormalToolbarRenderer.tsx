@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react"
-import { type Dispatch, type SetStateAction } from "react"
 import type { Editor } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import type { editorThemeType } from "./NormalEditor"
 // Button List
 import HeadingButton from "./ToolbarButtons/HeadingButton"
 import ListButton from "./ToolbarButtons/ListButton"
@@ -40,7 +37,6 @@ function NormalToolbarRenderer({
     s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
   const toolbarIsVisible = ThemeManagerStore((s) => 
     s.fileConfigByFileId[fileId]?.toolbarIsVisible ?? true) 
-
 
   return (<>
   {/* Toolbar Container */}

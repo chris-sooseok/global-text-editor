@@ -48,7 +48,7 @@ declare global {
 
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
       
-      saveFileContent(id: number, fileContent: string): Promise<SaveNormalEditorRes>
+      saveFileContent(storagePath: string, fileContent: string): Promise<SaveNormalEditorRes>
 
       loadFileConfig(id: number): Promise<loadFileConfigRes>
 

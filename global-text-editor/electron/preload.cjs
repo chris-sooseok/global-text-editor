@@ -28,7 +28,8 @@ contextBridge.exposeInMainWorld('api', {
 
   /* Editor Apis */
   loadFileContent: (storagePath) => invokeLogged('editors:load', {storagePath}),
-  saveFileContent: (id, fileContent) => invokeLogged('editors:save', {id, fileContent}),
+  saveFileContent: (storagePath, fileContent) => 
+    invokeLogged('editors:save', { storagePath, fileContent}),
 
   /* Editor Config */
   loadFileConfig: (id) => invokeLogged('editorConfig:load', {id}),

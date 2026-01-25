@@ -9,28 +9,27 @@ import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-const SAVE_DELAY_MS = 2000
 
 export type editorThemeType = "black" | "white" | null
 export type toolbarIsVisible = boolean | null
 
 function NormalEditor({file}: {file : FileNode}) {
   const editor = normalEditorConfig()
+  if (!editor) return null
+
+  {/* Load File Config */}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[file.id]?.editorTheme ?? "black")
   const loadFileConfig = ThemeManagerStore((s) => s.loadFileConfig)
-
-  const saveTimerRef = useRef<number | null>(null)
-
-  // load config
   useEffect(() => {
     void loadFileConfig(file.id)
   }, [file.id, loadFileConfig])
 
-  // load fileContent
-  useEffect(() => {
-    if (!editor) return
-    let cancelled = false
+  {/* Save Timer */}
+  const saveTimerRef = useRef<number | null>(null)
 
+  {/* Load File Content */}
+  useEffect(() => {
+    let cancelled = false
     async function loadFileContent() {
         // load file
         const contentRes = await window.api.loadFileContent(file.storagePath)
@@ -62,10 +61,8 @@ function NormalEditor({file}: {file : FileNode}) {
     }
   }, [editor, file.storagePath])
 
-  // update fileContent
+  {/* Update File Content */}
   useEffect(() => {
-    if (!editor) return
-
     const onUpdate = () => {
       // timer already scheduled -> do nothing
       if (saveTimerRef.current) return
@@ -73,11 +70,11 @@ function NormalEditor({file}: {file : FileNode}) {
       // schedule exactly one save
       saveTimerRef.current = window.setTimeout(() => {
         const fileContent = JSON.stringify(editor.getJSON())
-        window.api.saveFileContent(file.id, fileContent)
+        window.api.saveFileContent(file.storagePath, fileContent)
 
         // allow next change to schedule again
         saveTimerRef.current = null
-      }, SAVE_DELAY_MS)
+      }, 3000)
     }
 
     editor.on("update", onUpdate)

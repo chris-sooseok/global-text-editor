@@ -10,24 +10,27 @@ ipcMain.handle("editors:load", (_event, payload) => {
   const dirPath = path.join(app.getPath("userData"), storagePath)
   const filePath = path.join(dirPath, "index.json")
 
-  let fileContent = ""
-  try {
-    fileContent = fs.readFileSync(filePath, "utf8")
-  } catch {
-    fileContent = ""
+  try {    
+    const fileContent = fs.readFileSync(filePath, "utf8")
+    return { ok: true, fileContent: fileContent }
+  } catch(err) {
+    console.error('[editors:save] failed:', err)
+    return {ok : false, message: "Failed to fetch file content"}
   }
-
-  return { ok: true, fileContent: fileContent }
 })
 
 ipcMain.handle('editors:save', (_event, payload) => {
-
-  const id = payload.id
+  debugger
+  const storagePath = payload.storagePath
   const fileContent = payload.fileContent
 
-  const row = db.prepare(`SELECT storage_path FROM fsNode WHERE id = ?`).get(id)
-  const dirPath = path.join(app.getPath("userData"), row.storage_path)
-  fs.writeFileSync(path.join(dirPath, "index.json"), fileContent, "utf8")
-
+  try {
+    const dirPath = path.join(app.getPath("userData"), storagePath)
+    fs.writeFileSync(path.join(dirPath, "index.json"), fileContent, "utf8")
+    return {ok: true}
+  } catch(err) {
+    console.error('[editors:save] failed:', err)
+    return {ok: false, message: "Failed to save file content" }
+  }
 })
 
