@@ -1,3 +1,4 @@
+import type { toolbarIsVisible } from 'src/components/FileEditor/NormalEditor/NormalEditor'
 import { create } from 'zustand'
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
@@ -18,6 +19,11 @@ const DROPDOWN_BACKGROUND_WHITE=import.meta.env.VITE_DROPDOWN_BACKGROUND_WHITE
 const DROPDOWN_COLOR_WHITE=import.meta.env.VITE_DROPDOWN_COLOR_WHITE
 const DROPDOWN_HIGHLIGHT=import.meta.env.VITE_DROPDOWN_HIGHLIGHT
 
+export type EditorTheme = "black" | "white"
+export type FileConfig = {
+  editorTheme: EditorTheme
+  toolbarIsVisible: boolean
+}
 
 type ThemeManagerStoreType = {
     editorBackgroundBlack: string,
@@ -38,26 +44,70 @@ type ThemeManagerStoreType = {
     dropdownColor: string,
     dropdownHighlight: string,
 
+    fileConfigByFileId: Record<number, FileConfig>
+    loadFileConfig: (id: number) => Promise<void>
+    changeFileConfig: (id: number, change: Partial<FileConfig>) => Promise<void>
 }
 
-export const ThemeManagerStore = create<ThemeManagerStoreType>(() => {
-  return {
-    editorBackgroundBlack: EDITOR_BACKGROUND_BLACK,
-    toolbarBackgroundBlack: TOOLBAR_BACKGROUND_BLACK,
-    editorBackgroundWhite: EDITOR_BACKGROUND_WHITE,
-    toolbarBackgroundWhite: TOOLBAR_BACKGROUND_WHITE,
+export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
+  editorBackgroundBlack: EDITOR_BACKGROUND_BLACK,
+  toolbarBackgroundBlack: TOOLBAR_BACKGROUND_BLACK,
+  editorBackgroundWhite: EDITOR_BACKGROUND_WHITE,
+  toolbarBackgroundWhite: TOOLBAR_BACKGROUND_WHITE,
 
-    sidebarNodeBgr: SIDEBAR_NODE_BGR,
-    fileFontSize: FILE_FONT_SIZE,
-    sidebar_node_drag_target: SIDEBAR_NODE_DRAG_TARGET,
+  sidebarNodeBgr: SIDEBAR_NODE_BGR,
+  fileFontSize: FILE_FONT_SIZE,
+  sidebar_node_drag_target: SIDEBAR_NODE_DRAG_TARGET,
 
-    activeFileUnderActiveTabBgr: ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND,
-    activeFileBorder: ACTIVE_FILE_BORDER,
-    activeFileBackground: ACTIVE_FILE_BACKGROUND,
+  activeFileUnderActiveTabBgr: ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND,
+  activeFileBorder: ACTIVE_FILE_BORDER,
+  activeFileBackground: ACTIVE_FILE_BACKGROUND,
 
-    dropdownBorder: DROPDOWN_BORDER_WHITE,
-    dropdownBackground: DROPDOWN_BACKGROUND_WHITE,
-    dropdownColor: DROPDOWN_COLOR_WHITE,
-    dropdownHighlight: DROPDOWN_HIGHLIGHT,
-  }
-})
+  dropdownBorder: DROPDOWN_BORDER_WHITE,
+  dropdownBackground: DROPDOWN_BACKGROUND_WHITE,
+  dropdownColor: DROPDOWN_COLOR_WHITE,
+  dropdownHighlight: DROPDOWN_HIGHLIGHT,
+
+  fileConfigByFileId: {},
+
+  // make sure file config exists
+  loadFileConfig: async (id) => {
+    const res = await window.api.loadFileConfig(id)
+    if (!res.ok) return
+
+    set((state) => ({
+      fileConfigByFileId: {
+        ...state.fileConfigByFileId,
+        [id]: {
+          editorTheme: res.editorTheme,
+          toolbarIsVisible: res.toolbarIsVisible,
+        },
+      },
+    }))
+  },
+
+  changeFileConfig: async (id, change) => {
+    // optimistic update
+    set((state) => {
+      const prev = state.fileConfigByFileId[id] ?? {
+        editorTheme: "black" as EditorTheme,
+        toolbarIsVisible: true,
+      }
+
+      return {
+        fileConfigByFileId: {
+          ...state.fileConfigByFileId,
+          [id]: { ...prev, ...change },
+        },
+      }
+    })
+
+    // persist (call whichever IPC exists)
+    if (change.editorTheme) {
+      await window.api.changeTheme(id, change.editorTheme)
+    }
+    if (typeof change.toolbarIsVisible === "boolean") {
+      await window.api.changeToolbarVisible(id, change.toolbarIsVisible) // you need this IPC
+    }
+  },
+}))

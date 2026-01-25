@@ -83,7 +83,6 @@ function Tab({tabId}: {tabId: string}) {
         display: "flex",
         alignItems: "stretch", // files occupy all tab space
         padding: "0 15px 0 0", // right padding for tab close btn
-        borderRight: "1px solid rgba(0,0,0,0.15)", // tab distinguish
         justifyContent: "space-between" // space between files and tab close btn
       }}
     >

@@ -10,7 +10,10 @@ CREATE TABLE IF NOT EXISTS fsNode (
     file_type TEXT, -- nullable for folder
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    toolbar_is_visible INTEGER,
+    editor_theme TEXT CHECK (editor_theme IN ('black', 'white'))
+
 );
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);

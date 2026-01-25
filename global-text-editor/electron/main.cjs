@@ -30,6 +30,7 @@ app.whenReady().then(() => {
   migrate() // ensure migrating all sqls
   require("./ipc/fsNodeIpc.cjs")
   require("./ipc/editorIpc.cjs")
+  require("./ipc/editorConfigIpc.cjs")
   createWindow()
 })
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { type Dispatch, type SetStateAction } from "react"
 import type { Editor } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import type { editorThemeType } from "./NormalEditor"
 // Button List
 import HeadingButton from "./ToolbarButtons/HeadingButton"
 import ListButton from "./ToolbarButtons/ListButton"
@@ -24,25 +25,23 @@ import HideShowButton from "./ToolbarButtons/HideShowButton"
 import FontSizeButton from "./ToolbarButtons/FontSizeButton"
 import FontFamilyButton from "./ToolbarButtons/FontFamilyButton"
 
+const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
+const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
 function NormalToolbarRenderer({
   fileId,
   editor,
-  editorTheme,
-  setEditorTheme,
 }: {
   fileId: number
-  editor: Editor | null
-  editorTheme: "black" | "white"
-  setEditorTheme: Dispatch<SetStateAction<"black"|"white">>
+  editor: Editor
 }) {
 
-  const {toolbarBackgroundBlack, toolbarBackgroundWhite} = ThemeManagerStore.getState()
+  const editorTheme = ThemeManagerStore((s) => 
+    s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
+  const toolbarIsVisible = ThemeManagerStore((s) => 
+    s.fileConfigByFileId[fileId]?.toolbarIsVisible ?? true) 
 
-  const [toolbarIsVisible, setToolbarIsVisible] = useState(true)
-  if (!editor) return null
 
-  
   return (<>
   {/* Toolbar Container */}
   <div
@@ -54,7 +53,7 @@ function NormalToolbarRenderer({
       padding: "5px 15px",
       minHeight: 30,
       // change toolbar theme color and border color
-      background: editorTheme === "black" ? toolbarBackgroundBlack : toolbarBackgroundWhite
+      background: editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE
     }}
     
   >
@@ -99,8 +98,8 @@ function NormalToolbarRenderer({
           >
           {/* TODO
           font style */}
-          <FontFamilyButton editor={editor} editorTheme={editorTheme} />
-          <FontSizeButton editor={editor} editorTheme={editorTheme} />
+          <FontFamilyButton editor={editor} fileId={fileId} />
+          <FontSizeButton editor={editor} fileId={fileId} />
           <HeadingButton editor={editor} editorTheme={editorTheme} />
           <ListButton editor={editor} editorTheme={editorTheme} />
           <BackQuoteButton editor={editor} editorTheme={editorTheme} />
@@ -132,13 +131,11 @@ function NormalToolbarRenderer({
           <ThemeButton 
             fileId={fileId}
             editorTheme={editorTheme} 
-            setEditorTheme={setEditorTheme}
           />
           <HideShowButton
-            editor={editor}
+            fileId={fileId}
             editorTheme={editorTheme}
             toolbarIsVisible={toolbarIsVisible}
-            setToolbarIsVisible={setToolbarIsVisible}
           />
         </div>
       </div>

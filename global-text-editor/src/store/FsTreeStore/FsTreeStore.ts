@@ -78,9 +78,7 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       const res = await window.api.removeFsNode(removeNode)
       if (!res.ok) return
 
-      // deleting possibly requires having to delete child node for folders
-      // and reordering nodes, thus simply reload the FsNodes
-      // making sure sortOrder is sane is also important for moveFsNode
+      // reload
       await FsTreeStore.getState().loadFsNodes(window.api)
     },
 
@@ -90,7 +88,6 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       newParentId: number | null,
       dropPostion: "before" | "inside" | "after"
     ) => {
-      
       // case 1: when moving into folder, if already exists -> return
       if (dropPostion === 'inside' && node.parentId === newParentId) return
 
@@ -98,12 +95,12 @@ export const FsTreeStore = create<FsTreeStore>((set) => {
       if (node.parentId === newParentId && dropPostion === "after" 
         && node.sortOrder - 1 === targetNode.sortOrder) return
       if (node.parentId === newParentId && dropPostion === "before"
-        && node.sortOrder+ 1 === targetNode.sortOrder) return
+        && node.sortOrder + 1 === targetNode.sortOrder) return
       
       const res = await window.api.moveFsNode(node, targetNode, newParentId, dropPostion)
-
       if (!res.ok) return
-
+      
+      // reload
       await FsTreeStore.getState().loadFsNodes(window.api)
     }
   }

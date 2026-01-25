@@ -5,72 +5,64 @@ import NormalToolbarRenderer from "./NormalToolbarRenderer"
 
 import normalEditorConfig from "./normalEditorConfig"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+
+const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
+const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
+
 const SAVE_DELAY_MS = 2000
+
+export type editorThemeType = "black" | "white" | null
+export type toolbarIsVisible = boolean | null
 
 function NormalEditor({file}: {file : FileNode}) {
   const editor = normalEditorConfig()
+  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[file.id]?.editorTheme ?? "black")
+  const loadFileConfig = ThemeManagerStore((s) => s.loadFileConfig)
 
-  const [editorTheme, setEditorTheme] = useState<"black" | "white">("black")
-  const [configLoaded, setConfigLoaded] = useState(false)
-
-  const { editorBackgroundBlack, editorBackgroundWhite } = ThemeManagerStore.getState()
   const saveTimerRef = useRef<number | null>(null)
 
+  // load config
+  useEffect(() => {
+    void loadFileConfig(file.id)
+  }, [file.id, loadFileConfig])
+
+  // load fileContent
   useEffect(() => {
     if (!editor) return
-
     let cancelled = false
 
-    ;(async () => {
-      const res = await window.api.fetchNormalEditor(file.storagePath)
-      if (cancelled) return
-      
-      if (!res.ok) {
-        editor.commands.setContent("", { emitUpdate: false })
-        return
-      }
+    async function loadFileContent() {
+        // load file
+        const contentRes = await window.api.loadFileContent(file.storagePath)
+        if (cancelled) return
 
-      const raw = res.editorData ?? ""
-      if (!raw) {
-        // IMPORTANT: clear when file has no saved data
-        editor.commands.setContent("", { emitUpdate: false })
-        return
-      }
+        // TODO: if failed, dont allow editing at all
+        if (!contentRes.ok) {
+          editor.commands.setContent("", { emitUpdate: false })
+          return
+        }
 
-      try {
-        const json = JSON.parse(raw)
-        // load without triggering your autosave update
-        editor.commands.setContent(json, { emitUpdate: false })
-      } catch {
-        // ignore bad json
+        const raw = contentRes.fileContent
+        if (!raw) {
+          editor.commands.setContent("", { emitUpdate: false })
+        } else {
+          try {
+            const json = JSON.parse(raw)
+            editor.commands.setContent(json, { emitUpdate: false })
+          } catch {
+            // TODO: if corrupted, dont allow editing at all
+            editor.commands.setContent("", { emitUpdate: false })
+          }
+        }
       }
-    })()
+    void loadFileContent()  
 
     return () => {
       cancelled = true
     }
   }, [editor, file.storagePath])
 
-
-  useEffect(() => {
-    let cancelled = false
-    setConfigLoaded(false)
-
-    ;(async () => {
-      const res = await window.api.loadFileConfig(file.id)
-      if (cancelled) return
-      if (!res.ok) return
-
-      setConfigLoaded(true)
-      setEditorTheme(res.editorTheme) // "black" | "white"
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [file.id])
-
-
+  // update fileContent
   useEffect(() => {
     if (!editor) return
 
@@ -80,8 +72,8 @@ function NormalEditor({file}: {file : FileNode}) {
 
       // schedule exactly one save
       saveTimerRef.current = window.setTimeout(() => {
-        const json = JSON.stringify(editor.getJSON())
-        window.api.saveNormalEditor(file.id, json)
+        const fileContent = JSON.stringify(editor.getJSON())
+        window.api.saveFileContent(file.id, fileContent)
 
         // allow next change to schedule again
         saveTimerRef.current = null
@@ -97,7 +89,6 @@ function NormalEditor({file}: {file : FileNode}) {
     }
   }, [editor, file])
 
-  if (!configLoaded) return null
   
   return (
   <>
@@ -109,14 +100,12 @@ function NormalEditor({file}: {file : FileNode}) {
         height: "100%",
         overflowY: "auto",
         overflowX: "hidden",
-        background: editorTheme === "black" ? editorBackgroundBlack : editorBackgroundWhite,
+        background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
       <NormalToolbarRenderer
         fileId={file.id}
         editor={editor}
-        editorTheme={editorTheme}
-        setEditorTheme={setEditorTheme}
       />
 
       {/* Editor */}
