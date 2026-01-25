@@ -7,13 +7,12 @@ import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
 
 
 function FontFamilyButton({
-  editor,
-  editorTheme
+  fileId,
+  editor
 }: {
-  editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
+  editor: Editor 
 }) {
-  if (!editor) return null
 
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
@@ -50,7 +49,7 @@ function FontFamilyButton({
         <ToolbarIcon 
             blackIcon={blackFontIcon}
             whiteIcon={whiteFontIcon}
-            editorTheme={editorTheme}
+            fileId={fileId}
         />
       </button>
 

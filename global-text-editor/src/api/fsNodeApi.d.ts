@@ -9,7 +9,7 @@ type FetchFsNodeRes =
   | { ok: false; message: string }
 
 type FetchNormalEditorRes =
-    | { ok: true; editorData: string }
+    | { ok: true; fileContent: string }
     | { ok: false; message: string }
 
 type MoveFsNodePayload = {node: FsNode, targetNode: FsNode, newParentId: number | null,
@@ -46,16 +46,15 @@ declare global {
 
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
-      fetchNormalEditor(storagePath: string): Promise<FetchNormalEditorRes>
+      loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
       
-      saveNormalEditor(
-        id: number,
-        editorData: string
-      ): Promise<SaveNormalEditorRes>
+      saveFileContent(id: number, fileContent: string): Promise<SaveNormalEditorRes>
 
       loadFileConfig(id: number): Promise<loadFileConfigRes>
 
-      switchEditorTheme(id, theme: "black" | "white"): Promise<{ok: boolean}>
+      changeTheme(id: number, theme: "black" | "white"): Promise<{ok: boolean}>
+
+      changeToolbarVisible(id: number, toolbarIsVisible: boolean): Promise<{ok: boolean}>
 
       exportToPDF(): Promise<>
     }

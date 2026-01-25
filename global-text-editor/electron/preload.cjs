@@ -27,11 +27,14 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('fsNodes:fetch', {}),
 
   /* Editor Apis */
-  fetchNormalEditor: (storagePath) =>
-    invokeLogged('editor:fetch', {storagePath}),
-  saveNormalEditor: (id, editorData) =>
-    invokeLogged('editor:save', {id, editorData}),
-  loadFileConfig: (id) => invokeLogged('editor:loadConfig', {id}),
-  switchEditorTheme: (id, theme) => invokeLogged('editor:switchTheme', {id, theme})
+  loadFileContent: (storagePath) => invokeLogged('editors:load', {storagePath}),
+  saveFileContent: (id, fileContent) => invokeLogged('editors:save', {id, fileContent}),
+
+  /* Editor Config */
+  loadFileConfig: (id) => invokeLogged('editorConfig:load', {id}),
+  changeTheme: (id, theme) => invokeLogged('editorConfig:changeTheme', {id, theme}),
+  changeToolbarVisible: (id, toolbarIsVisible) =>
+     invokeLogged('editorConfig:toolbarVisible', {id, toolbarIsVisible}),
+
 
 })

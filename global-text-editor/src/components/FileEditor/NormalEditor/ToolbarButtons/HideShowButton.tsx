@@ -4,40 +4,41 @@ import whiteHideIcon from "assets/NormalTypeIcons/icons8-hide-white-96.png"
 import blackHideIcon from "assets/NormalTypeIcons/icons8-hide-black-96.png"
 import blackShowIcon from "assets/NormalTypeIcons/icons8-show-black-96.png"
 import whiteShowIcon from "assets/NormalTypeIcons/icons8-show-white-96.png"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
 
 function HideShowButton({
-  editor,
+  fileId,
   editorTheme,
-  toolbarIsVisible,
-  setToolbarIsVisible,
-  
+  toolbarIsVisible,  
 }: {
-  editor: Editor | null
+  fileId: number
   editorTheme: "black" | "white"
   toolbarIsVisible: boolean
-  setToolbarIsVisible: React.Dispatch<React.SetStateAction<boolean>>
 }) {
-  if (!editor) return null
 
   return (
     <button
       type="button"
       onMouseDown={(e) => {
         e.preventDefault()
-        setToolbarIsVisible((prev) => !prev)
+        if (toolbarIsVisible) {
+          ThemeManagerStore.getState().changeFileConfig(fileId, { toolbarIsVisible: false})
+        }else {
+          ThemeManagerStore.getState().changeFileConfig(fileId, { toolbarIsVisible: true})
+        }
       }}
     >
       {toolbarIsVisible 
         ? <ToolbarIcon 
           blackIcon={blackShowIcon}
           whiteIcon={whiteShowIcon}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
         : <ToolbarIcon 
           blackIcon={blackHideIcon}
           whiteIcon={whiteHideIcon}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
     }
 
