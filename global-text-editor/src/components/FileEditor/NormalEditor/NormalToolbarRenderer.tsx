@@ -99,22 +99,22 @@ function NormalToolbarRenderer({
           {/* TODO
           font style */}
           <FontFamilyButton editor={editor} fileId={fileId} />
-          <FontSizeButton editor={editor} fileId={fileId} />
-          <HeadingButton editor={editor} editorTheme={editorTheme} />
-          <ListButton editor={editor} editorTheme={editorTheme} />
-          <BackQuoteButton editor={editor} editorTheme={editorTheme} />
-          <BoldButton editor={editor} editorTheme={editorTheme} />
-          <ItalicButton editor={editor} editorTheme={editorTheme} />
-          <HighlightButton editor={editor} editorTheme={editorTheme} />
-          <LinkButton editor={editor} editorTheme={editorTheme} />
-          <CodeButton editor={editor} editorTheme={editorTheme} />
-          <CodeBlockButton editor={editor} editorTheme={editorTheme} />
-          <SuperscriptButton editor={editor} editorTheme={editorTheme} />
-          <SubscriptButton editor={editor} editorTheme={editorTheme} />
-          <TextAlignButton editor={editor} editorTheme={editorTheme} />
-          <ImageButton editor={editor} editorTheme={editorTheme} />
-          <UndoButton editor={editor} editorTheme={editorTheme} />
-          <RedoButton editor={editor} editorTheme={editorTheme} />
+          <FontSizeButton editor={editor} editorTheme={editorTheme} />
+          <HeadingButton editor={editor} fileId={fileId} />
+          <ListButton editor={editor} fileId={fileId} />
+          <BackQuoteButton editor={editor} fileId={fileId}/>
+          <BoldButton editor={editor} fileId={fileId} />
+          <ItalicButton editor={editor} fileId={fileId}/>
+          <HighlightButton editor={editor} fileId={fileId} />
+          <LinkButton editor={editor} fileId={fileId} />
+          <CodeButton editor={editor} fileId={fileId} />
+          <CodeBlockButton editor={editor} fileId={fileId} />
+          <SuperscriptButton editor={editor} fileId={fileId} />
+          <SubscriptButton editor={editor} fileId={fileId} />
+          <TextAlignButton editor={editor} fileId={fileId} />
+          <ImageButton editor={editor} fileId={fileId} />
+          <UndoButton editor={editor} fileId={fileId} />
+          <RedoButton editor={editor} fileId={fileId}/>
         </div>
       </div>
 
@@ -127,14 +127,13 @@ function NormalToolbarRenderer({
             flexShrink: 0,
           }}
         >
-          <ExportButton editor={editor} editorTheme={editorTheme} />
+          <ExportButton editor={editor} fileId={fileId} />
           <ThemeButton 
             fileId={fileId}
             editorTheme={editorTheme} 
           />
           <HideShowButton
             fileId={fileId}
-            editorTheme={editorTheme}
             toolbarIsVisible={toolbarIsVisible}
           />
         </div>

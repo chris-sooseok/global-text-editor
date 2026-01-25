@@ -5,10 +5,10 @@ import whiteQuoteIcon from "assets/NormalTypeIcons/icons8-quote-white-96.png"
 
 function BackQuoteButton({
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -24,7 +24,7 @@ function BackQuoteButton({
       <ToolbarIcon 
         blackIcon={blackQuoteIcon}
         whiteIcon={whiteQuoteIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
       />
     </button>
   )

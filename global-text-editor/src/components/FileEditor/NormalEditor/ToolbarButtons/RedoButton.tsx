@@ -5,10 +5,10 @@ import whiteRedoIcon from "assets/NormalTypeIcons/icons8-redo-white-96.png"
 
 function RedoButton({ 
   editor,
-  editorTheme
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   if (!editor) return null
 
@@ -29,7 +29,7 @@ function RedoButton({
     <ToolbarIcon 
         blackIcon={blackRedoIcon}
         whiteIcon={whiteRedoIcon}
-        editorTheme={editorTheme}
+        fileId={fileId}
     />
     </button>
   )

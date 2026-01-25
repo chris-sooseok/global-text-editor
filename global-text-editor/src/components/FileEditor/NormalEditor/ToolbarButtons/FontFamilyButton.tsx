@@ -7,11 +7,11 @@ import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
 
 
 function FontFamilyButton({
-  fileId,
-  editor
+  editor,
+  fileId
 }: {
-  fileId: number
   editor: Editor 
+  fileId: number
 }) {
 
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)

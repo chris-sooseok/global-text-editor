@@ -14,10 +14,10 @@ import whitePdfIcon from "assets/NormalTypeIcons/icons8-pdf-white-96.png"
 
 function ExportButton({
   editor,
-  editorTheme,
+  fileId
 }: {
   editor: Editor | null
-  editorTheme: "black" | "white"
+  fileId: number
 }) {
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement | null>(null)
@@ -38,7 +38,7 @@ function ExportButton({
         <ToolbarIcon
           blackIcon={blackDownloadIcon}
           whiteIcon={whiteDownloadIcon}
-          editorTheme={editorTheme}
+          fileId={fileId}
         />
       </button>
 
