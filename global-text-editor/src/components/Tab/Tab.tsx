@@ -39,6 +39,10 @@ function Tab({tabId}: {tabId: string}) {
   const closeFile = TabManagerStore((s) => s.closeFile)
   const closeTab = TabManagerStore((s) => s.closeTab)
 
+  /** TODO: It is possible that localStorage may get corrupted, 
+   * In that case, I need some strategy to normalize data
+  */
+
   function renderEditorOnFileType() {
     return <>
         {/* {activeFile ? (
@@ -112,7 +116,7 @@ function Tab({tabId}: {tabId: string}) {
           minWidth: 0,
         }}
       >
-        {/* filename and file close button */}
+        {/* Filename and Close Button */}
         {files.map((file) => (
           <div 
             key={file.id} 
@@ -134,7 +138,7 @@ function Tab({tabId}: {tabId: string}) {
                   : undefined,
               flexShrink: 0 // prevent shrinking
           }}> 
-            {/* filename */}
+            {/* Filename */}
             <button
               ref={btnRef}
               onClick={() => {
@@ -159,7 +163,7 @@ function Tab({tabId}: {tabId: string}) {
               {file.name}
             </button>
   
-            {/* file close button */}
+            {/* File Clost Button */}
             <button
               onClick={() => closeFile(tabId, file)}
               style={{
@@ -204,7 +208,7 @@ function Tab({tabId}: {tabId: string}) {
       </div>
     </div>
 
-    
+    {/* Editor Container */}
     <div style={{ 
       flex: 1, // file editor takes up the renaming space
       minWidth: 0, // force width shrink
