@@ -25,13 +25,7 @@ import FontFamilyButton from "./ToolbarButtons/FontFamilyButton"
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
-function NormalToolbarRenderer({
-  fileId,
-  editor,
-}: {
-  fileId: number
-  editor: Editor
-}) {
+function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Editor}) {
 
   const editorTheme = ThemeManagerStore((s) => 
     s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
