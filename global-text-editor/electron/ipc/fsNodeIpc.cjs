@@ -42,8 +42,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
    * 3. create disk path
    * 
    * if folder
-   * 1. simply store folder in db
-   */
+   * 1. simply store folder in db */
 
   const tsx = db.transaction(() => {
     info = db
@@ -57,11 +56,12 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       db.prepare(`
         INSERT INTO fileConfig (file_id, toolbar_is_visible, editor_theme)
         VALUES (?, ?, ?)
-      `).run(id, 0, "black")
+      `).run(id, 1, "black")
 
       storagePath = `nodes/${uuid}`
       absStoragePath = path.join(app.getPath("userData"), storagePath)
       fs.mkdirSync(absStoragePath, { recursive: true})
+      fs.writeFileSync(path.join(absStoragePath, "index.json"), "", { flag: "wx" })
     }
 
   })
@@ -161,19 +161,7 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
   }
 })
 
-/**
- * whether it is a folder or file, if newParentId is same
- * we simply need to update sortOrder
- */
-ipcMain.handle("fsNodes.updateOrder", (_evnet, payload) => {
 
-})
-
-/**
- * whether it is a file or folder, if 
- * targetNode
- * newParentId
- */
 ipcMain.handle("fsNodes:move", (_event, payload) => {
 
   const node = payload.node

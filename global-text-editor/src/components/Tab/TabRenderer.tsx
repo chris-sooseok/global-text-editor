@@ -10,7 +10,6 @@ import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
 
 function TabRenderer() {
 
-  const tabIsVisible = TabManagerStore((s) => s.tabIsVisible)
   const tabIds = TabManagerStore((s) => s.tabIds)
 
   // TODO: consider adding dragging between tabs
@@ -25,7 +24,6 @@ function TabRenderer() {
         width: "100%", 
         height: "100%",
         overflow: "hidden",
-        visibility: tabIsVisible ? "visible" : "hidden"
       }}
     >
       {/* Tab */}

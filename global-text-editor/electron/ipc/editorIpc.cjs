@@ -14,8 +14,8 @@ ipcMain.handle("editors:load", (_event, payload) => {
     const fileContent = fs.readFileSync(filePath, "utf8")
     return { ok: true, fileContent: fileContent }
   } catch(err) {
-    console.error('[editors:save] failed:', err)
-    return {ok : false, message: "Failed to fetch file content"}
+    console.error('[editors:load] failed:', err)
+    return {ok : false, message: "Failed to load file content"}
   }
 })
 

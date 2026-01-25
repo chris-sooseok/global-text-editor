@@ -1,4 +1,3 @@
-import type { toolbarIsVisible } from 'src/components/FileEditor/NormalEditor/NormalEditor'
 import { create } from 'zustand'
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK

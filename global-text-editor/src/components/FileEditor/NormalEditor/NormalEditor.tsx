@@ -124,9 +124,8 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
             // focusStartSoon()
           }
         }
-
-        
       }
+      
     void loadFileContent()  
 
     return () => {
@@ -200,8 +199,7 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
           <EditorContent
             editor={editor}
             className={
-              (editorTheme === "black" ? "prose prose-invert " : "prose ") +
-              "max-w-none [&_.ProseMirror>p:first-child]:mt-0"
+              (editorTheme === "black" ? "prose prose-invert " : "prose ")
             }
             style={{
               flex: 1
