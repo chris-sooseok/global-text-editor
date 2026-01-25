@@ -26,7 +26,6 @@ const DEFAULT_DOC = {
   ],
 }
 
-
 function NormalEditor({activeFile}: {activeFile : FileNode}) {
     /* Editor */
     const editor = useEditor({
@@ -183,28 +182,36 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
       />
 
       {/* Editor */}
-      <div style={{ 
-        flex: 1,
-        minHeight: 0,
-        overflowY: "auto",
-        overflowX: "auto",
-        display: "flex",
-        justifyContent: "center",
-        }}>
-        <div style={{ 
-            width: 794,
-            minHeight: "100%",
-            display: "flex"
-          }}>
-          <EditorContent
-            editor={editor}
-            className={
-              (editorTheme === "black" ? "prose prose-invert " : "prose ")
-            }
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "auto",
+          width: "100%",
+        }}
+      >
+        {/* Full-width rail so centering is computed against the real tab width */}
+        <div style={{ minWidth: "100%", minHeight: "100%" }}>
+          {/* Fixed 794 page: centered when possible, left-aligned when not */}
+          <div
             style={{
-              flex: 1
+              width: 794,
+              margin: "0 auto",
+              minHeight: "100%",
+              display: "flex",
             }}
-          />
+          >
+            <EditorContent
+              editor={editor}
+              className={
+                editorTheme === "black"
+                  ? "prose prose-invert max-w-none [&_.ProseMirror]:min-h-full"
+                  : "prose max-w-none [&_.ProseMirror]:min-h-full"
+              }
+              style={{ flex: 1, minWidth: 0, minHeight: "100%" }}
+            />
+          </div>
         </div>
       </div>
     </div>

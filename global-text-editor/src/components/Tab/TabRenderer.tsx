@@ -31,7 +31,7 @@ function TabRenderer() {
         <div
           key={tabId}
           style={{
-            flex: 1, // each tab takes up space
+            flex: "1",
             height: "100%",
             overflow: "hidden",
           }}
@@ -44,3 +44,35 @@ function TabRenderer() {
 }
 
 export default TabRenderer
+
+/**
+ * 
+ * 
+ * 
+    <div
+      style={{
+        display: "flex", // horizontally rendering tabs
+        // tabs should take all space
+        width: "100%", 
+        height: "100%",
+        overflowX: "auto",   // ✅ scroll tabs horizontally
+        overflowY: "hidden",
+      }}
+    >
+
+      {tabIds.map((tabId) => (
+        <div
+          key={tabId}
+          style={{
+            flex: "1 0 794px", // ✅ grow if space, never shrink below 794
+            minWidth: 794,     // ✅ hard floor
+            height: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <Tab tabId={tabId}/>
+        </div>
+      ))}
+    </div>
+  </>
+ **/
