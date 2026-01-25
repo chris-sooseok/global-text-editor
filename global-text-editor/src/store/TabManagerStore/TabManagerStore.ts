@@ -3,11 +3,11 @@ import { parseLocalStorage } from 'shared/parseLocalStorage'
 import type { FileNode } from '../FsTreeStore/FsTreeTypes'
 import { tabStateCommiter } from './TabMangerStoreHelper'
 
-const TAB_IS_VISIBLE = String(import.meta.env.VITE_TAB_IS_VISIBLE)
-const ACTIVE_TAB_ID = String(import.meta.env.VITE_ACTIVE_TAB_ID)
-const TABS_IDS = String(import.meta.env.VITE_TABS_IDS)
-const ACTIVE_FILE_BY_TAB_IDS = String(import.meta.env.VITE_ACTIVE_FILE_BY_TAB_IDS)
-const FILES_BY_TABS_IDS = String(import.meta.env.VITE_FILES_BY_TABS_IDS)
+const TAB_IS_VISIBLE = import.meta.env.VITE_TAB_IS_VISIBLE
+const ACTIVE_TAB_ID = import.meta.env.VITE_ACTIVE_TAB_ID
+const TABS_IDS = import.meta.env.VITE_TABS_IDS
+const ACTIVE_FILE_BY_TAB_IDS = import.meta.env.VITE_ACTIVE_FILE_BY_TAB_IDS
+const FILES_BY_TABS_IDS = import.meta.env.VITE_FILES_BY_TABS_IDS
 
 
 export const DEFAULT_ACTIVE_TAB_ID = 'tab-1'
@@ -91,13 +91,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             // -> set its active file to the selectedFile 
             nextActiveFileByTabIds[curActiveTabId] = selectedFile
             localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
-            return {
-              tabIsVisible: state.tabIsVisible,
-              activeTabId: nextActiveTabId,
-              tabIds: nextTabIds,
-              activeFileByTabIds: nextActiveFileByTabIds,
-              filesByTabIds: nextFilesByTabIds,
-            }
+            return {activeFileByTabIds: nextActiveFileByTabIds}
           }
         }
 
@@ -108,13 +102,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
         localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
 
-        return {
-          tabIsVisible: state.tabIsVisible,
-          activeTabId: nextActiveTabId,
-          tabIds: nextTabIds,
-          activeFileByTabIds: nextActiveFileByTabIds,
-          filesByTabIds: nextFilesByTabIds,
-        }
+        return { activeFileByTabIds: nextActiveFileByTabIds, filesByTabIds: nextFilesByTabIds }
       })
     },
 
@@ -143,13 +131,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         nextActiveTabId = nextTabId
         localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(nextActiveTabId))
 
-        return {
-          tabIsVisible: state.tabIsVisible,
-          activeTabId: nextActiveTabId,
-          tabIds: state.tabIds,
-          activeFileByTabIds: state.activeFileByTabIds,
-          filesByTabIds: state.filesByTabIds,
-        }
+        return { activeTabId: nextActiveTabId }
       })
     },
 
@@ -172,12 +154,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         nextFilesByTabIds[newTabId] = [copyingFile]
         nextActiveFileByTabIds[newTabId] = copyingFile
         
-        return tabStateCommiter(
-          nextActiveTabId,
-          nextTabIds,
-          nextActiveFileByTabIds,
-          nextFilesByTabIds
-        )
+        return tabStateCommiter( nextActiveTabId, nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds)
       })
     },
 
@@ -190,13 +167,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
         nextActiveFileByTabIds[tabId] = nextFile
         localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
-        return {
-            tabIsVisible: state.tabIsVisible,
-            activeTabId: state.activeTabId,
-            tabIds: state.tabIds,
-            activeFileByTabIds: nextActiveFileByTabIds,
-            filesByTabIds: state.filesByTabIds,
-        }
+        return { activeFileByTabIds: nextActiveFileByTabIds }
       })
     },
 
@@ -268,7 +239,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
             localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
             return {
-              tabIsVisible: state.tabIsVisible,
               activeTabId: nextActiveTabId,
               tabIds: nextTabIds,
               activeFileByTabIds: nextActiveFileByTabIds,
@@ -323,11 +293,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
         // if closing tab is the last tab, set every state to default
         if (curTabIds.length === 1) {
-          nextActiveTabId = DEFAULT_ACTIVE_TAB_ID
-          nextTabIds = []
-          nextActiveFileByTabIds = {}
-          nextFilesByTabIds = {}
-          return tabStateCommiter(nextActiveTabId, nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds) 
+          return tabStateCommiter(DEFAULT_ACTIVE_TAB_ID, [], {}, {})
         }
 
         // if closing tab is not activeTab, simply close it
@@ -339,7 +305,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
           localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
           localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
           return {
-            tabIsVisible: state.tabIsVisible,
             activeTabId: nextActiveTabId,
             tabIds: nextTabIds,
             activeFileByTabIds: nextActiveFileByTabIds,
