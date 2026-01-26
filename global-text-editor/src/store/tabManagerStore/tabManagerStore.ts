@@ -188,6 +188,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         let nextActiveFileByTabIds = {...curActiveFileByTabIds}
         let nextFilesByTabIds = {...curFilesByTabIds}
         let nextTabIdsByFileIds = {...curTabIdsByFileIds}
+        debugger
         // ! when a file is closed, tabIdsByFileIds should remove tabId which the closing file id is in
         nextTabIdsByFileIds[closingFile.id] = curTabIdsByFileIds[closingFile.id].filter((tid) => tid !== tabId)
 
@@ -198,9 +199,8 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
          * -> simply close the non-active file */
         if (curActiveFile.id !== closingFile.id && lenOfFilesInTab > 1) {
           nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((f) => f.id !== closingFile.id )
-          localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
-          return tabStateCommiter(undefined, undefined, undefined,
-            filesByTabIds, tabIdsByFileIds)
+          return tabStateCommiter(undefined, undefined, undefined, 
+            nextFilesByTabIds, nextTabIdsByFileIds)
         }
 
         /** closingFile is the active file, and the tab has at least two files
@@ -215,7 +215,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
               nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds
             )
 
-          }else {
+          } else {
             // if there are more than two files, apply different logics
             const idxOfClosingFile = curFilesByTabIds[tabId].findIndex((f) => f.id === closingFile.id)
             // closing file is the end file, set prev file to the active file
@@ -227,8 +227,8 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             }
             nextFilesByTabIds[tabId] = curFilesByTabIds[tabId].filter((file) => file.id !== closingFile.id )
 
-            return tabStateCommiter(undefined, undefined, undefined,
-              filesByTabIds, tabIdsByFileIds)
+            return tabStateCommiter(undefined, undefined,
+              nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
           }
         }
 
@@ -247,7 +247,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             delete nextActiveFileByTabIds[tabId]
             delete nextFilesByTabIds[tabId]
             return tabStateCommiter(undefined,
-              nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds, tabIdsByFileIds)
+              nextTabIds, nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
           }
 
           // if tab that has closing file is the activeTab, apply these logics
