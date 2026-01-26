@@ -1,6 +1,6 @@
 // TabGroup.tsx
 import { useState, useRef } from "react"
-import NormalEditor from "../FileEditor/NormalEditor/NormalEditor"
+import MarkdownEditor from "../MarkdownEditor/MarkdownEditor"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
@@ -8,7 +8,6 @@ import ToolbarIcon from "shared/ToolbarIcon"
 import DropdownOverlay from "shared/DropdownOverlay"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
-type FileTypes = "Normal" | "Markdown" | "Canvas" 
 
 function Tab({tabId}: {tabId: string}) {
 
@@ -43,31 +42,6 @@ function Tab({tabId}: {tabId: string}) {
    * In that case, I need some strategy to normalize data
   */
 
-  function renderEditorOnFileType() {
-    return <>
-        {/* {activeFile ? (
-          <>
-            {activeFile.fileType === "normal" && (
-              <NormalEditor key="Normal" fileId={activeFile.id} />
-            )}
-
-            {activeFile.fileType === "markdown" && (
-              <MarkdownEditor key="Markdown" fileId={activeFile.id} />
-            )}
-
-            {activeFile.fileType === "page" && (
-              <CanvasEditor key="Canvas" fileId={activeFile.id} />
-            )}
-          </>
-        ) : null}       */}
-    </> 
-  }
-
-  function temp() {
-    return <>
-        <NormalEditor key="normal" activeFile={activeFile} tabId={tabId} />
-    </>
-  }
 
   return (
   <>
@@ -218,8 +192,7 @@ function Tab({tabId}: {tabId: string}) {
       minWidth: 0, // force width to shrink
       minHeight: 0, // force height to shrink 
     }}>
-      {/* {renderEditorOnFileType()} */}
-      {temp()}
+      <MarkdownEditor key="normal" activeFile={activeFile} tabId={tabId} />
     </div>
 
   </div>

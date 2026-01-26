@@ -26,10 +26,9 @@ import { useState } from "react"
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
-function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Editor}) {
+function ToolbarRenderer({fileId, editor}: {fileId: number, editor: Editor}) {
 
-  const editorTheme = ThemeManagerStore((s) => 
-    s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
+  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
 
   const [ toolbarIsVisible, setToolbarIsVisible ] = useState<boolean>(true)
 
@@ -132,4 +131,4 @@ function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Edito
   </>)
 }
 
-export default NormalToolbarRenderer
+export default ToolbarRenderer

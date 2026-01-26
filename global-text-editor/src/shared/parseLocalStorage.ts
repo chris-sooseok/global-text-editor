@@ -1,3 +1,5 @@
+
+// helps parsing localStorage value
 export function parseLocalStorage<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback
   try {

@@ -2,6 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore";
 
 
+/**
+ * DropdownOverlay is a dropdown component that can be used anywhere in the app. 
+ * To allow components to adapt this usability, buttons need to be manually passed
+ * as children. 
+ * It has some attributes like `align`, `activeCheck`, and `scrollable` 
+ * to be appliable in several cases.
+ */
+
 function DropdownOverlay({
   dropdownIsOpen,
   setDropdownIsOpen,

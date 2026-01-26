@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import NormalToolbarRenderer from "./NormalToolbarRenderer"
+import ToolbarRenderer from "./ToolbarRenderer"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
 import { useEditor } from "@tiptap/react"
@@ -27,9 +27,18 @@ const DEFAULT_DOC = {
   ],
 }
 
-export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode, tabId: string}) {
+function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
     
-  /* Editor  Config */
+  {/*** Editor Supports ***/}
+  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
+  const { loadFileConfig } = ThemeManagerStore.getState()
+  const { switchActiveTab } = TabManagerStore.getState()
+
+  useEffect(() => {
+    void loadFileConfig(activeFile.id)
+  }, [activeFile.id])
+
+  /* Editor Setup */
     const editor = useEditor({
       extensions: [
         FontFamily,
@@ -72,21 +81,9 @@ export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode
       }
   })
 
-  if (!editor) return null
-
-  {/* Load File Config */}
-  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-  const { loadFileConfig } = ThemeManagerStore.getState()
-  const { switchActiveTab } = TabManagerStore.getState()
-
-  useEffect(() => {
-    void loadFileConfig(activeFile.id)
-  }, [activeFile.id])
-
-  {/* Save Timer */}
   const saveTimerRef = useRef<number | null>(null)
 
-  {/* Load File Content */}
+  {/*** Load File Content ***/}
   useEffect(() => {
     let cancelled = false
 
@@ -117,7 +114,7 @@ export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode
         } else {
           try {
             const json = JSON.parse(raw)
-            editor.commands.setContent('# Hello World\n\nThis is **Markdown**!', { emitUpdate: false })
+            editor.commands.setContent(json, { emitUpdate: false })
             focusEditor()
           } catch {
             // TODO: if corrupted, dont allow editing at all
@@ -134,7 +131,7 @@ export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode
     }
   }, [editor, activeFile.storagePath])
 
-  {/* Update File Content */}
+  {/*** Update File Content ***/}
   useEffect(() => {
 
     function saveNow() {
@@ -178,7 +175,7 @@ export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode
         background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
-      <NormalToolbarRenderer
+      <ToolbarRenderer
         fileId={activeFile.id}
         editor={editor}
       />
@@ -214,3 +211,5 @@ export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode
   </>
   )
 }
+
+export default MarkdownEditor
