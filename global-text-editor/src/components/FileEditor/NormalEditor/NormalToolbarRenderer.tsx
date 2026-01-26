@@ -21,6 +21,7 @@ import ExportButton from "./ToolbarButtons/ExportButton"
 import HideShowButton from "./ToolbarButtons/HideShowButton"
 import FontSizeButton from "./ToolbarButtons/FontSizeButton"
 import FontFamilyButton from "./ToolbarButtons/FontFamilyButton"
+import { useState } from "react"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
@@ -29,8 +30,8 @@ function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Edito
 
   const editorTheme = ThemeManagerStore((s) => 
     s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
-  const toolbarIsVisible = ThemeManagerStore((s) => 
-    s.fileConfigByFileId[fileId]?.toolbarIsVisible ?? true) 
+
+  const [ toolbarIsVisible, setToolbarIsVisible ] = useState<boolean>(true)
 
   return (<>
   {/* Toolbar Container */}
@@ -117,15 +118,17 @@ function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Edito
             flexShrink: 0,
           }}
         >
-          <ExportButton editor={editor} fileId={fileId} />
+          <HideShowButton
+            fileId={fileId}
+            toolbarIsVisible={toolbarIsVisible}
+            setToolbarIsVisible={setToolbarIsVisible}
+          />
           <ThemeButton 
             fileId={fileId}
             editorTheme={editorTheme} 
           />
-          <HideShowButton
-            fileId={fileId}
-            toolbarIsVisible={toolbarIsVisible}
-          />
+          <ExportButton editor={editor} fileId={fileId} />
+
         </div>
       </div>
     </div>

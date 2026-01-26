@@ -32,8 +32,9 @@ function TabRenderer() {
         <div
           key={tabId}
           style={{
-            flex: "1 1 700px", // ✅ grow if space, never shrink below 794
-            minWidth: 700,     // ✅ hard floor
+            // each tab and editor never shrink belows 700
+            flex: "1 1 700px",
+            minWidth: 700,
             height: "100%",
             overflow: "hidden",
           }}

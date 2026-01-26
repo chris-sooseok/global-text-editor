@@ -125,7 +125,7 @@ function Tab({tabId}: {tabId: string}) {
               alignItems: "center",
               padding: "0 8px", // padding around each file
               gap: 6, // gap between filename and file close button
-              minWidth: 135,
+              minWidth: 135, // minimum file width
               // active file highlight under active or non-active tab
               background:
                 activeFile.id === file.id
@@ -156,7 +156,7 @@ function Tab({tabId}: {tabId: string}) {
               style={{
                 flex: 1,
                 minWidth: 0,
-                textAlign: "left",
+                textAlign: "left", // left align filename
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,
@@ -215,8 +215,8 @@ function Tab({tabId}: {tabId: string}) {
     {/* Editor Container */}
     <div style={{ 
       flex: 1, // file editor takes up the renaming space
-      minWidth: 0, // force width shrink
-      minHeight: 0, // force height shrink 
+      minWidth: 0, // force width to shrink
+      minHeight: 0, // force height to shrink 
     }}>
       {/* {renderEditorOnFileType()} */}
       {temp()}
