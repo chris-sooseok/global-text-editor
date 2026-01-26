@@ -1,6 +1,11 @@
 
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 
+/** 
+ * ToolbarIcon is used inside 'button' element to display icon image for that button
+ * This should be used whenever some icon needs to be displayed for some button
+ * Since some buttons have special cases
+ */
 function ToolbarIcon({
   blackIcon,
   whiteIcon,
