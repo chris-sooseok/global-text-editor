@@ -177,6 +177,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     closeFileInTab: (tabId: string, closingFile: FileNode) => {
       set((state) => {
+        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds

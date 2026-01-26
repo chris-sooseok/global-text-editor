@@ -28,8 +28,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   // file
   const mimeType = payload.mimeType ?? null
   const fileType = payload.fileType ?? null
-  let storagePath
-  let absStoragePath
+  const storagePath = `nodes/${uuid}`
   let info
   if (!valididateName(name)) return { ok: false, message: 'Name is invalid'}
   if (!validateType(type)) return { ok: false, message: "Type is invalid"}
@@ -51,15 +50,14 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(uuid, type, parentId, name, storagePath, mimeType, fileType, now, now, nextSortOrder)
-      const id = Number(info.lastInsertRowid)
-      if (type === "file") {
-        db.prepare(`
-          INSERT INTO fileConfig (file_id, editor_theme)
-          VALUES (?, ?)
-        `).run(id, "black")
+      
+    if (type === "file") {
+      db.prepare(`
+        INSERT INTO fileConfig (file_id, editor_theme)
+        VALUES (?, ?)
+      `).run(Number(info.lastInsertRowid), "black")
 
-      storagePath = `nodes/${uuid}`
-      absStoragePath = path.join(app.getPath("userData"), storagePath)
+      const absStoragePath = path.join(app.getPath("userData"), storagePath)
       fs.mkdirSync(absStoragePath, { recursive: true})
       fs.writeFileSync(path.join(absStoragePath, "index.json"), "", { flag: "wx" })
     }

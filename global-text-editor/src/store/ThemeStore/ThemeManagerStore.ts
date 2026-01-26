@@ -56,7 +56,7 @@ type ThemeManagerStoreType = {
     changeEditorTheme: (id: number, theme: EditorTheme) => Promise<void>
 }
 
-export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
+export const ThemeManagerStore = create<ThemeManagerStoreType>((set) => ({
   editorBackgroundBlack: EDITOR_BACKGROUND_BLACK,
   toolbarBackgroundBlack: TOOLBAR_BACKGROUND_BLACK,
   editorBackgroundWhite: EDITOR_BACKGROUND_WHITE,
