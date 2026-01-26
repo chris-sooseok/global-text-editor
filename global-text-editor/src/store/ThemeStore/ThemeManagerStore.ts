@@ -78,7 +78,6 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
         ...state.fileConfigByFileId,
         [id]: {
           editorTheme: res.editorTheme,
-          toolbarIsVisible: res.toolbarIsVisible,
         },
       },
     }))

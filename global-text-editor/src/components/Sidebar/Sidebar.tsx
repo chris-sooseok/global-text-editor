@@ -48,8 +48,9 @@ function Sidebar() {
   const { 
     openFileInActiveTab, // open file in tabs
     filesByTabIds, // supports rename and delete
+    tabIdsByFileIds,
     renameFileInTab, // on rename
-    closeFile, // on file deletion
+    closeFileInTab, // on file deletion
   } = TabManagerStore.getState()
 
   
@@ -280,11 +281,8 @@ function Sidebar() {
     // only files appear in tabs
     if (renameNode.type !== "file") return
 
-    // update file name in every tab that has it
-    for (const [tabId, files] of Object.entries(filesByTabIds)) {
-      if (files.some((f) => f.id === renameNode.id)) {
-        renameFileInTab(tabId, renameNode.id, newName)
-      }
+    for (const tabId of tabIdsByFileIds[renameNode.id]) {
+      renameFileInTab(tabId, renameNode.id, newName)
     }
   }
 
@@ -309,14 +307,8 @@ function Sidebar() {
 
     setSelectedFile(null)
     // close the file in tabs on remove
-    const tabIdsToCloseIn: string[] = []
-    for (const [tabId, files] of Object.entries(filesByTabIds)) {
-      if (files.some((f) => f.id === removeNode.id)) {
-        tabIdsToCloseIn.push(tabId)
-      }
-    }
-    for (const tabId of tabIdsToCloseIn) {
-      closeFile(tabId, removeNode as FileNode)
+    for (const tabId of tabIdsByFileIds[removeNode.id]) {
+      closeFileInTab(tabId, removeNode as FileNode)
     }
   }
 
