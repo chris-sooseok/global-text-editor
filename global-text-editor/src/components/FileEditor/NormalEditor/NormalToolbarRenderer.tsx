@@ -123,10 +123,7 @@ function NormalToolbarRenderer({fileId, editor,}: {fileId: number, editor: Edito
             toolbarIsVisible={toolbarIsVisible}
             setToolbarIsVisible={setToolbarIsVisible}
           />
-          <ThemeButton 
-            fileId={fileId}
-            editorTheme={editorTheme} 
-          />
+          <ThemeButton fileId={fileId} />
           <ExportButton editor={editor} fileId={fileId} />
 
         </div>

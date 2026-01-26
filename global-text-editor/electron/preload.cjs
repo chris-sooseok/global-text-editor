@@ -32,10 +32,7 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('editors:save', { storagePath, fileContent}),
 
   /* Editor Config */
-  loadFileConfig: (id) => invokeLogged('editorConfig:load', {id}),
-  changeTheme: (id, theme) => invokeLogged('editorConfig:changeTheme', {id, theme}),
-  changeToolbarVisible: (id, toolbarIsVisible) =>
-     invokeLogged('editorConfig:toolbarVisible', {id, toolbarIsVisible}),
-
+  loadFileConfig: (id) => invokeLogged('editors:loadConfig', {id}),
+  changeEditorTheme: (id, theme) => invokeLogged('editors:changeEditorTheme', {id, theme}),
 
 })
