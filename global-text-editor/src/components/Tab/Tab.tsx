@@ -125,6 +125,7 @@ function Tab({tabId}: {tabId: string}) {
               alignItems: "center",
               padding: "0 8px", // padding around each file
               gap: 6, // gap between filename and file close button
+              minWidth: 135,
               // active file highlight under active or non-active tab
               background:
                 activeFile.id === file.id
@@ -153,6 +154,9 @@ function Tab({tabId}: {tabId: string}) {
                 setDropdownIsOpen(true)
               }}
               style={{
+                flex: 1,
+                minWidth: 0,
+                textAlign: "left",
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: fileFontSize,

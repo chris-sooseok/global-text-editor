@@ -27,7 +27,8 @@ const DEFAULT_DOC = {
 }
 
 function NormalEditor({activeFile}: {activeFile : FileNode}) {
-    /* Editor */
+    
+  /* Editor  Config */
     const editor = useEditor({
       extensions: [
         FontFamily,
@@ -47,7 +48,6 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
         Image,
         Markdown,
       ],
-      content: "", // initial heading
       editable: true,
       autofocus: "start",
       editorProps: {
@@ -110,13 +110,13 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
         if (!raw) {
           editor.commands.setContent(DEFAULT_DOC, { emitUpdate: false })
           editor.commands.focus("start")
-          // focusStartSoon()
+          focusEditor()
           return
         } else {
           try {
             const json = JSON.parse(raw)
-            editor.commands.setContent(json, { emitUpdate: false })
-            // focusStartSoon()
+            editor.commands.setContent('# Hello World\n\nThis is **Markdown**!', { emitUpdate: false })
+            focusEditor()
           } catch {
             // TODO: if corrupted, dont allow editing at all
             editor.commands.setContent(DEFAULT_DOC, { emitUpdate: false })
@@ -189,22 +189,10 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
           overflowY: "auto", 
           overflowX: "auto",
           width: "100%",
+          display: "flex",
         }}
       >
-        {/* Allows centering editor always */}
-        <div style={{ 
-          minWidth: "100%", 
-          minHeight: "100%" 
-        }}>
-          {/* Editor is always 794px width and centered */}
-          <div
-            style={{
-              width: 794,
-              margin: "0 auto", // center editor
-              minHeight: "100%",
-              display: "flex",
-            }}
-          >
+
             <EditorContent
               editor={editor}
               className={
@@ -212,10 +200,13 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
                   ? "prose prose-invert max-w-none "
                   : "prose max-w-none"
               }
-              style={{ flex: 1 }}
+              style={{ 
+                flex: 1,
+                display: "flex",
+                width: "100%",
+                minHeight: "100%"
+               }}
             />
-          </div>
-        </div>
       </div>
     </div>
   </>
