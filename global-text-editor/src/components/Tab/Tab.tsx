@@ -116,6 +116,7 @@ function Tab({tabId}: {tabId: string}) {
             {/* Filename */}
             <button
               ref={btnRef}
+              tabIndex={-1}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
                 if (activeFile.id !== file.id) switchActiveFile(tabId, file)
@@ -143,6 +144,7 @@ function Tab({tabId}: {tabId: string}) {
   
             {/* File Clost Button */}
             <button
+              tabIndex={-1}
               onClick={() => closeFile(tabId, file)}
               style={{
                 paddingRight: "5px", // align padding with filename padding
@@ -180,7 +182,7 @@ function Tab({tabId}: {tabId: string}) {
 
       {/* Tab Close Button */}
       <div style={{ display: "flex", alignItems: "center", paddingLeft: "15px", cursor: "pointer" }} >
-        <button onClick={() => closeTab(tabId)}>
+        <button tabIndex={-1} onClick={() => closeTab(tabId)}>
           <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={18} />
         </button>
       </div>

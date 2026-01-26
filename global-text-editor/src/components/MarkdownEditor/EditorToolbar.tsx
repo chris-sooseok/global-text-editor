@@ -26,7 +26,7 @@ import { useState } from "react"
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
-function ToolbarRenderer({fileId, editor}: {fileId: number, editor: Editor}) {
+function EditorToolbar({fileId, editor}: {fileId: number, editor: Editor}) {
 
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
 
@@ -131,4 +131,4 @@ function ToolbarRenderer({fileId, editor}: {fileId: number, editor: Editor}) {
   </>)
 }
 
-export default ToolbarRenderer
+export default EditorToolbar
