@@ -14,6 +14,7 @@ import Subscript from "@tiptap/extension-subscript"
 import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
 import { Markdown } from '@tiptap/markdown'
+import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
@@ -26,7 +27,7 @@ const DEFAULT_DOC = {
   ],
 }
 
-function NormalEditor({activeFile}: {activeFile : FileNode}) {
+export default function NormalEditor({activeFile, tabId}: {activeFile : FileNode, tabId: string}) {
     
   /* Editor  Config */
     const editor = useEditor({
@@ -76,6 +77,7 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
   {/* Load File Config */}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
   const { loadFileConfig } = ThemeManagerStore.getState()
+  const { switchActiveTab } = TabManagerStore.getState()
 
   useEffect(() => {
     void loadFileConfig(activeFile.id)
@@ -192,25 +194,23 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
           display: "flex",
         }}
       >
-
-            <EditorContent
-              editor={editor}
-              className={
-                editorTheme === "black"
-                  ? "prose prose-invert max-w-none "
-                  : "prose max-w-none"
-              }
-              style={{ 
-                flex: 1,
-                display: "flex",
-                width: "100%",
-                minHeight: "100%"
-               }}
-            />
+        <EditorContent
+          editor={editor}
+          className={
+            editorTheme === "black"
+              ? "prose prose-invert max-w-none "
+              : "prose max-w-none"
+          }
+          onFocus={() => switchActiveTab(tabId)}
+          style={{ 
+            flex: 1,
+            display: "flex",
+            width: "100%",
+            minHeight: "100%"
+            }}
+        />
       </div>
     </div>
   </>
   )
 }
-
-export default NormalEditor
