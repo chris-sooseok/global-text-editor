@@ -99,6 +99,7 @@ function SidebarRenderer() {
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 180ms ease',
+        userSelect: "none", // prevent cursor highlight for all children
       }}
     >
       {/* Topbar above sidebar content */}
@@ -114,7 +115,8 @@ function SidebarRenderer() {
       >
         <button
           type="button"
-          onClick={setSidebarCollapsedHandler}  
+          onClick={setSidebarCollapsedHandler} 
+          tabIndex={-1}
         >
           <ToolbarIcon
             whiteIcon={hideIcon}

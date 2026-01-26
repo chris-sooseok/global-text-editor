@@ -41,14 +41,11 @@ function Sidebar() {
     void loadFsNodes(window.api)
   }, [loadFsNodes])
 
-  /** FsTree Manipulation */
-  const { renameFsNode, removeFsNode, moveFsNode } = FsTreeStore.getState()
+  const [ dropdownIsOpen, setDropdownIsOpen ] = useState(false)
+  const [ dropdownNode, setDropdownNode ] = useState<FsNode | null>(null)
+  const dropdownRef = useRef<HTMLButtonElement | null>(null)
 
-  /** Interaction with Tabs */
-  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
-  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
-  
-  /** control folder toggle */
+  /** Folder Toggle and Highlight Logics */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     // localStorage only supports arr, so we make sure to conver to Set
     const arr = parseLocalStorage<number[]>
@@ -67,25 +64,27 @@ function Sidebar() {
     (localStorage.getItem(SIDEBAR_SELECTED_FOLDER), null)
   })
 
-  /** Used to allow update node names */
+  /** FsTree Manipulation */
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
 
-  /*** Node Dragging Control  ***/
-  const [dragState, setDragState] = useState<DragState | null>(null)
+  const { renameFsNode, removeFsNode, moveFsNode } = FsTreeStore.getState()
 
+  /** Interaction with Tabs */
+  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
+  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
+
+  const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
 
-    /** Used for new node creation
+  /** Used for new node creation
    * newNodeType should be set to some type only when prompt is to be displayed
    * Unless some node is to be created, they all should be set to null */
   const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
   const newNodePromptRef = useRef<HTMLDivElement | null>(null)
   const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
-
-  /*** 
-   * ! Folder Toggle and Highlight Logics by Node Selecetion */
+  /** Folder Toggle and Highlight Logics */
   function toggleFolderHandler(nodeId: number) {
     setToggledFolderIds((prev) => {
       const next = new Set(prev) // create a new Set so React sees a new reference
@@ -100,9 +99,11 @@ function Sidebar() {
    * Based on node selected (file or folder), highlight them
    * Also this is used to unhighlight folder for global click behavior: else case */ 
   function selectNodeHandler(node: FsNode) {
+
     if (node?.type === 'file') {
       const nextSelectedFile: FsNode = node    
       selectFileHandler(nextSelectedFile)
+      
       //* We make separate check conditions to prevent state update on every selection
       // when a root file is created or selected
       if (nextSelectedFile.parentId === null) { 
@@ -139,7 +140,6 @@ function Sidebar() {
   function selectFileHandler(file: FileNode | null) {
     setSelectedFile(file)
     localStorage.setItem(SIDEBAR_SELECTED_FILE, JSON.stringify(file))
-
     if (!file) return
     openFileInActiveTab(file)
   }
@@ -149,26 +149,36 @@ function Sidebar() {
     localStorage.setItem(SIDEBAR_SELECTED_FOLDER, JSON.stringify(folder))
   }
 
-    function renameNodeHandler(renameNode: FsNode, newName: string) {
+  {/** FsNode Manipulations */}
+  function renameNodeHandler(renameNode: FsNode, newName: string) {
     renameFsNode(renameNode, newName)
     
-    // only files appear in tabs
-    if (renameNode.type !== "file") return
-
-    for (const tabId of tabIdsByFileIds[renameNode.id]) {
-      renameFileInTab(tabId, renameNode.id, newName)
+    // Update names in tabs
+    if (renameNode.type === "file") {
+      for (const tabId of tabIdsByFileIds[renameNode.id] ?? []) {
+        renameFileInTab(tabId, renameNode.id, newName)
+      }
     }
+  }
+
+  function cancelRenameHandler() {
+    setRenameNodeId(null)
+    if (renameInputRef.current) renameInputRef.current.value = ''
   }
 
   function removeNodeHandler(removeNode: FsNode) {
     const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
     if (!ok) return
 
-    removeFsNode(removeNode)
-
-    // if folder is removed, delete it from toggled list
-    if (removeNode.type !== "file") {
-      setSelectedFolder(null)
+    if (removeNode.type === "folder") {
+      const folderNode = nodes.get(removeNode.id)
+      // ! Currently we prevent deleting folder when child exists
+      if (folderNode?.type === 'folder' && folderNode.children.length !== 0) {
+         window.alert("This folder isn’t empty. Delete/move the contents first.")
+         return
+      }
+      selectFolderHandler(null)
+      // if folder is removed, delete it from toggled list
       setToggledFolderIds((prev) => {
         if (!prev.has(removeNode.id)) return prev
         const next = new Set(prev)
@@ -176,14 +186,16 @@ function Sidebar() {
         localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
         return next
       })
-      return
+
+    } else {
+      selectFileHandler(null)
+      // close the file in tabs on remove
+      for (const tabId of tabIdsByFileIds[removeNode.id] ?? []) {
+        closeFileInTab(tabId, removeNode as FileNode)
+      }
     }
 
-    setSelectedFile(null)
-    // close the file in tabs on remove
-    for (const tabId of tabIdsByFileIds[removeNode.id]) {
-      closeFileInTab(tabId, removeNode as FileNode)
-    }
+    removeFsNode(removeNode)
   }
 
   /** 
@@ -278,21 +290,19 @@ function Sidebar() {
           }
         }
       }
-
       dragNodeRef.current = null
       setDragState(null)
     }
-
       window.addEventListener("pointermove", onMouseMove, true)
       window.addEventListener("pointerup", onMouseUp, true)
 
-      return () => {
-        window.removeEventListener("pointermove", onMouseMove, true)
-        window.removeEventListener("pointerup", onMouseUp, true)
-      }
-   }, [nodes, dragState])
+    return () => {
+      window.removeEventListener("pointermove", onMouseMove, true)
+      window.removeEventListener("pointerup", onMouseUp, true)
+    }
+  }, [nodes, dragState])
 
-  // when a node is selected, update the position of the selected node to ref
+  // Update dragNodeRef on Every Node Selection
   function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
     // only left click
     if (e.button !== 0) return
@@ -390,6 +400,7 @@ function Sidebar() {
       renameInputRef,
       setRenameNodeId,
       renameNodeHandler,
+      cancelRenameHandler,
       // dragging
       dragState,
       onPointerDownNode
@@ -398,29 +409,25 @@ function Sidebar() {
 
   function renderFsTree() {
     return (<>
+      {/* FsNodes Container */}
       {roots.length === 0 ? (
           <>
-            {/* no items */}
-            {!newNodeType ?
-               <div style={{ opacity: 0.7 }}>No items</div> : null
+            {/* No Items and Root Prompt When No Items */}
+            {!newNodeType 
+              ? <div style={{ opacity: 0.7 }}>No items</div> 
+              : <ul style={{ padding: 4 }}>
+                  {renderNewNodePrompt(0)}
+                </ul>
             }
-            {/* root prompt when no items */}
-            {newNodeType && selectedFolder === null ? (
-              <ul style={{ margin: 0, paddingLeft: 2 }}>
-                {renderNewNodePrompt(0)}
-              </ul>
-            ) : null}
           </>
           ) : (
             <ul style={{ 
-              margin: 0,
-              paddingLeft: 2,
-              borderRadius: 5,
+              padding: 4,
               overflow: 'hidden',
             }}>
-              {/* display root node */}
+              {/* FsNodes Rendering */}
               {roots.map((root) => renderNode(root, 0))}
-              {/* root prompt when items */}
+              {/* Root Prompt When Items */}
               {newNodeType && !selectedFolder ? renderNewNodePrompt(0) : null}
             </ul>
           )
@@ -431,8 +438,14 @@ function Sidebar() {
   return (
     <>
       {/* Sidebar Container */}
-      <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden'}}>
-        {/* Top-right icon buttons */}
+      <aside style={{ 
+        padding: 12, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+        gap: 12,
+      }}>
+        {/* Sidebar Toolbar Container */}
         <div
           style={{
             display: 'flex',
@@ -447,9 +460,12 @@ function Sidebar() {
           </div>
           {/* right icons */}
           <div 
-            style={{ display: 'flex', gap: 6 }}
-          >
+            style={{ 
+              display: 'flex', 
+              gap: 6,
+          }}>
             <button
+              tabIndex={-1}
               onClick={() => createNewNode('folder')}
               data-new-node-btn="true"
             >
@@ -459,6 +475,7 @@ function Sidebar() {
               />
             </button>
             <button
+              tabIndex={-1} 
               onClick={() => createNewNode('file')}
               data-new-node-btn="true"
             >
@@ -469,7 +486,8 @@ function Sidebar() {
             </button>
           </div>
         </div>
-        {/* Roots list */}
+
+        {/* FsNodes Container Rendering */}
         {renderFsTree()}
 
         {/* Dragging Node Name */}

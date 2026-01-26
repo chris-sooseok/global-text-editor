@@ -177,7 +177,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     closeFileInTab: (tabId: string, closingFile: FileNode) => {
       set((state) => {
-        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
@@ -188,7 +187,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         let nextActiveFileByTabIds = {...curActiveFileByTabIds}
         let nextFilesByTabIds = {...curFilesByTabIds}
         let nextTabIdsByFileIds = {...curTabIdsByFileIds}
-        debugger
+
         // ! when a file is closed, tabIdsByFileIds should remove tabId which the closing file id is in
         nextTabIdsByFileIds[closingFile.id] = curTabIdsByFileIds[closingFile.id].filter((tid) => tid !== tabId)
 

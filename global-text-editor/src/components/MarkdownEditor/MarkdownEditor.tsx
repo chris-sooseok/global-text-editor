@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import ToolbarRenderer from "./ToolbarRenderer"
+import EditorToolbar from "./EditorToolbar"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
 import { useEditor } from "@tiptap/react"
@@ -175,7 +175,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
         background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
-      <ToolbarRenderer
+      <EditorToolbar
         fileId={activeFile.id}
         editor={editor}
       />

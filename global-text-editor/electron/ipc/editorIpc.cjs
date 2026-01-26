@@ -60,7 +60,6 @@ ipcMain.handle("editors:load", (_event, payload) => {
 })
 
 ipcMain.handle('editors:save', (_event, payload) => {
-  debugger
   const storagePath = payload.storagePath
   const fileContent = payload.fileContent
 
