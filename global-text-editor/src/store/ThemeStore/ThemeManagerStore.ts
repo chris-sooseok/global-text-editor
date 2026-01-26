@@ -21,7 +21,6 @@ const DROPDOWN_HIGHLIGHT=import.meta.env.VITE_DROPDOWN_HIGHLIGHT
 export type EditorTheme = "black" | "white"
 export type FileConfig = {
   editorTheme: EditorTheme
-  toolbarIsVisible: boolean
 }
 
 type ThemeManagerStoreType = {
@@ -104,9 +103,6 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
     // persist (call whichever IPC exists)
     if (change.editorTheme) {
       await window.api.changeTheme(id, change.editorTheme)
-    }
-    if (typeof change.toolbarIsVisible === "boolean") {
-      await window.api.changeToolbarVisible(id, change.toolbarIsVisible) // you need this IPC
     }
   },
 }))
