@@ -57,7 +57,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
     
     openFileInActiveTab: (selectedFile: FileNode) => {
       set((state) => {
-        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
@@ -103,12 +102,12 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
             return tabStateCommiter(undefined, undefined, nextActiveFileByTabIds)
           }
         }
-
+        
         // case 3 -> append selectedFile and set it as active file
         const existingFiles = nextFilesByTabIds[curActiveTabId] ?? []
         nextFilesByTabIds[curActiveTabId] = [...existingFiles, selectedFile]
         nextActiveFileByTabIds[curActiveTabId] = selectedFile
-        nextTabIdsByFileIds[selectedFile.id] = [...curTabIdsByFileIds[selectedFile.id], curActiveTabId]
+        nextTabIdsByFileIds[selectedFile.id] = [...curTabIdsByFileIds[selectedFile.id] ?? [], curActiveTabId]
         return tabStateCommiter(undefined, undefined, 
           nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
       })
@@ -140,7 +139,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     openNewTab: (copyingFile: FileNode) => {
       set((state) => {
-        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
@@ -159,7 +157,7 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
         nextTabIds = [...curTabIds, newTabId]
         nextFilesByTabIds[newTabId] = [copyingFile]
         nextActiveFileByTabIds[newTabId] = copyingFile
-        nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id], newTabId]
+        nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id] ?? [], newTabId]
         
         return tabStateCommiter(nextActiveTabId, nextTabIds,
            nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
@@ -179,7 +177,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     closeFileInTab: (tabId: string, closingFile: FileNode) => {
       set((state) => {
-        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
@@ -287,7 +284,6 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
 
     closeTab: (closingTabId: string) => {
       set((state) => {
-        debugger
         const curActiveTabId: string = state.activeTabId
         const curTabIds: string[] = state.tabIds
         const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
