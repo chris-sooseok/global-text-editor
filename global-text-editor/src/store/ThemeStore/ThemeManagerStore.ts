@@ -42,9 +42,18 @@ type ThemeManagerStoreType = {
     dropdownColor: string,
     dropdownHighlight: string,
 
+    /** File Config
+     * Currently we have editorTheme attribute only in the config, but always possible to expand this
+     * We control file config separately from the file data itself because it is hard to
+     * manage file config when file data are spread across sidebar and tabs.
+     * Instead, we isolate file config itself separately, and load the file config when
+     * editor is mounted. 
+     * This not only allows manipulating file config easy without having to do prop-drilling, but also
+     * allows files in different tabs subscribe this attribute to update their config
+     */
     fileConfigByFileId: Record<number, FileConfig>
     loadFileConfig: (id: number) => Promise<void>
-    changeFileConfig: (id: number, change: Partial<FileConfig>) => Promise<void>
+    changeEditorTheme: (id: number, theme: EditorTheme) => Promise<void>
 }
 
 export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
@@ -68,10 +77,21 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
 
   fileConfigByFileId: {},
 
-  // make sure file config exists
   loadFileConfig: async (id) => {
     const res = await window.api.loadFileConfig(id)
-    if (!res.ok) return
+
+    // default to black if fails
+    if (!res.ok) {
+      set((state) => ({
+      fileConfigByFileId: {
+        ...state.fileConfigByFileId,
+          [id]: {
+            editorTheme: "black",
+          },
+        },
+      }))
+      return
+    }
 
     set((state) => ({
       fileConfigByFileId: {
@@ -83,25 +103,22 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set, get) => ({
     }))
   },
 
-  changeFileConfig: async (id, change) => {
-    // optimistic update
-    set((state) => {
-      const prev = state.fileConfigByFileId[id] ?? {
-        editorTheme: "black" as EditorTheme,
-        toolbarIsVisible: true,
-      }
+changeEditorTheme: async (id, theme) => {
+  const res = await window.api.changeEditorTheme(id, theme)
 
-      return {
-        fileConfigByFileId: {
-          ...state.fileConfigByFileId,
-          [id]: { ...prev, ...change },
-        },
-      }
-    })
+  // fail dont change anything
+  if (!res?.ok) return
 
-    // persist (call whichever IPC exists)
-    if (change.editorTheme) {
-      await window.api.changeTheme(id, change.editorTheme)
+  set((state) => {
+    const prev = state.fileConfigByFileId[id] 
+
+    return {
+      fileConfigByFileId: {
+        ...state.fileConfigByFileId,
+        [id]: { ...prev, editorTheme: theme },
+      },
     }
-  },
+  })
+},
+
 }))

@@ -51,12 +51,12 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(uuid, type, parentId, name, storagePath, mimeType, fileType, now, now, nextSortOrder)
-    const id = Number(info.lastInsertRowid)
-    if (type === "file") {
-      db.prepare(`
-        INSERT INTO fileConfig (file_id, toolbar_is_visible, editor_theme)
-        VALUES (?, ?, ?)
-      `).run(id, 1, "black")
+      const id = Number(info.lastInsertRowid)
+      if (type === "file") {
+        db.prepare(`
+          INSERT INTO fileConfig (file_id, editor_theme)
+          VALUES (?, ?)
+        `).run(id, "black")
 
       storagePath = `nodes/${uuid}`
       absStoragePath = path.join(app.getPath("userData"), storagePath)

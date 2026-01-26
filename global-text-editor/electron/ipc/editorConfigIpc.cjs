@@ -42,20 +42,3 @@ ipcMain.handle('editorConfig:changeTheme', (_event, payload) => {
     return { ok: false }
   }
 })
-
-ipcMain.handle("editorConfig:toolbarVisible", (_event, payload) => {
-  const id = payload.id
-  const toolbarIsVisible = payload.toolbarIsVisible
-
-  try {
-    db.prepare(`
-      UPDATE fileConfig
-      SET toolbar_is_visible = ?
-      WHERE file_id = ?
-    `).run(toolbarIsVisible ? 1 : 0, id)
-
-    return { ok: true }
-  } catch (err) {
-    return { ok: false }
-  }
-})

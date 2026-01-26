@@ -5,6 +5,46 @@ const fs = require("node:fs")
 
 const db = connect_db()
 
+ipcMain.handle("editors:loadConfig", (_event, payload) => {
+  const id = payload.id
+
+  try {
+    const row = db
+      .prepare(`
+        SELECT editor_theme
+        FROM fileConfig
+        WHERE file_id = ?
+      `)
+      .get(id)
+
+    return {
+      ok: true,
+      editorTheme: row.editor_theme,
+    }
+
+  } catch (err) {
+    console.error('[editors:loadConfig] failed:', err)
+    return { ok: false}
+  }
+})
+
+ipcMain.handle('editors:changeEditorTheme', (_event, payload) => {
+
+  const id = payload.id
+  const theme = payload.theme // "black" | "white"
+  try {
+    db.prepare(`
+        UPDATE fileConfig
+        SET editor_theme = ?
+        WHERE file_id = ?
+    `).run(theme, id)
+
+    return { ok: true }
+  } catch {
+    return { ok: false }
+  }
+})
+
 ipcMain.handle("editors:load", (_event, payload) => {
   const storagePath = payload.storagePath
   const dirPath = path.join(app.getPath("userData"), storagePath)

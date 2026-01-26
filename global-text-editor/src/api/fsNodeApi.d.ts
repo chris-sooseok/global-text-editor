@@ -1,5 +1,5 @@
 import type { FsNodeRow } from "store/FsTreeStore/FsTreeTypes";
-
+import type { EditorTheme } from "store/ThemeStore/ThemeManagerStore";
 type CreateFsNodeRes =
   | { ok: true; row: FsNodeRow }
   | { ok: false; message: string }
@@ -20,7 +20,8 @@ type SaveNormalEditorRes =
     | { ok: false; message: string }
 
 type loadFileConfigRes =
-  | { ok: true; toolbarIsVisible: boolean; editorTheme: "black" | "white"}
+  | { ok: true; editorTheme: "black" | "white"}
+  | { ok: false}
 
 declare global {
   interface Window {
@@ -52,9 +53,7 @@ declare global {
 
       loadFileConfig(id: number): Promise<loadFileConfigRes>
 
-      changeTheme(id: number, theme: "black" | "white"): Promise<{ok: boolean}>
-
-      changeToolbarVisible(id: number, toolbarIsVisible: boolean): Promise<{ok: boolean}>
+      changeEditorTheme(id: number, theme: EditorTheme): Promise<{ok: boolean}>
 
       exportToPDF(): Promise<>
     }

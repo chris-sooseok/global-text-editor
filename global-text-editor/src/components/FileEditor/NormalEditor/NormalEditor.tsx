@@ -75,11 +75,11 @@ function NormalEditor({activeFile}: {activeFile : FileNode}) {
 
   {/* Load File Config */}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-  const loadFileConfig = ThemeManagerStore((s) => s.loadFileConfig)
+  const { loadFileConfig } = ThemeManagerStore.getState()
 
   useEffect(() => {
     void loadFileConfig(activeFile.id)
-  }, [activeFile.id, loadFileConfig])
+  }, [activeFile.id])
 
   {/* Save Timer */}
   const saveTimerRef = useRef<number | null>(null)
