@@ -45,14 +45,8 @@ function Sidebar() {
   const { renameFsNode, removeFsNode, moveFsNode } = FsTreeStore.getState()
 
   /** Interaction with Tabs */
-  const { 
-    openFileInActiveTab, // open file in tabs
-    filesByTabIds, // supports rename and delete
-    tabIdsByFileIds,
-    renameFileInTab, // on rename
-    closeFileInTab, // on file deletion
-  } = TabManagerStore.getState()
-
+  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
+  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
   
   /** control folder toggle */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
@@ -153,6 +147,43 @@ function Sidebar() {
   function selectFolderHandler(folder: FolderNode | null) {
     setSelectedFolder(folder)
     localStorage.setItem(SIDEBAR_SELECTED_FOLDER, JSON.stringify(folder))
+  }
+
+    function renameNodeHandler(renameNode: FsNode, newName: string) {
+    renameFsNode(renameNode, newName)
+    
+    // only files appear in tabs
+    if (renameNode.type !== "file") return
+
+    for (const tabId of tabIdsByFileIds[renameNode.id]) {
+      renameFileInTab(tabId, renameNode.id, newName)
+    }
+  }
+
+  function removeNodeHandler(removeNode: FsNode) {
+    const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
+    if (!ok) return
+
+    removeFsNode(removeNode)
+
+    // if folder is removed, delete it from toggled list
+    if (removeNode.type !== "file") {
+      setSelectedFolder(null)
+      setToggledFolderIds((prev) => {
+        if (!prev.has(removeNode.id)) return prev
+        const next = new Set(prev)
+        next.delete(removeNode.id)
+        localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
+        return next
+      })
+      return
+    }
+
+    setSelectedFile(null)
+    // close the file in tabs on remove
+    for (const tabId of tabIdsByFileIds[removeNode.id]) {
+      closeFileInTab(tabId, removeNode as FileNode)
+    }
   }
 
   /** 
@@ -275,43 +306,6 @@ function Sidebar() {
     }
   }
 
-  function renameNodeHandler(renameNode: FsNode, newName: string) {
-    renameFsNode(renameNode, newName)
-    
-    // only files appear in tabs
-    if (renameNode.type !== "file") return
-
-    for (const tabId of tabIdsByFileIds[renameNode.id]) {
-      renameFileInTab(tabId, renameNode.id, newName)
-    }
-  }
-
-  function removeNodeHandler(removeNode: FsNode) {
-    const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
-    if (!ok) return
-
-    removeFsNode(removeNode)
-
-    // if folder is removed, delete it from toggled list
-    if (removeNode.type !== "file") {
-      setSelectedFolder(null)
-      setToggledFolderIds((prev) => {
-        if (!prev.has(removeNode.id)) return prev
-        const next = new Set(prev)
-        next.delete(removeNode.id)
-        localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
-        return next
-      })
-      return
-    }
-
-    setSelectedFile(null)
-    // close the file in tabs on remove
-    for (const tabId of tabIdsByFileIds[removeNode.id]) {
-      closeFileInTab(tabId, removeNode as FileNode)
-    }
-  }
-
   /** 
    * ! New Prompt Behavior for creating new FsNode  
    * Updates newNodeType to the selected type
@@ -319,7 +313,6 @@ function Sidebar() {
    * and renderNewNodePrompt will re-evaludate
    * which <li> element to display newNodePromptRef and newNodePromptInputRef
    * under the current selectedFolder */
-
   function createNewNode(type: 'folder' | 'file') {
     // if new node type is already set, highlight prompt again
     if (newNodeType === type) {
