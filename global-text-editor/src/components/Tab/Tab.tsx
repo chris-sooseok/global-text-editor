@@ -65,7 +65,7 @@ function Tab({tabId}: {tabId: string}) {
 
   function temp() {
     return <>
-        <NormalEditor key="normal" activeFile={activeFile}/>
+        <NormalEditor key="normal" activeFile={activeFile} tabId={tabId} />
     </>
   }
 
