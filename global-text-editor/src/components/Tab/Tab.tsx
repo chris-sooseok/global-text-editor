@@ -36,7 +36,7 @@ function Tab({tabId}: {tabId: string}) {
   const switchActiveTab = TabManagerStore((s) => s.switchActiveTab)
   const switchActiveFile = TabManagerStore((s) => s.switchActiveFile)
   const openNewTab = TabManagerStore((s) => s.openNewTab)
-  const closeFile = TabManagerStore((s) => s.closeFile)
+  const closeFile = TabManagerStore((s) => s.closeFileInTab)
   const closeTab = TabManagerStore((s) => s.closeTab)
 
   /** TODO: It is possible that localStorage may get corrupted, 

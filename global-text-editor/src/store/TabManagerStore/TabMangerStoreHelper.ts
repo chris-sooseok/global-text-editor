@@ -14,19 +14,19 @@ export function tabStateCommiter(
   nextTabIds: string[],
   nextActiveFileByTabIds: Record<string, FileNode>,
   nextFilesByTabIds: Record<string, FileNode[]>,
+  nextTabIdsByFileIds: Record<number, string[]>
 ) {
 
   localStorage.setItem(ACTIVE_TAB_ID, JSON.stringify(nextActiveTabId))
   localStorage.setItem(TABS_IDS, JSON.stringify(nextTabIds))
   localStorage.setItem(ACTIVE_FILE_BY_TAB_IDS, JSON.stringify(nextActiveFileByTabIds))
   localStorage.setItem(FILES_BY_TABS_IDS, JSON.stringify(nextFilesByTabIds))
-  
 
   return {
     activeTabId: nextActiveTabId,
     tabIds: nextTabIds,
     activeFileByTabIds: nextActiveFileByTabIds,
     filesByTabIds: nextFilesByTabIds,
-    
+    nextTabIdsByFileIds: nextTabIdsByFileIds
   }
 }
