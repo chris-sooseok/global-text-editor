@@ -3,10 +3,8 @@ import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import EditorToolbar from "./MarkdownToolbar"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
-
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
-import { FontSize, FontFamily, TextStyle } from "@tiptap/extension-text-style"
 import { ListKit } from "@tiptap/extension-list"
 import Highlight from "@tiptap/extension-highlight"
 import SuperScript from "@tiptap/extension-superscript"
@@ -33,6 +31,9 @@ const DEFAULT_DOC_TEMPLATE = {
 
 
 function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
+
+  const [isMarkdownView, setIsMarkdownView] = useState(false)
+  const [markdownText, setMarkdownText] = useState("")
     
   {/*** Editor Config and Supports ***/}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
@@ -82,9 +83,36 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       }
   })
 
+  function onChangeMarkdown(next: string) {
+    setMarkdownText(next)
+    if (!editor) return
+
+    try {
+      // This updates the Tiptap doc from markdown (will trigger editor "update")
+      editor.commands.setContent(next, { contentType: "markdown" })
+    } catch {
+      // ignore parse errors while typing
+    }
+  }
+
+  function toggleMarkdownView() {
+    if (!editor) return
+
+    setIsMarkdownView((prev) => {
+      const next = !prev
+      if (next) setMarkdownText(editor.getMarkdown())
+      return next
+    })
+  }
+
   {/*** Load File Content ***/}
   useEffect(() => {
+    if (!editor) return
+
     let cancelled = false
+
+    // optional: prevent showing old content while loading
+    if (isMarkdownView) setMarkdownText("")
 
     function focusEditor() {
       setTimeout(() => {
@@ -93,42 +121,45 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
     }
 
     async function loadFileContent() {
-        // load file
-        const contentRes = await window.api.loadFileContent(activeFile.storagePath)
-        if (cancelled) return
+      const contentRes = await window.api.loadFileContent(activeFile.storagePath)
+      if (cancelled) return
 
-        // TODO: if failed, dont allow editing at all
-        if (!contentRes.ok) {
-          editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
-          // focusStartSoon()
-          return
-        }
-
-        const raw = contentRes.fileContent
-        if (!raw) {
-          editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
-          editor.commands.focus("start")
-          focusEditor()
-          return
-        } else {
-          try {
-            const json = JSON.parse(raw)
-            editor.commands.setContent(json, { emitUpdate: false })
-            focusEditor()
-          } catch {
-            // TODO: if corrupted, dont allow editing at all
-            editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
-            // focusStartSoon()
-          }
-        }
+      if (!contentRes.ok) {
+        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
+        return
       }
-      
-    void loadFileContent()  
 
+      const raw = contentRes.fileContent
+      if (!raw) {
+        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
+        focusEditor()
+        return
+      }
+
+      try {
+        const json = JSON.parse(raw)
+        editor.commands.setContent(json, { emitUpdate: false })
+
+        if (isMarkdownView) {
+          setTimeout(() => {
+            if (!cancelled) setMarkdownText(editor.getMarkdown())
+          }, 0)
+        }
+
+        focusEditor()
+      } catch {
+        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
+      }
+    }
+
+    void loadFileContent()
     return () => {
       cancelled = true
     }
-  }, [editor, activeFile.storagePath])
+  }, [editor, activeFile.storagePath, isMarkdownView])
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
@@ -141,21 +172,21 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       void window.api.saveFileContent(activeFile.id, activeFile.storagePath, fileContent, tabId)
     }
 
-    function onUpdate(){
-
-      const fileContent = JSON.stringify(editor.getJSON())
+    function onUpdate() {
+      const jsonContent = JSON.stringify(editor.getJSON())
+      const markdownContent = editor.getMarkdown()
 
       broadcastEditorContentUpdated({
         fileId: activeFile.id,
-        fileContent,
+        jsonContent,
+        markdownContent,
         originTabId: tabId,
       })
 
-      // reset timer on every change
+      // your existing debounced save (keep as-is)
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
-      // set new timer
       saveTimerRef.current = window.setTimeout(() => {
-        void window.api.saveFileContent(activeFile.id, activeFile.storagePath, fileContent, tabId)
+        void window.api.saveFileContent(activeFile.id, activeFile.storagePath, jsonContent, tabId)
         saveTimerRef.current = null
       }, updateTime)
     }
@@ -178,20 +209,21 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
   useEffect(() => {
     if (!editor) return
 
-    const unsubscribe = onEditorContentUpdated(({ fileId, fileContent, originTabId }) => {
+    const unsubscribe = onEditorContentUpdated(({ fileId, jsonContent, markdownContent, originTabId }) => {
       if (fileId !== activeFile.id) return
-      if (originTabId === tabId) return // ignore myself
+      if (originTabId === tabId) return
 
       try {
-        const json = JSON.parse(fileContent)
-        editor.commands.setContent(json, { emitUpdate: false })
-      } catch {
-        // ignore corrupted payload
+        editor.commands.setContent(JSON.parse(jsonContent), { emitUpdate: false })
+      } catch {}
+
+      if (isMarkdownView) {
+        setMarkdownText(markdownContent)
       }
     })
 
     return unsubscribe
-  }, [editor, activeFile.id, tabId])
+  }, [editor, activeFile.id, tabId, isMarkdownView])
   
   return (
   <>
@@ -207,6 +239,8 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       <EditorToolbar
         fileId={activeFile.id}
         editor={editor}
+        isMarkdownView={isMarkdownView}
+        toggleMarkdownView={toggleMarkdownView}
       />
 
       {/* Editor */}
@@ -220,21 +254,32 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
           display: "flex",
         }}
       >
+      {isMarkdownView ? (
+        <textarea
+          value={markdownText}
+          onChange={(e) => onChangeMarkdown(e.currentTarget.value)}
+          onFocus={() => switchActiveTab(tabId)}
+          style={{
+            flex: 1,
+            width: "100%",
+            minHeight: "100%",
+            background: "transparent",
+            outline: "none",
+            resize: "none",
+            fontSize: "16px",
+            padding: 12,
+            fontFamily: "monospace",
+            whiteSpace: "pre",
+          }}
+        />
+      ) : (
         <EditorContent
           editor={editor}
-          className={
-            editorTheme === "black"
-              ? "prose prose-invert max-w-none "
-              : "prose max-w-none"
-          }
+          className={editorTheme === "black" ? "prose prose-invert max-w-none " : "prose max-w-none"}
           onFocus={() => switchActiveTab(tabId)}
-          style={{ 
-            flex: 1,
-            display: "flex",
-            width: "100%",
-            minHeight: "100%"
-            }}
+          style={{ flex: 1, display: "flex", width: "100%", minHeight: "100%" }}
         />
+      )}
       </div>
     </div>
   </>

@@ -1,22 +1,20 @@
-export type EditorContentUpdatedPayload = {
+export type EditorSyncPayload = {
   fileId: number
-  fileContent: string
+  jsonContent: string
+  markdownContent: string
   originTabId: string
 }
 
 const bus = new EventTarget()
 
-export function broadcastEditorContentUpdated(payload: EditorContentUpdatedPayload) {
-  bus.dispatchEvent(new CustomEvent<EditorContentUpdatedPayload>("editors:contentUpdated", { detail: payload }))
+export function broadcastEditorContentUpdated(payload: EditorSyncPayload) {
+  bus.dispatchEvent(new CustomEvent<EditorSyncPayload>("editors:contentUpdated", { detail: payload }))
 }
 
-export function onEditorContentUpdated(
-  handler: (payload: EditorContentUpdatedPayload) => void
-) {
+export function onEditorContentUpdated(handler: (payload: EditorSyncPayload) => void) {
   const listener = (e: Event) => {
-    handler((e as CustomEvent<EditorContentUpdatedPayload>).detail)
+    handler((e as CustomEvent<EditorSyncPayload>).detail)
   }
-
   bus.addEventListener("editors:contentUpdated", listener)
   return () => bus.removeEventListener("editors:contentUpdated", listener)
 }

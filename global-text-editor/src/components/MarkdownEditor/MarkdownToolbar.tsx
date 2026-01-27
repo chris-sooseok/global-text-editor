@@ -24,11 +24,22 @@ import FontFamilyButton from "../Buttons/FontFamilyButton"
 import { useState } from "react"
 import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
+import MarkdownButton from "./MarkdownButtons/MarkdownButton"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
-function EditorToolbar({fileId, editor}: {fileId: number, editor: Editor}) {
+function EditorToolbar({
+  fileId,
+  editor,
+  isMarkdownView,
+  toggleMarkdownView,
+}: {
+  fileId: number
+  editor: Editor
+  isMarkdownView: boolean
+  toggleMarkdownView: () => void
+}) {
 
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
 
@@ -94,19 +105,16 @@ function EditorToolbar({fileId, editor}: {fileId: number, editor: Editor}) {
           <ItalicButton editor={editor} fileId={fileId}/>
           <UnderlineButton editor={editor} fileId={fileId} />
           <StrikethroughButton editor={editor} fileId={fileId} />
+          <ListButton editor={editor} fileId={fileId} />
           <HighlightButton editor={editor} fileId={fileId} />
-
-
-                    <SuperscriptButton editor={editor} fileId={fileId} />
+          <SuperscriptButton editor={editor} fileId={fileId} />
           <SubscriptButton editor={editor} fileId={fileId} />
           <BackQuoteButton editor={editor} fileId={fileId}/>
-                      <CodeButton editor={editor} fileId={fileId} />
-          <CodeBlockButton editor={editor} fileId={fileId} />
-                    <ListButton editor={editor} fileId={fileId} />
+          <CodeButton editor={editor} fileId={fileId} />
+          <CodeBlockButton editor={editor} fileId={fileId} />          
           <LinkButton editor={editor} fileId={fileId} />
-
           <ImageButton editor={editor} fileId={fileId} />
-
+            
         </div>
       </div>
 
@@ -119,6 +127,11 @@ function EditorToolbar({fileId, editor}: {fileId: number, editor: Editor}) {
             flexShrink: 0,
           }}
         >
+          <MarkdownButton
+            fileId={fileId}
+            isMarkdownView={isMarkdownView}
+            toggleMarkdownView={toggleMarkdownView}
+          />
           <HideShowButton
             fileId={fileId}
             toolbarIsVisible={toolbarIsVisible}
