@@ -47,13 +47,12 @@ declare global {
       // Editors Apis
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
       saveFileContent(fileId: number, storagePath: string, fileContent: string, originTabId: string): Promise<SaveNormalEditorRes>
-      onFileContentUpdated(handler: 
-        (payload: { 
-          fileId: number
-          fileContent: string
-          originTabId: string 
-        }
-      ) => void): () => void
+      
+      // onFileContentUpdated(handler: (payload: { 
+      //     fileId: number
+      //     fileContent: string
+      //     originTabId: string 
+      //   }) => void): () => void
 
 
       // Editor Config

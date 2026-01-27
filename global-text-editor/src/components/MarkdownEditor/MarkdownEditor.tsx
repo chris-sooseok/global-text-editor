@@ -18,7 +18,7 @@ import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { 
   broadcastEditorContentUpdated, 
   onEditorContentUpdated,
-} from "store/EditorSyncBus"
+} from "store/EditorContentStore/EditorSyncBus"
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
@@ -135,7 +135,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
-  const updateTime = 1000
+  const updateTime = 500
 
   useEffect(() => {
 
@@ -145,6 +145,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
     }
 
     function onUpdate(){
+
       const fileContent = JSON.stringify(editor.getJSON())
 
       broadcastEditorContentUpdated({
@@ -176,6 +177,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
     }
   }, [editor, activeFile])
 
+  {/** Local Update Sync */}
   useEffect(() => {
     if (!editor) return
 
@@ -193,7 +195,6 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
     return unsubscribe
   }, [editor, activeFile.id, tabId])
-
   
   return (
   <>

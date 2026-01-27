@@ -31,13 +31,12 @@ contextBridge.exposeInMainWorld('api', {
   saveFileContent: (fileId, storagePath, fileContent, originTabId) => 
     invokeLogged('editors:saveContent', { fileId, storagePath, fileContent, originTabId}),
 
-  onFileContentUpdated: (handler) => {
-    const listener = (_e, payload) => handler(payload)
-    ipcRenderer.on("editors:contentUpdated", listener)
-
-    // unsubscribe
-    return () => ipcRenderer.removeListener("editors:contentUpdated", listener)
-  },
+  // onFileContentUpdated: (handler) => {
+  //   const listener = (_e, payload) => handler(payload)
+  //   ipcRenderer.on("editors:contentUpdated", listener)
+  //   // unsubscribe
+  //   return () => ipcRenderer.removeListener("editors:contentUpdated", listener)
+  // },
 
   /* Editor Config */
   loadFileConfig: (id) => invokeLogged('editors:loadConfig', {id}),
