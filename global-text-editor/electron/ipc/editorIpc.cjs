@@ -66,9 +66,10 @@ ipcMain.handle('editors:saveContent', (_event, payload) => {
     const dirPath = path.join(app.getPath("userData"), storagePath)
     fs.writeFileSync(path.join(dirPath, "index.json"), fileContent, "utf8")
 
-    for (const win of BrowserWindow.getAllWindows()) {
-      win.webContents.send("editors:contentUpdated", { fileId, fileContent, originTabId })
-    }
+    // ? Not needed now
+    // for (const win of BrowserWindow.getAllWindows()) {
+    //   win.webContents.send("editors:contentUpdated", { fileId, fileContent, originTabId })
+    // }
 
     return {ok: true}
   } catch(err) {
