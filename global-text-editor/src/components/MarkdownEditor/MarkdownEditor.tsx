@@ -130,13 +130,13 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
-  const updateTime = 3000
+  const updateTime = 0
 
   useEffect(() => {
 
     function saveFileContent() {
       const fileContent = JSON.stringify(editor.getJSON())
-      void window.api.saveFileContent(activeFile.storagePath, fileContent)
+      void window.api.saveFileContent(activeFile.id, activeFile.storagePath, fileContent, tabId)
     }
 
     function onUpdate(){
@@ -162,6 +162,24 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       }
     }
   }, [editor, activeFile])
+
+  useEffect(() => {
+    if (!editor) return
+
+    const unsubscribe = window.api.onFileContentUpdated(({ fileId, fileContent, originTabId }) => {
+      if (fileId !== activeFile.id) return
+      if (originTabId === tabId) return 
+
+      try {
+        const json = JSON.parse(fileContent)
+        editor.commands.setContent(json, { emitUpdate: false }) // prevents save-loop
+      } catch {
+        // ignore bad payload
+      }
+    })
+
+    return unsubscribe
+  }, [editor, activeFile.id, tabId])
 
   
   return (

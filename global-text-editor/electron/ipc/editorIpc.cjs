@@ -1,4 +1,4 @@
-const { ipcMain, app } = require("electron")
+const { ipcMain, app, BrowserWindow } = require("electron")
 const { connect_db } = require('../db/index.cjs')
 const path = require("node:path")
 const fs = require("node:fs")
@@ -45,7 +45,7 @@ ipcMain.handle('editors:changeEditorTheme', (_event, payload) => {
   }
 })
 
-ipcMain.handle("editors:load", (_event, payload) => {
+ipcMain.handle("editors:loadContent", (_event, payload) => {
   const storagePath = payload.storagePath
   const dirPath = path.join(app.getPath("userData"), storagePath)
   const filePath = path.join(dirPath, "index.json")
@@ -59,13 +59,17 @@ ipcMain.handle("editors:load", (_event, payload) => {
   }
 })
 
-ipcMain.handle('editors:save', (_event, payload) => {
-  const storagePath = payload.storagePath
-  const fileContent = payload.fileContent
-
+ipcMain.handle('editors:saveContent', (_event, payload) => {
+  const { fileId, storagePath, fileContent, originTabId } = payload
+  
   try {
     const dirPath = path.join(app.getPath("userData"), storagePath)
     fs.writeFileSync(path.join(dirPath, "index.json"), fileContent, "utf8")
+
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send("editors:contentUpdated", { fileId, fileContent, originTabId })
+    }
+
     return {ok: true}
   } catch(err) {
     console.error('[editors:save] failed:', err)

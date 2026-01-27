@@ -26,6 +26,7 @@ type loadFileConfigRes =
 declare global {
   interface Window {
     api: {
+      // FsNodes Apis
       createFsNode(
         type: string,
         parentId: number | null,
@@ -33,26 +34,30 @@ declare global {
         mimeType: string | null,
         fileType: string | null
       ): Promise<CreateFsNodeRes>
-
       renameFsNode(id: number, newName: string): Promise<{ok: true}>
-
       removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>
-
       moveFsNode(
         node: FsNode,
         targetNode: FsNode,
         newParentId: number | null,
         dropPosition: "before" | "inside" | "after"
       ): Promise<{ok: boolean}>
-
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
+      // Editors Apis
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
-      
-      saveFileContent(storagePath: string, fileContent: string): Promise<SaveNormalEditorRes>
+      saveFileContent(fileId: number, storagePath: string, fileContent: string, originTabId: string): Promise<SaveNormalEditorRes>
+      onFileContentUpdated(handler: 
+        (payload: { 
+          fileId: number
+          fileContent: string
+          originTabId: string 
+        }
+      ) => void): () => void
 
+
+      // Editor Config
       loadFileConfig(id: number): Promise<loadFileConfigRes>
-
       changeEditorTheme(id: number, theme: EditorTheme): Promise<{ok: boolean}>
 
       exportToPDF(): Promise<>
