@@ -166,8 +166,6 @@ export function renderNodeHandler(
     node.parentId === dragState?.targetParentId
   const isDraggingNode = dragState?.draggingNode?.id === node.id
 
-  const INDENT_PX = 14
-  const CARET_W = 12
 
   return (
       <li key={node.id}

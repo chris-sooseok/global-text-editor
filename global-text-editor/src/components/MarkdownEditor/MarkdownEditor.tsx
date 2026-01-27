@@ -19,7 +19,7 @@ import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-const DEFAULT_DOC = {
+const DEFAULT_DOC_TEMPLATE = {
   type: "doc",
   content: [
     { type: "heading", attrs: { level: 1 } },
@@ -29,11 +29,10 @@ const DEFAULT_DOC = {
 
 function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
     
-  {/*** Editor Supports ***/}
+  {/*** Editor Config and Supports ***/}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
   const { loadFileConfig } = ThemeManagerStore.getState()
   const { switchActiveTab } = TabManagerStore.getState()
-
   useEffect(() => {
     void loadFileConfig(activeFile.id)
   }, [activeFile.id])
@@ -81,8 +80,6 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       }
   })
 
-  const saveTimerRef = useRef<number | null>(null)
-
   {/*** Load File Content ***/}
   useEffect(() => {
     let cancelled = false
@@ -100,14 +97,14 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
         // TODO: if failed, dont allow editing at all
         if (!contentRes.ok) {
-          editor.commands.setContent(DEFAULT_DOC, { emitUpdate: false })
+          editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
           // focusStartSoon()
           return
         }
 
         const raw = contentRes.fileContent
         if (!raw) {
-          editor.commands.setContent(DEFAULT_DOC, { emitUpdate: false })
+          editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
           editor.commands.focus("start")
           focusEditor()
           return
@@ -118,7 +115,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
             focusEditor()
           } catch {
             // TODO: if corrupted, dont allow editing at all
-            editor.commands.setContent(DEFAULT_DOC, { emitUpdate: false })
+            editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
             // focusStartSoon()
           }
         }
@@ -132,9 +129,12 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
   }, [editor, activeFile.storagePath])
 
   {/*** Update File Content ***/}
+  const saveTimerRef = useRef<number | null>(null)
+  const updateTime = 3000
+
   useEffect(() => {
 
-    function saveNow() {
+    function saveFileContent() {
       const fileContent = JSON.stringify(editor.getJSON())
       void window.api.saveFileContent(activeFile.storagePath, fileContent)
     }
@@ -144,9 +144,9 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
       // set new timer
       saveTimerRef.current = window.setTimeout(() => {
-        saveNow()
+        saveFileContent()
         saveTimerRef.current = null
-      }, 3000)
+      }, updateTime)
     }
 
     editor.on("update", onUpdate)
@@ -154,11 +154,11 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
     return () => {
       editor.off("update", onUpdate)
 
-      // on unmount or file change, flush
+      // on unmount or file switch, flush the state
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
-        saveNow()
+        saveFileContent()
       }
     }
   }, [editor, activeFile])
