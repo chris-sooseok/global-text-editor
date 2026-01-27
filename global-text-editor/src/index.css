@@ -22,13 +22,49 @@ body {
 .normal-editor {
   flex: 1;
   width: 100%;
-  padding: 20px 16px;
+  padding: 12px;
   min-height: 100%;
-  /* outline: none; */
-  font-size: 16px;
+  outline: none;
+  font-size: 20px;
   line-height: 1.0;
-
 }
 
 /* List */
 .normal-editor ul, .normal-editor ol { padding-left: 1.4em; }
+
+/* task list container */
+.normal-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* baseline alignment is the key */
+.normal-editor li[data-type="taskItem"] {
+  display: flex;
+  align-items: baseline;   /* ✅ baseline, not center */
+  gap: 8px;
+}
+
+/* checkbox column */
+.normal-editor li[data-type="taskItem"] > label {
+  line-height: 1;
+  display: flex;
+}
+
+/* kill default checkbox spacing + nudge */
+.normal-editor li[data-type="taskItem"] > label input[type="checkbox"] {
+  margin: 0;
+  transform: translateY(2px); /* ✅ tweak 1–3px if needed */
+}
+
+/* text column */
+.normal-editor li[data-type="taskItem"] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.normal-editor li[data-type="taskItem"] p {
+  margin: 0;
+}
+

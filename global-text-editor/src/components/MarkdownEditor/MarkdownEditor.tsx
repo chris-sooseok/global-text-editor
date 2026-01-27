@@ -6,17 +6,19 @@ import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { ListKit } from "@tiptap/extension-list"
-import Highlight from "@tiptap/extension-highlight"
 import SuperScript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
 import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
+import Highlight from "@tiptap/extension-highlight"
+import Color from "@tiptap/extension-color"
 import { Markdown } from '@tiptap/markdown'
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { 
   broadcastEditorContentUpdated, 
   onEditorContentUpdated,
 } from "store/EditorContentStore/EditorSyncBus"
+import TextStyleWithMarkdown from "./MarkdownHelper"
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
@@ -34,6 +36,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
   const [isMarkdownView, setIsMarkdownView] = useState(false)
   const [markdownText, setMarkdownText] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
     
   {/*** Editor Config and Supports ***/}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
@@ -53,6 +56,8 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
           listItem: false,
         }),
         ListKit,
+        TextStyleWithMarkdown,
+        Color,
         Highlight,
         SuperScript,
         Subscript,
@@ -237,10 +242,13 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       }}
     >
       <EditorToolbar
-        fileId={activeFile.id}
+        activeFile={activeFile}
         editor={editor}
         isMarkdownView={isMarkdownView}
         toggleMarkdownView={toggleMarkdownView}
+        markdownText={markdownText}
+        onChangeMarkdown={onChangeMarkdown}
+        textareaRef={textareaRef}
       />
 
       {/* Editor */}
@@ -249,7 +257,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
           flex: 1,
           minHeight: 0,
           overflowY: "auto", 
-          overflowX: "auto",
+          overflowX: "hidden",
           width: "100%",
           display: "flex",
         }}
