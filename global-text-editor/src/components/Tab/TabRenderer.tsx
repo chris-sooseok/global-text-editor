@@ -25,6 +25,7 @@ function TabRenderer() {
         height: "100%",
         overflowX: "auto", // we allow tabs to grow overflow
         overflowY: "hidden",
+        userSelect: "none", // prevent cursor highlight for all children
       }}
     >
 
