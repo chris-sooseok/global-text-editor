@@ -47,6 +47,12 @@ declare global {
       // Editors Apis
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
       saveFileContent(fileId: number, storagePath: string, fileContent: string, originTabId: string): Promise<SaveNormalEditorRes>
+      saveImageAsset(
+        storagePath: string,
+        fileContent: ArrayBuffer,
+        originalName: string
+      ): Promise<{ ok: boolean; src?: string; filename?: string; message?: string }>
+
       
       // onFileContentUpdated(handler: (payload: { 
       //     fileId: number

@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('api', {
   loadFileContent: (storagePath) => invokeLogged('editors:loadContent', {storagePath}),
   saveFileContent: (fileId, storagePath, fileContent, originTabId) => 
     invokeLogged('editors:saveContent', { fileId, storagePath, fileContent, originTabId}),
+  saveImageAsset: (storagePath, fileContent, originalName) =>
+    invokeLogged("editors:saveImageAsset", { storagePath, fileContent, originalName }),
+
+
 
   // onFileContentUpdated: (handler) => {
   //   const listener = (_e, payload) => handler(payload)

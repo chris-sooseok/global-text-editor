@@ -1,7 +1,6 @@
 import type { Editor } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 // Button List
-import HeadingButton from "./MarkdownButtons/HeadingButton"
 import ListButton from "./MarkdownButtons/ListButton"
 import BackQuoteButton from "./MarkdownButtons/BackQuoteButton"
 import BoldButton from "./MarkdownButtons/BoldButton"
@@ -12,36 +11,38 @@ import CodeBlockButton from "./MarkdownButtons/CodeBlockButton"
 import CodeButton from "../Buttons/CodeButton"
 import SuperscriptButton from "./MarkdownButtons/SuperscriptButton"
 import SubscriptButton from "./MarkdownButtons/SubscriptButton"
-import TextAlignButton from "../Buttons/TextAlignButton"
 import ImageButton from "./MarkdownButtons/ImageButton"
-import UndoButton from "../Buttons/UndoButton"
-import RedoButton from "./MarkdownButtons/RedoButton"
 import ThemeButton from "./MarkdownButtons/ThemeButton"
 import ExportButton from "./MarkdownButtons/ExportButton"
 import HideShowButton from "./MarkdownButtons/HideShowButton"
-import FontSizeButton from "../Buttons/FontSizeButton"
-import FontFamilyButton from "../Buttons/FontFamilyButton"
 import { useState } from "react"
 import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
+import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
 function EditorToolbar({
-  fileId,
+  activeFile,
   editor,
   isMarkdownView,
   toggleMarkdownView,
+  markdownText,
+  onChangeMarkdown,
+  textareaRef,
 }: {
-  fileId: number
+  activeFile: FileNode
   editor: Editor
   isMarkdownView: boolean
   toggleMarkdownView: () => void
+  markdownText: string
+  onChangeMarkdown: (next: string) => void
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
 
-  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[fileId]?.editorTheme ?? "black")
+  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
 
   const [ toolbarIsVisible, setToolbarIsVisible ] = useState<boolean>(true)
 
@@ -69,23 +70,15 @@ function EditorToolbar({
       } 
       }>
         {/* Left Buttons */}
-        <style>{`
-          /* Chrome / Edge / Electron */
-          .toolbar-scroll::-webkit-scrollbar {
-            height: 0px;
-          }
-          /* Firefox */
-          .files-scroll {
-            scrollbar-width: none;
-          }
-        `}</style>
         <div
           className="toolbar-scroll"
           style={{
             flex: 1,
             minWidth: 0,
-            overflowX: "auto", //scrollable
-            overflowY: "hidden",
+            display: "flex",
+            flexWrap: "nowrap",
+            alignItems: "center",
+            gap: 14,
             visibility: toolbarIsVisible ? "visible" : "hidden",
             pointerEvents: toolbarIsVisible ? "auto" : "none",
           }}
@@ -101,19 +94,30 @@ function EditorToolbar({
           >
           {/* TODO
           font style */}
-          <BoldButton editor={editor} fileId={fileId} />
-          <ItalicButton editor={editor} fileId={fileId}/>
-          <UnderlineButton editor={editor} fileId={fileId} />
-          <StrikethroughButton editor={editor} fileId={fileId} />
-          <ListButton editor={editor} fileId={fileId} />
-          <HighlightButton editor={editor} fileId={fileId} />
-          <SuperscriptButton editor={editor} fileId={fileId} />
-          <SubscriptButton editor={editor} fileId={fileId} />
-          <BackQuoteButton editor={editor} fileId={fileId}/>
-          <CodeButton editor={editor} fileId={fileId} />
-          <CodeBlockButton editor={editor} fileId={fileId} />          
-          <LinkButton editor={editor} fileId={fileId} />
-          <ImageButton editor={editor} fileId={fileId} />
+          <BoldButton editor={editor} fileId={activeFile.id} />
+          <ItalicButton editor={editor} fileId={activeFile.id}/>
+          <UnderlineButton editor={editor} fileId={activeFile.id} />
+          <StrikethroughButton editor={editor} fileId={activeFile.id} />
+          <ListButton editor={editor} fileId={activeFile.id} />
+          <HighlightButton
+            editor={editor}
+            fileId={activeFile.id}
+            isMarkdownView={isMarkdownView}
+            markdownText={markdownText}
+            onChangeMarkdown={onChangeMarkdown}
+            textareaRef={textareaRef}
+          />
+          <SuperscriptButton editor={editor} fileId={activeFile.id} />
+          <SubscriptButton editor={editor} fileId={activeFile.id} />
+          <BackQuoteButton editor={editor} fileId={activeFile.id}/>
+          <CodeButton editor={editor} fileId={activeFile.id} />
+          <CodeBlockButton editor={editor} fileId={activeFile.id} />          
+          <LinkButton editor={editor} fileId={activeFile.id} />
+          <ImageButton
+            editor={editor}
+            fileId={activeFile.id}
+            storagePath={activeFile.storagePath}
+          />
             
         </div>
       </div>
@@ -128,17 +132,17 @@ function EditorToolbar({
           }}
         >
           <MarkdownButton
-            fileId={fileId}
+            fileId={activeFile.id}
             isMarkdownView={isMarkdownView}
             toggleMarkdownView={toggleMarkdownView}
           />
           <HideShowButton
-            fileId={fileId}
+            fileId={activeFile.id}
             toolbarIsVisible={toolbarIsVisible}
             setToolbarIsVisible={setToolbarIsVisible}
           />
-          <ThemeButton fileId={fileId} />
-          <ExportButton editor={editor} fileId={fileId} />
+          <ThemeButton fileId={activeFile.id} />
+          <ExportButton editor={editor} fileId={activeFile.id} />
 
         </div>
       </div>

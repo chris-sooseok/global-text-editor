@@ -1,7 +1,9 @@
-const { ipcMain, app, BrowserWindow } = require("electron")
-const { connect_db } = require('../db/index.cjs')
+const { ipcMain, app } = require("electron")
 const path = require("node:path")
 const fs = require("node:fs")
+const { randomUUID } = require("node:crypto")
+const { pathToFileURL } = require("node:url")
+const { connect_db } = require("../db/index.cjs")
 
 const db = connect_db()
 
@@ -78,3 +80,29 @@ ipcMain.handle('editors:saveContent', (_event, payload) => {
   }
 })
 
+ipcMain.handle("editors:saveImageAsset", (_event, payload) => {
+  const { storagePath, fileContent, originalName } = payload
+
+  try {
+    if (!storagePath || !fileContent) {
+      return { ok: false, message: "Missing storagePath or fileContent" }
+    }
+
+    const assetsDir = path.join(app.getPath("userData"), storagePath, "assets")
+    fs.mkdirSync(assetsDir, { recursive: true })
+
+    const ext = (path.extname(originalName || "") || ".png").toLowerCase()
+    const filename = `${randomUUID()}${ext}`
+    const absDest = path.join(assetsDir, filename)
+
+    // fileContent is an ArrayBuffer
+    const buf = Buffer.from(new Uint8Array(fileContent))
+    fs.writeFileSync(absDest, buf)
+
+    const src = `gtext://${storagePath}/assets/${filename}`
+    return { ok: true, src, filename }
+  } catch (err) {
+    console.error("[editors:saveImageAsset] failed:", err)
+    return { ok: false, message: "Failed to save image asset" }
+  }
+})
