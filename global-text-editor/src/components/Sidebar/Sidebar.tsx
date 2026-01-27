@@ -41,10 +41,6 @@ function Sidebar() {
     void loadFsNodes(window.api)
   }, [loadFsNodes])
 
-  const [ dropdownIsOpen, setDropdownIsOpen ] = useState(false)
-  const [ dropdownNode, setDropdownNode ] = useState<FsNode | null>(null)
-  const dropdownRef = useRef<HTMLButtonElement | null>(null)
-
   /** Folder Toggle and Highlight Logics */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     // localStorage only supports arr, so we make sure to conver to Set
@@ -422,7 +418,7 @@ function Sidebar() {
           </>
           ) : (
             <ul style={{ 
-              padding: 4,
+              margin: 4,
               overflow: 'hidden',
             }}>
               {/* FsNodes Rendering */}
