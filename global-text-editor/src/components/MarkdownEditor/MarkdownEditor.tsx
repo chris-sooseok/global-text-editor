@@ -15,6 +15,10 @@ import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
 import { Markdown } from '@tiptap/markdown'
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
+import { 
+  broadcastEditorContentUpdated, 
+  onEditorContentUpdated,
+} from "store/EditorSyncBus"
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
@@ -26,6 +30,7 @@ const DEFAULT_DOC_TEMPLATE = {
     { type: "paragraph" },
   ],
 }
+
 
 function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
     
@@ -130,7 +135,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
-  const updateTime = 0
+  const updateTime = 1000
 
   useEffect(() => {
 
@@ -140,11 +145,19 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
     }
 
     function onUpdate(){
+      const fileContent = JSON.stringify(editor.getJSON())
+
+      broadcastEditorContentUpdated({
+        fileId: activeFile.id,
+        fileContent,
+        originTabId: tabId,
+      })
+
       // reset timer on every change
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
       // set new timer
       saveTimerRef.current = window.setTimeout(() => {
-        saveFileContent()
+        void window.api.saveFileContent(activeFile.id, activeFile.storagePath, fileContent, tabId)
         saveTimerRef.current = null
       }, updateTime)
     }
@@ -166,15 +179,15 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
   useEffect(() => {
     if (!editor) return
 
-    const unsubscribe = window.api.onFileContentUpdated(({ fileId, fileContent, originTabId }) => {
+    const unsubscribe = onEditorContentUpdated(({ fileId, fileContent, originTabId }) => {
       if (fileId !== activeFile.id) return
-      if (originTabId === tabId) return 
+      if (originTabId === tabId) return // ignore myself
 
       try {
         const json = JSON.parse(fileContent)
-        editor.commands.setContent(json, { emitUpdate: false }) // prevents save-loop
+        editor.commands.setContent(json, { emitUpdate: false })
       } catch {
-        // ignore bad payload
+        // ignore corrupted payload
       }
     })
 
