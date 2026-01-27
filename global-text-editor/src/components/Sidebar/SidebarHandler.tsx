@@ -3,6 +3,8 @@ import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/F
 import type { SelectedNodeType, DragState } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
+import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
+import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { FsTreeStore } from "store/FsTreeStore/FsTreeStore"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
@@ -164,20 +166,23 @@ export function renderNodeHandler(
     node.parentId === dragState?.targetParentId
   const isDraggingNode = dragState?.draggingNode?.id === node.id
 
+  const INDENT_PX = 14
+  const CARET_W = 12
+
   return (
       <li key={node.id}
         style={{
-          paddingLeft: (node.type === 'folder' ? depth * 15 : depth * 11),
+          paddingLeft: 0
         }}
       >
         {/* FsNode */}
         <div 
-          ref={dropdownRef}
           tabIndex={-1}
           data-node-id={node.id}
           style={{ 
             cursor: 'pointer',
             borderRadius: 2,
+            marginLeft: depth * 23,
             padding: "2px 0px",
             // Highlight Styles
             fontWeight: (node.type === 'folder' 
@@ -242,9 +247,6 @@ export function renderNodeHandler(
           }}
           // Dragging
           onPointerDown={(e) => onPointerDownNode(e, node)}
-          onContextMenu={(e) => {
-
-          }}
         >
           {/* FsNode Logo and Name Container */}
           <span style={{ 
@@ -253,18 +255,25 @@ export function renderNodeHandler(
             gap: 6, 
             width: '100%' 
           }}>
-            {/* Folder Node */}
+
             {node.type === 'folder' 
-              ? <span style={{ width: 12, display: 'inline-block' }}>
-                  {isExpanded ? '▾' : '▸'}
-                </span>
+              ? <ToolbarIcon 
+                whiteIcon={isExpanded ? downIcon : rightIcon}
+                onlyWhiteIcon={true}
+                
+              />
               : undefined
             }
             {/* FsNode Icon */}
-            <ToolbarIcon
-              whiteIcon={node.type === 'folder' ? folderIcon : fileIcon}
+            { node.type === 'file' 
+              ? <ToolbarIcon
+              whiteIcon={fileIcon}
               onlyWhiteIcon={true}
             />
+            : undefined
+            
+            }
+
 
             {/* FsNode Name or Rename Prompt */}
             {renameNodeId !== node.id 
@@ -316,13 +325,15 @@ export function renderNodeHandler(
                   cancelRenameHandler()
                 }}
               />
+              
             )}    
+
           </span>
         </div>
         
         {/** Show Children Nodes If Folder is expanded */}
         {isExpanded && node.type === 'folder' ?
-          <ul style={{ margin: 0, paddingLeft: 6 }}>
+          <ul style={{ margin: 0, paddingLeft: 0}}>
             {children.map((child) => renderNode(child, depth + 1))}
             {/* folder prompt */}
             {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
