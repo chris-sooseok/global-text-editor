@@ -1,5 +1,6 @@
 {
-  "name": "global-text-editor",
+  "productName": "my editor",
+  "name": "my-editor",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,8 +9,27 @@
     "dev:renderer": "vite",
     "dev:electron": "wait-on tcp:5173 && electron . --inspect=9229 --remote-debugging-port=9222",
     "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
-    "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "build": "vite build"
+    "postinstall": "electron-builder install-app-deps",
+    "build": "vite build",
+    "build:prod": "vite build --config vite.config.prod.ts",
+    "dist:mac": "npm run build:prod && electron-builder --mac --arm64"
+  },
+  "build": {
+    "appId": "com.chriskim.my-editor",
+    "mac": {
+      "target": ["dmg"]
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "directories": {
+      "output": "release"
+    }
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -29,7 +49,6 @@
     "@tiptap/react": "^3.16.0",
     "@tiptap/starter-kit": "^3.16.0",
     "better-sqlite3": "^12.5.0",
-    "electron": "^39.2.7",
     "lodash.throttle": "^4.1.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -38,6 +57,7 @@
     "zustand": "^5.0.10"
   },
   "devDependencies": {
+    "electron": "^39.2.7",
     "@electron/rebuild": "^3.7.2",
     "@eslint/js": "^9.39.1",
     "@tailwindcss/typography": "^0.5.19",
@@ -47,6 +67,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "concurrently": "^9.2.1",
+    "electron-builder": "^26.4.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

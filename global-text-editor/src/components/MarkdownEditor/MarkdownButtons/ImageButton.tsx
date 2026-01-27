@@ -14,12 +14,36 @@ function ImageButton({
   fileId: number
   storagePath: string
 }) {
-  if (!editor) return null
-
   const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+  const [urlInput, setUrlInput] = useState("")
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  async function uploadAndInsert(file: File) {
+    if (!editor) return
+
+    const fileContent = await file.arrayBuffer()
+    const res = await window.api.saveImageAsset(storagePath, fileContent, file.name)
+    if (!res.ok || !res.src) return
+
+    editor.chain().focus().setImage({ src: res.src }).run()
+  }
+
+  function insertUrl() {
+    if (!editor) {
+      setDropdownIsOpen(false)
+      return
+    }
+
+    const src = urlInput.trim()
+    if (!src) return
+
+    editor.chain().focus().setImage({ src }).run()
+    setUrlInput("")
+    setDropdownIsOpen(false)
+  }
+
+  if (!editor) return null
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -44,7 +68,7 @@ function ImageButton({
           const file = e.currentTarget.files?.[0]
           if (!file) return
           void uploadAndInsert(file)
-          e.currentTarget.value = "" // allow re-upload same file
+          e.currentTarget.value = ""
         }}
       />
 
@@ -55,18 +79,41 @@ function ImageButton({
         scrollable={false}
         align="center"
       >
-        {/* URL */}
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault()
-            const src = window.prompt("Image URL")
-            if (!src) return
-            editor.chain().focus().setImage({ src: src.trim() }).run()
-            setDropdownIsOpen(false)
-          }}
-        >
-          Image URL
-        </button>
+        {/* URL input */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.currentTarget.value)}
+            placeholder="Image URL"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                insertUrl()
+              }
+              if (e.key === "Escape") {
+                e.preventDefault()
+                setDropdownIsOpen(false)
+              }
+            }}
+            style={{
+              width: 220,
+              background: "transparent",
+              outline: "none",
+              border: "1px solid rgba(255,255,255,0.18)",
+              borderRadius: 6,
+              padding: "6px 8px",
+            }}
+          />
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              insertUrl()
+            }}
+          >
+            Insert
+          </button>
+        </div>
 
         {/* Upload */}
         <button

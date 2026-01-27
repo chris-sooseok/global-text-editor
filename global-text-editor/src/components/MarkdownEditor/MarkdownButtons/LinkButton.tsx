@@ -25,6 +25,11 @@ function LinkButton({
   if (!editor) return null
 
   function applyHref() {
+    if (!editor) {
+      setDropdownIsOpen(false)
+      return
+    }
+
     const trimmed = href.trim()
 
     if (trimmed === "") {
