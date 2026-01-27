@@ -1,45 +1,15 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, protocol} = require('electron')
 const path = require('node:path')
-const Database = require('better-sqlite3')
+const { migrate, close_db } = require("./db/index.cjs");
 
-let db = null
 
-function getDb() {
-  if (db) return db
-
-  // Where your DB file will live (per-user app data dir)
-  const dbPath = path.join(app.getPath('userData'), 'app.db')
-
-  db = new Database(dbPath)
-  db.pragma('journal_mode = WAL')
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS notes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      text TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-  `)
-
-  return db
-}
-
-function registerIpc() {
-  ipcMain.handle('notes:list', () => {
-    return getDb()
-      .prepare('SELECT id, text, created_at AS createdAt FROM notes ORDER BY id DESC')
-      .all()
-  })
-
-  ipcMain.handle('notes:add', (_evt, text) => {
-    const createdAt = Date.now()
-    const info = getDb()
-      .prepare('INSERT INTO notes (text, created_at) VALUES (?, ?)')
-      .run(text, createdAt)
-
-    return { id: Number(info.lastInsertRowid), text, createdAt }
-  })
-}
+// images
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "gtext",
+    privileges: { standard: true, secure: true, supportFetchAPI: true },
+  },
+])
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -52,19 +22,38 @@ function createWindow() {
     }
   })
 
-  const isDev = !app.isPackaged
+  win.maximize()
 
-  if (isDev) {
-    win.loadURL('http://localhost:5173')
-    // win.webContents.openDevTools()
-  } else {
+  const isProd = app.isPackaged
+
+  if (isProd) {
+    // getAppPath returns project root path
     win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
+  } else {
+    win.loadURL('http://localhost:5173')
+    win.webContents.openDevTools()
   }
 }
 
 app.whenReady().then(() => {
-  registerIpc()
-  getDb() // create db + tables early
+    // ✅ 2) register protocol handler
+  protocol.registerFileProtocol("gtext", (request, callback) => {
+    try {
+      const u = new URL(request.url)
+      // gtext://nodes/<uuid>/assets/<file>
+      const rel = path.posix.join(u.host, u.pathname)
+      const relPath = decodeURIComponent(rel)
+      const absPath = path.join(app.getPath("userData"), relPath)
+      callback({ path: absPath })
+    } catch (err) {
+      console.error("[gtext protocol] failed:", err)
+      callback({ error: -2 })
+    }
+  })
+
+  migrate() // ensure migrating all sqls
+  require("./ipc/fsNodeIpc.cjs")
+  require("./ipc/editorIpc.cjs")
   createWindow()
 })
 
@@ -73,5 +62,5 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
-  if (db) db.close()
+  close_db()
 })
