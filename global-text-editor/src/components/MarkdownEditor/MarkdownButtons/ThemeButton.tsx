@@ -24,17 +24,17 @@ function ThemeButton({fileId }: {fileId: number}) {
         }
       }}
     >
-    {editorTheme === "black"
+    {editorTheme === "black" 
       ? <ToolbarIcon 
+        blackIcon={blackSunIcon}
+        whiteIcon={whiteSunIcon}
+        fileId={fileId}/>
+      : <ToolbarIcon 
         blackIcon={blackMoonIcon}
         whiteIcon={whiteMoonIcon}
         fileId={fileId}
       />
-      : <ToolbarIcon 
-        blackIcon={blackSunIcon}
-        whiteIcon={whiteSunIcon}
-        fileId={fileId}
-      />
+   
     }
 
     </button>
