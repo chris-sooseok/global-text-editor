@@ -12,6 +12,7 @@ import TextAlign from "@tiptap/extension-text-align"
 import Image from "@tiptap/extension-image"
 import Highlight from "@tiptap/extension-highlight"
 import Color from "@tiptap/extension-color"
+import Link from "@tiptap/extension-link"
 import { Markdown } from '@tiptap/markdown'
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { 
@@ -61,7 +62,11 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
         Highlight,
         SuperScript,
         Subscript,
-        TextAlign,
+        Link.configure({
+          openOnClick: true,      // click opens in browser
+          autolink: false,
+          linkOnPaste: true,
+        }),
         Image,
         Markdown,
       ],
@@ -253,14 +258,13 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
       {/* Editor */}
       <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto", 
-          overflowX: "hidden",
-          width: "100%",
-          display: "flex",
-        }}
+      style={{
+        flex: 1,
+        minHeight: 0,
+        overflow: "auto",
+        width: "100%",
+        display: "flex",
+      }}
       >
       {isMarkdownView ? (
         <textarea
@@ -268,16 +272,22 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
           onChange={(e) => onChangeMarkdown(e.currentTarget.value)}
           onFocus={() => switchActiveTab(tabId)}
           style={{
-            flex: 1,
-            width: "100%",
-            minHeight: "100%",
-            background: "transparent",
-            outline: "none",
-            resize: "none",
-            fontSize: "16px",
-            padding: 12,
-            fontFamily: "monospace",
-            whiteSpace: "pre",
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    minHeight: 0,
+    boxSizing: "border-box",
+
+    background: "transparent",
+    outline: "none",
+    resize: "none",
+    fontSize: "16px",
+    padding: 12,
+    fontFamily: "monospace",
+
+    whiteSpace: "pre-wrap",     // ✅ preserves newlines BUT wraps
+    overflowWrap: "anywhere",   // ✅ breaks long tokens/URLs
+    wordBreak: "break-word",    // ✅ extra safety
           }}
         />
       ) : (

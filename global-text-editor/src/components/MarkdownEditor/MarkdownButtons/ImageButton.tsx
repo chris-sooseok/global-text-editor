@@ -20,16 +20,6 @@ function ImageButton({
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  async function uploadAndInsert(file: File) {
-    if (!editor) return
-
-    const fileContent = await file.arrayBuffer()
-
-    const res = await window.api.saveImageAsset(storagePath, fileContent, file.name)
-    if (!res.ok || !res.src) return
-
-    editor.chain().focus().setImage({ src: res.src }).run()
-  }
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>

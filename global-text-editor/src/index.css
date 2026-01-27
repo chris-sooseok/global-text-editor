@@ -68,3 +68,7 @@ body {
   margin: 0;
 }
 
+/* link */
+.normal-editor a {
+  text-decoration: underline;
+}
