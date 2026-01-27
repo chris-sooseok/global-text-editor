@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import EditorToolbar from "./EditorToolbar"
+import EditorToolbar from "./MarkdownToolbar"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
 import { useEditor } from "@tiptap/react"
@@ -45,9 +45,6 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
   /* Editor Setup */
     const editor = useEditor({
       extensions: [
-        FontFamily,
-        TextStyle,
-        FontSize,
         // List Kit already has these extensions
         StarterKit.configure({
           bulletList: false,
