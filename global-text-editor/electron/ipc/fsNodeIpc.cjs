@@ -89,9 +89,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
 })
 
 ipcMain.handle("fsNodes:rename", (_event, payload) => {
+  if (!valididateName(payload.newName)) return { ok: false }
+
   const id = payload.id
   const newName = payload.newName
-  if (!valididateName(newName)) return { ok: false }
   db.prepare(`
     UPDATE fsNode
     SET name = ?
@@ -102,9 +103,9 @@ ipcMain.handle("fsNodes:rename", (_event, payload) => {
 
 ipcMain.handle("fsNodes:remove", (_event, payload) => {
   const removeNode = payload.removeNode
-  const parentId = removeNode.parentId
-  const type = removeNode.type
   const id = removeNode.id
+  const type = removeNode.type
+  const parentId = removeNode.parentId  
 
   const tsx = db.transaction(() => {
     /** if file
@@ -121,31 +122,22 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
     }
 
     /** if folder
-     * 1. get storage path of all its child
-     * 2. cascade delete all children
-     * 3. delete disk files of all children
-     * 4. reorder siblings
+     * 1. if folder has child node, no deletion
+     * 2. otherwise, delete the folder
+     * 3. reorder siblings
      */
-    const storageRows = db
+    const hasChild = db
       .prepare(`
-        WITH RECURSIVE subtree(id) AS (
-          SELECT id FROM fsNode WHERE id = ?
-          UNION ALL
-          SELECT f.id
-          FROM fsNode f
-          JOIN subtree s ON f.parent_id = s.id
-        )
-        SELECT storage_path AS storagePath
+        SELECT 1 AS hit
         FROM fsNode
-        WHERE id IN (SELECT id FROM subtree)
-          AND storage_path IS NOT NULL
+        WHERE parent_id = ?
+        LIMIT 1
       `)
-      .all(id)
+      .get(id)
+
+    if (hasChild) return { ok: false, message: "Folder is not empty" }
+    
     db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
-    for (const r of storageRows) {
-      const abs = path.join(app.getPath("userData"), r.storagePath)
-      fs.rmSync(abs, { recursive: true, force: true })
-    }
     reorderSiblings(parentId)
   })
 
@@ -166,38 +158,42 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
   const newParentId = payload.newParentId
   const dropPosition = payload.dropPosition
 
-  // case 2: moving into folder that the node doesn't belong to
-  // case 5: if file is moved into lower-level folder
-  if (targetNode.type === 'folder' && dropPosition === 'inside' && node.parentId !== newParentId) {
+  // case 2: moving into sibling folder that the node (file/folder) doesn't belong to
+  // case 5: file moving into lower-level folder
+  if (targetNode.type === 'folder' && dropPosition === 'inside' &&
+      node.parentId !== newParentId && targetNode.id === newParentId) {
 
     // case 3: folder cannot be moved into its own descendant
     if (node.type === "folder") {
       const hit = db.prepare(`
-        WITH RECURSIVE subtree(id) AS (
-          SELECT id FROM fsNode WHERE id = ?
+        -- build list of childNode ids
+        WITH RECURSIVE childNodes(id) AS (
+          SELECT id FROM fsNode WHERE id = ? -- initial starting node
           UNION ALL
           SELECT f.id
           FROM fsNode f
-          JOIN subtree s ON f.parent_id = s.id
+          -- find and join nodes that has parent_id that matches to ids in the list
+          JOIN childNodes c ON f.parent_id = c.id
         )
         SELECT 1 AS hit
-        FROM subtree
+        FROM childNodes
         WHERE id = ?
         LIMIT 1
       `).get(node.id, newParentId)
-
       if (hit) return { ok: false }
     }
-    const nextSortOrder = getNextSortOrder(db, newParentId)
+    // when dropped into a folder, append it to the end
+    const nextSortOrder = getNextSortOrder(newParentId)
     const oldParentId = node.parentId
 
     const tsx = db.transaction(() => {
+      // append to new parent id
       db.prepare(`
         UPDATE fsNode
         SET parent_id = ?, sort_order = ?
         WHERE id = ?
       `).run(newParentId, nextSortOrder, node.id)
-
+      // reorder of prev folder 
       reorderSiblings(oldParentId)
     })
     try {
@@ -209,7 +205,7 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
     }
   }
 
-  // case 6: moved into same parent, but order is changed
+  // case 6: moved position under the same parent, and order is changed
   if (node.parentId === newParentId && targetNode.parentId === newParentId &&
      (dropPosition === "before" || dropPosition === "after")) {
     const parentid = newParentId
@@ -219,46 +215,44 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
       WHERE parent_id IS ?
       ORDER BY sort_order, id
     `).all(parentid).map(r => r.id)
-
+    
     const filtered = siblingIds.filter(id => id !== node.id)
-    const targetIdx = filtered.indexOf(targetNode.id)
+    const targetNodeIdx = filtered.indexOf(targetNode.id)
 
-    const insertIdx = dropPosition === "before" ? targetIdx : targetIdx + 1
-    // insert node into filtered list
+    // compute position around the target
+    const insertIdx = dropPosition === "before" ? targetNodeIdx : targetNodeIdx + 1
+    // insert node before or next to target
     filtered.splice(insertIdx, 0, node.id)
 
     const tsx = db.transaction(() => {
+      // update order based on filtered list
       const prepUpdate = db.prepare(`
         UPDATE fsNode
         SET sort_order = ?
         WHERE id = ?
       `)
-
-      // simple 1..N
       for (let i = 0; i < filtered.length; i++) {
         prepUpdate.run(i + 1, filtered[i])
       }
     })
-
     try {
       tsx()
       return { ok: true}
     } catch (err) {
       console.error("[fsNodes:move] failed:", err)
       return {ok: false}
-    }
-    
+    } 
   }
 
-  // case 7: moved into differnt parent, and dropPosition is also specified
+  // case 7: moved into folder, and dropPosition is also specified within the folder
   if (node.parentId !== newParentId && targetNode.parentId === newParentId 
     && (dropPosition === "before" || dropPosition === "after")) {
-
-    const oldParentId = node.parentId
+  
     const parentId = newParentId
-
+    const oldParentId = node.parentId
+    
     const tsx = db.transaction(() => {
-      // move parent first
+      // update parent_id first
       db.prepare(`
         UPDATE fsNode
         SET parent_id = ?
@@ -272,13 +266,14 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
         ORDER BY sort_order, id
       `).all(parentId).map(r => r.id)
 
-
       const filtered = siblingIds.filter(id => id !== node.id)
-      const targetIdx = filtered.indexOf(targetNode.id)
-      const insertIdx = dropPosition === "before" ? targetIdx : targetIdx + 1
-      // insert node into filtered list
+      const targetNodeIdx = filtered.indexOf(targetNode.id)
+      // compute position around the target
+      const insertIdx = dropPosition === "before" ? targetNodeIdx : targetNodeIdx + 1
+      // insert node before or next to target
       filtered.splice(insertIdx, 0, node.id)
 
+      // reorder nodes under new folder
       const prepUpdate = db.prepare(`
         UPDATE fsNode
         SET sort_order = ?
@@ -289,6 +284,7 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
         prepUpdate.run(i + 1, filtered[i])
       }
 
+      // reorder nodes under prev folder
       const oldIds = db.prepare(`
         SELECT id
         FROM fsNode
