@@ -326,20 +326,19 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
           uuid,
           type, 
           parent_id AS parentId,
+          is_root AS isRoot,
           name,
           storage_path AS storagePath,
-          mime_type AS mimeType,
-          file_type AS fileType,
           created_at AS createdAt,
           updated_at AS updatedAt,
           sort_order AS sortOrder
-        FROM fsNode
-        -- sort ascending order
-        -- sort based on sort_order within each parent group
+        FROM fsNode 
+        WHERE id != 0 -- filter seed node
         ORDER BY parent_id, sort_order
-        `)
-        .all()
-     return { ok: true, rows}
+      `)
+      .all()
+
+    return { ok: true, rows }
 
   } catch (err) {
     console.error('[fsNode:fetch] failed:', err)

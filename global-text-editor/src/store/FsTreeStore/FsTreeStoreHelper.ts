@@ -5,7 +5,7 @@ export function makeFolderNode(r: FsNodeRow): FolderNode {
     id: r.id,
     uuid: r.uuid,
     type: "folder",
-    parentId: r.parentId ?? null,
+    parentId: r.parentId,
     isRoot: r.isRoot,
     name: r.name,
     createdAt: r.createdAt,
@@ -20,7 +20,7 @@ export function makeFileNode(r: FsNodeRow): FileNode {
     id: r.id,
     uuid: r.uuid,
     type: "file",
-    parentId: r.parentId ?? null,
+    parentId: r.parentId,
     isRoot: r.isRoot,
     name: r.name,
     storagePath: r.storagePath,
@@ -58,4 +58,8 @@ export function buildFsTree(nodeRows: FsNodeRow[]): {
   }
 
   return { roots, nodes }
+}
+
+export function buildRootNodes(nodeRows: FsNodeRow[]) {
+  
 }
