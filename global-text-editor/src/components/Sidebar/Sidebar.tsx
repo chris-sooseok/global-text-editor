@@ -419,7 +419,7 @@ function Sidebar() {
           ) : (
             <ul style={{ 
               margin: 4,
-              overflow: 'hidden',
+              overflowX: 'hidden',
             }}>
               {/* FsNodes Rendering */}
               {roots.map((root) => renderNode(root, 0))}
@@ -435,6 +435,7 @@ function Sidebar() {
     <>
       {/* Sidebar Container */}
       <aside style={{ 
+        height: "100%",
         padding: 12, 
         display: 'flex', 
         flexDirection: 'column', 
@@ -484,7 +485,16 @@ function Sidebar() {
         </div>
 
         {/* FsNodes Container Rendering */}
-        {renderFsTree()}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+          }}
+        >
+          {renderFsTree()}
+        </div>
 
         {/* Dragging Node Name */}
         {dragState ? (

@@ -1,6 +1,10 @@
 const { app, BrowserWindow, protocol} = require('electron')
 const path = require('node:path')
-const { migrate, close_db } = require("./db/index.cjs");
+
+if (!app.isPackaged) {
+  const devUserData = path.join(app.getPath("appData"), `${app.getName()}-dev`)
+  app.setPath("userData", devUserData)
+}
 
 
 // images
@@ -35,7 +39,13 @@ function createWindow() {
   }
 }
 
+let close_db = null
+
 app.whenReady().then(() => {
+
+    const db = require("./db/index.cjs")
+    db.migrate()
+    close_db = db.close_db
     // ✅ 2) register protocol handler
   protocol.registerFileProtocol("gtext", (request, callback) => {
     try {
@@ -51,7 +61,6 @@ app.whenReady().then(() => {
     }
   })
 
-  migrate() // ensure migrating all sqls
   require("./ipc/fsNodeIpc.cjs")
   require("./ipc/editorIpc.cjs")
   createWindow()
