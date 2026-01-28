@@ -45,7 +45,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   const tsx = db.transaction(() => {
     info = db
       .prepare(`
-        INSERT INTO fsNode (uuid, type, parent_id, isRoot, name, storage_path, created_at, updated_at, sort_order)
+        INSERT INTO fsNode (uuid, type, is_root, parent_id, name, storage_path, created_at, updated_at, sort_order)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(uuid, type, isRoot, parentId, name, storagePath, createdAt, createdAt, nextSortOrder)
@@ -70,8 +70,8 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         id: lastInsertRowid,
         uuid,
         type,
-        parentId,
         isRoot,
+        parentId,
         name,
         storagePath,
         createdAt: now,
@@ -322,8 +322,8 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
           id,
           uuid,
           type, 
-          parent_id AS parentId,
           is_root AS isRoot,
+          parent_id AS parentId,
           name,
           storage_path AS storagePath,
           created_at AS createdAt,
