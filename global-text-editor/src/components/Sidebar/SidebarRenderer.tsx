@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
+import settingIcon from 'assets/Sidebar/icons8-settings-white-96.png'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
 
@@ -153,12 +154,18 @@ function SidebarRenderer() {
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-end",
-          padding: "8px 12px",
+          padding: "0px 10px",
           flexShrink: 0,
           borderTop: "2px solid rgba(255, 255, 255, 0.15)",
         }}
       >
-        <button type="button" tabIndex={-1}>Btn B</button>
+        <button type="button" tabIndex={-1}>
+          <ToolbarIcon 
+            whiteIcon={settingIcon}
+            onlyWhiteIcon={true}
+            size={20}
+          />
+        </button>
       </div>
 
       {/* only when not collapsed, allow dragging */}
