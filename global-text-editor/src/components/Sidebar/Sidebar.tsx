@@ -436,25 +436,23 @@ function Sidebar() {
       {/* Sidebar Container */}
       <aside style={{ 
         height: "100%",
-        padding: 12, 
+        paddingLeft: "10px",
         display: 'flex', 
         flexDirection: 'column', 
         overflow: 'hidden',
-        gap: 12,
       }}>
         {/* Sidebar Toolbar Container */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            minHeight: "35px",
+            paddingRight: "10px",
+            justifyContent: 'flex-end',
             gap: 6,
           }}
         >
-          {/* left text */}
-          <div style={{ fontWeight: 600, fontSize: 20 }}>
-            Files
-          </div>
+
           {/* right icons */}
           <div 
             style={{ 

@@ -6,7 +6,6 @@ import ToolbarIcon from 'shared/ToolbarIcon'
 
 const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
-const SIDEBAR_MAX_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MAX_WIDTH)
 const SIDEBAR_COLLAPSED_WIDTH = Number(import.meta.env.VITE_SIDEBAR_COLLAPSED_WIDTH)
 
 const SIDEBAR_WIDTH = String(import.meta.env.VITE_SIDEBAR_WIDTH)
@@ -38,7 +37,7 @@ function SidebarRenderer() {
       const draggingX = e.clientX - startXRef.current
       const nextWidth = startWidthRef.current + draggingX
       // width limit
-      const clamped = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, nextWidth))
+      const clamped = Math.max(SIDEBAR_MIN_WIDTH, nextWidth)
   
       setSidebarWidthHandler(clamped)
     }
@@ -108,11 +107,18 @@ function SidebarRenderer() {
           height: 45,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
-          padding: '8px 12px',
+          justifyContent: sidebarCollapsed ? "flex-end" : "space-between",
+          padding: '0px 10px',
           flexShrink: 0,
         }}
       >
+
+        {!sidebarCollapsed && (
+          <div style={{ fontWeight: 600, fontSize: 20 }}>
+            Files
+          </div>
+        )}
+
         <button
           type="button"
           onClick={setSidebarCollapsedHandler} 
@@ -138,6 +144,21 @@ function SidebarRenderer() {
         >
           <Sidebar />
         </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div
+        style={{
+          height: 45,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          padding: "8px 12px",
+          flexShrink: 0,
+          borderTop: "2px solid rgba(255, 255, 255, 0.15)",
+        }}
+      >
+        <button type="button" tabIndex={-1}>Btn B</button>
       </div>
 
       {/* only when not collapsed, allow dragging */}
