@@ -2,7 +2,6 @@ const { ipcMain, app } = require("electron")
 const path = require("node:path")
 const fs = require("node:fs")
 const { randomUUID } = require("node:crypto")
-const { pathToFileURL } = require("node:url")
 const { connect_db } = require("../db/index.cjs")
 
 const db = connect_db()

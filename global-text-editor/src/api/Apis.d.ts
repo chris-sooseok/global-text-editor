@@ -31,8 +31,6 @@ declare global {
         type: string,
         parentId: number | null,
         name: string,
-        mimeType: string | null,
-        fileType: string | null
       ): Promise<CreateFsNodeRes>
       renameFsNode(id: number, newName: string): Promise<{ok: true}>
       removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>

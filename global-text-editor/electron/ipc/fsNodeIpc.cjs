@@ -23,11 +23,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   const type = payload.type
   const name = payload.name  
   const parentId = payload.parentId ?? null
+  const isRoot = parentId ? 0 : 1
   const now = Date.now()
   const nextSortOrder = getNextSortOrder(db, parentId)
   // file
-  const mimeType = payload.mimeType ?? null
-  const fileType = payload.fileType ?? null
   const storagePath = `nodes/${uuid}`
   const absStoragePath = path.join(app.getPath("userData"), storagePath)
   let info
@@ -47,10 +46,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   const tsx = db.transaction(() => {
     info = db
       .prepare(`
-        INSERT INTO fsNode (uuid, type, parent_id, name, storage_path, mime_type, file_type, created_at, updated_at, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO fsNode (uuid, type, parent_id, isRoot, name, storage_path, created_at, updated_at, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
-      .run(uuid, type, parentId, name, storagePath, mimeType, fileType, now, now, nextSortOrder)
+      .run(uuid, type, parentId, isRoot, name, storagePath, now, now, nextSortOrder)
       
     if (type === "file") {
       db.prepare(`
@@ -72,11 +71,11 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         uuid,
         type,
         parentId,
+        isRoot,
         name,
-        createdAt: now,
         storagePath,
-        mimeType,
-        fileType,
+        createdAt: now,
+        updatedAt: now,
         sortOrder: nextSortOrder
       },
       }
@@ -85,7 +84,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
       fs.rmSync(absStoragePath, { recursive: true, force: true })
     }
     console.error('[fsNodes:create] failed:', err)
-    return { ok: false, message: 'Failed to create node' }
+    return { ok: false, message: 'Failed to create fsNode' }
   } 
 })
 

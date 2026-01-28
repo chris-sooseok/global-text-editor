@@ -30,10 +30,8 @@ export async function submitNewNodePromptHandler(
     const name = newNodePromptInputRef.current.value
     const parentId = selectedFolder?.id ?? null
     // ! Leaving memeType and fileType here for legacy
-    const mimeType = null
-    const fileType = (newNodeType === 'file' ? "normal" : null)
-    
-    const res = await window.api.createFsNode(newNodeType, parentId, name, mimeType, fileType)
+
+    const res = await window.api.createFsNode(newNodeType, parentId, name)
 
     if (res.ok) {
       const newNode: FsNodeRow = res.row
