@@ -1,6 +1,7 @@
-
-const validFileTypes = ['normal', 'markdown', 'canvas', 'page', 'diagram']
-
+/**
+ * Decides which sortOrder next node should get under some parentId
+ * If no node exists yet, start with sort_order = 1
+ */
 function getNextSortOrder(db, parentId) {
   const row = db
     .prepare(`
@@ -8,7 +9,7 @@ function getNextSortOrder(db, parentId) {
       FROM fsNode
       WHERE parent_id IS ?
     `)
-    .get(parentId ?? null)
+    .get(parentId)
 
   return (Number(row?.maxOrder) || 0) + 1
 }
@@ -22,7 +23,7 @@ function reorderSiblings(db, parentId) {
       WHERE parent_id IS ?
       ORDER BY sort_order, id
     `)
-    .all(parentId ?? null)
+    .all(parentId)
 
   const prepUpdate = db.prepare(`
     UPDATE fsNode
@@ -47,26 +48,12 @@ function validateType(type) {
   return type === "folder" || type === "file"
 }
 
-// file must have valid file type
-function validateFile(type, fileType) {
-  if (type === 'file' && !validFileTypes.includes(fileType)) false
-  return true
-}
-
-// folder must not have any mimeType or fileType
-function validateFolder(type, mimeType, fileType) {
-  if (type === "folder" && (!mimeType || !fileType)) false
-  return true 
-}
-
 
 module.exports = {
   getNextSortOrder,
   reorderSiblings,
   valididateName,
   validateType,
-  validateFolder,
-  validateFile,
 }
 
 

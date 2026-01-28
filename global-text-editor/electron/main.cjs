@@ -1,21 +1,37 @@
 const { app, BrowserWindow, protocol} = require('electron')
 const path = require('node:path')
 
-if (!app.isPackaged) {
+/** Eelectron Setup Flow
+ * When Electron launches, it starts the main process (node.js) environment, and
+ * runs main entry file (main.cjs) from top bottom order like normal Node
+ * 
+ * Once main entry file is loaded,
+ * 1. Sets up userData path as neccessary
+ * 2. Do early Electron configuration that must exist before app is ready
+ *    (ex: protocol.registerSchemesAsPrivileged for custom schemes).
+ * 3. Register event handlers
+ *  1. whenReady callback
+ *  2. window close callback
+ *  3. quit callback
+ *  
+ * When app becomes ready (whenReady callback runs):
+ * - Initialize services (db.migrate, IPC handlers, protocol handlers)
+ * - Create BrowserWindow and load UI
+ */
+
+const isDev = !app.isPackaged
+
+/** If Dev, set up dev userData path */
+if (isDev) {
   const devUserData = path.join(app.getPath("appData"), `${app.getName()}-dev`)
   app.setPath("userData", devUserData)
 }
 
+// load db after userData path is setup
+const db = require("./db/index.cjs")
 
-// images
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: "gtext",
-    privileges: { standard: true, secure: true, supportFetchAPI: true },
-  },
-])
-
-function createWindow() {
+/** When electron config is complete, render window */
+function createBrowserWindow() {
   const win = new BrowserWindow({
     width: 900,
     height: 600,
@@ -25,28 +41,29 @@ function createWindow() {
       nodeIntegration: false
     }
   })
-
   win.maximize()
-
-  const isProd = app.isPackaged
-
-  if (isProd) {
-    // getAppPath returns project root path
-    win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
-  } else {
+  if (isDev) {
+    // load React into the browser window
     win.loadURL('http://localhost:5173')
     win.webContents.openDevTools()
+  } else {
+    // getAppPath returns project root path
+    win.loadFile(path.join(app.getAppPath(), 'dist', 'index.html'))
   }
 }
 
-let close_db = null
+/* Image Protocol Handler */
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "gtext",
+    privileges: { standard: true, secure: true, supportFetchAPI: true },
+  },
+])
 
 app.whenReady().then(() => {
+  db.migrate()
 
-    const db = require("./db/index.cjs")
-    db.migrate()
-    close_db = db.close_db
-    // ✅ 2) register protocol handler
+    //  register protocol handler
   protocol.registerFileProtocol("gtext", (request, callback) => {
     try {
       const u = new URL(request.url)
@@ -63,7 +80,7 @@ app.whenReady().then(() => {
 
   require("./ipc/fsNodeIpc.cjs")
   require("./ipc/editorIpc.cjs")
-  createWindow()
+  createBrowserWindow()
 })
 
 app.on('window-all-closed', () => {
@@ -71,5 +88,5 @@ app.on('window-all-closed', () => {
 })
 
 app.on('will-quit', () => {
-  close_db()
+  db.close_db()
 })

@@ -9,8 +9,6 @@ const {
   reorderSiblings,
   valididateName,
   validateType,
-  validateFolder,
-  validateFile,
 } = require("./fsNodeIpcHelper.cjs")
 
 
@@ -22,18 +20,23 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   const uuid = randomUUID()
   const type = payload.type
   const name = payload.name  
-  const parentId = payload.parentId ?? null
-  const isRoot = parentId ? 0 : 1
+  const parentId = payload.parentId
+  const isRoot = payload.parentId === 0 ? 1 : 0
   const now = Date.now()
   const nextSortOrder = getNextSortOrder(db, parentId)
   // file
-  const storagePath = `nodes/${uuid}`
-  const absStoragePath = path.join(app.getPath("userData"), storagePath)
+  let storagePath
+  let absStoragePath
+  if (type === 'file') {
+    storagePath = `nodes/${uuid}`
+    absStoragePath = path.join(app.getPath("userData"), storagePath)
+  } else {
+    storagePath = ''
+  }
+
   let info
   if (!valididateName(name)) return { ok: false, message: 'Name is invalid'}
   if (!validateType(type)) return { ok: false, message: "Type is invalid"}
-  if (!validateFile(type, fileType)) return { ok: false, message: "Invalid file"}
-  if (!validateFolder(type, mimeType, fileType)) return { ok: false, message: "Invalid folder"}
   
   /** if file
    * 1. store file in db
