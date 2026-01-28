@@ -1,8 +1,12 @@
+const { connect_db } = require('../db/index.cjs')
+
+const db = connect_db()
+
 /**
  * Decides which sortOrder next node should get under some parentId
  * If no node exists yet, start with sort_order = 1
  */
-function getNextSortOrder(db, parentId) {
+function getNextSortOrder(parentId) {
   const row = db
     .prepare(`
       SELECT MAX(sort_order) AS maxOrder
@@ -15,7 +19,7 @@ function getNextSortOrder(db, parentId) {
 }
 
 // reorder siblings of a deleting node
-function reorderSiblings(db, parentId) {
+function reorderSiblings(parentId) {
   const siblings = db
     .prepare(`
       SELECT id

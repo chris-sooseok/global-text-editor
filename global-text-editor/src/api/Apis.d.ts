@@ -12,7 +12,7 @@ type FetchNormalEditorRes =
     | { ok: true; fileContent: string }
     | { ok: false; message: string }
 
-type MoveFsNodePayload = {node: FsNode, targetNode: FsNode, newParentId: number | null,
+type MoveFsNodePayload = {node: FsNode, targetNode: FsNode, newParentId: number,
   dropPosition: "before" | "inside" | "after"}
 
 type SaveNormalEditorRes =
@@ -26,12 +26,8 @@ type loadFileConfigRes =
 declare global {
   interface Window {
     api: {
-      // FsNodes Apis
-      createFsNode(
-        type: string,
-        parentId: number | null,
-        name: string,
-      ): Promise<CreateFsNodeRes>
+      /* FsNode Apis */
+      createFsNode(type: string, parentId: number, name: string): Promise<CreateFsNodeRes>
       renameFsNode(id: number, newName: string): Promise<{ok: true}>
       removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>
       moveFsNode(
@@ -42,7 +38,7 @@ declare global {
       ): Promise<{ok: boolean}>
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
-      // Editors Apis
+      /* Editor Apis */
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
       saveFileContent(fileId: number, storagePath: string, fileContent: string, originTabId: string): Promise<SaveNormalEditorRes>
       saveImageAsset(
@@ -50,7 +46,6 @@ declare global {
         fileContent: ArrayBuffer,
         originalName: string
       ): Promise<{ ok: boolean; src?: string; filename?: string; message?: string }>
-
       
       // onFileContentUpdated(handler: (payload: { 
       //     fileId: number
@@ -58,12 +53,9 @@ declare global {
       //     originTabId: string 
       //   }) => void): () => void
 
-
-      // Editor Config
+      /* Editor Config Apis */
       loadFileConfig(id: number): Promise<loadFileConfigRes>
       changeEditorTheme(id: number, theme: EditorTheme): Promise<{ok: boolean}>
-
-      exportToPDF(): Promise<>
     }
   }
 }

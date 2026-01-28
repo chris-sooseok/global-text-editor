@@ -14,7 +14,8 @@ async function invokeLogged(channel, payload) {
 }
 
 contextBridge.exposeInMainWorld('api', {
-  /* Sidebar Apis */
+
+  /* FsNode Apis */
   createFsNode: (type, parentId, name) =>
     invokeLogged('fsNodes:create', { type, parentId, name}),
   renameFsNode: (id, newName) =>
@@ -32,8 +33,6 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('editors:saveContent', { fileId, storagePath, fileContent, originTabId}),
   saveImageAsset: (storagePath, fileContent, originalName) =>
     invokeLogged("editors:saveImageAsset", { storagePath, fileContent, originalName }),
-
-
 
   // onFileContentUpdated: (handler) => {
   //   const listener = (_e, payload) => handler(payload)

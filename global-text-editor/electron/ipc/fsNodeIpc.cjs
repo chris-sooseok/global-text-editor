@@ -16,35 +16,31 @@ const db = connect_db()
 
 ipcMain.handle('fsNodes:create', (_event, payload) => {
 
-  // folder&file
+  if (!valididateName(payload.name)) return { ok: false, message: 'Name is invalid'}
+  if (!validateType(payload.type)) return { ok: false, message: "Type is invalid"}
+
   const uuid = randomUUID()
   const type = payload.type
-  const name = payload.name  
-  const parentId = payload.parentId
   const isRoot = payload.parentId === 0 ? 1 : 0
-  const now = Date.now()
-  const nextSortOrder = getNextSortOrder(db, parentId)
-  // file
-  let storagePath
+  const parentId = payload.parentId
+  const name = payload.name  
+  let storagePath = ''
+  const createdAt = Date.now()
+  const nextSortOrder = getNextSortOrder(parentId)
+
+  /** if file
+   * 1. set storagePath
+   * 2. set absStoragePath to create disk path
+   * 3. create file config
+  */
   let absStoragePath
   if (type === 'file') {
     storagePath = `nodes/${uuid}`
     absStoragePath = path.join(app.getPath("userData"), storagePath)
-  } else {
-    storagePath = ''
   }
 
   let info
-  if (!valididateName(name)) return { ok: false, message: 'Name is invalid'}
-  if (!validateType(type)) return { ok: false, message: "Type is invalid"}
-  
-  /** if file
-   * 1. store file in db
-   * 2. create file config
-   * 3. create disk path
-   * 
-   * if folder
-   * 1. simply store folder in db */
+  let lastInsertRowid
 
   const tsx = db.transaction(() => {
     info = db
@@ -52,25 +48,26 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         INSERT INTO fsNode (uuid, type, parent_id, isRoot, name, storage_path, created_at, updated_at, sort_order)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
-      .run(uuid, type, parentId, isRoot, name, storagePath, now, now, nextSortOrder)
-      
+      .run(uuid, type, isRoot, parentId, name, storagePath, createdAt, createdAt, nextSortOrder)
+    
+    lastInsertRowid = Number(info.lastInsertRowid)
+
     if (type === "file") {
       db.prepare(`
         INSERT INTO fileConfig (file_id, editor_theme)
         VALUES (?, ?)
-      `).run(Number(info.lastInsertRowid), "black")
-
+      `).run(lastInsertRowid, "black")
       fs.mkdirSync(absStoragePath, { recursive: true})
       fs.writeFileSync(path.join(absStoragePath, "index.json"), "", { flag: "wx" })
     }
-
   })
+  
   try {
     tsx()
     return {
       ok: true,
       row: {
-        id: Number(info.lastInsertRowid),
+        id: lastInsertRowid,
         uuid,
         type,
         parentId,
@@ -119,7 +116,7 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
       db.prepare(`DELETE FROM fsNode WHERE id = ?`).run(id)
       const abs = path.join(app.getPath("userData"), removeNode.storagePath)
       fs.rmSync(abs, { recursive: true, force: true })
-      reorderSiblings(db, parentId)
+      reorderSiblings(parentId)
       return
     }
 
@@ -149,7 +146,7 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
       const abs = path.join(app.getPath("userData"), r.storagePath)
       fs.rmSync(abs, { recursive: true, force: true })
     }
-    reorderSiblings(db, parentId)
+    reorderSiblings(parentId)
   })
 
   try {
@@ -201,7 +198,7 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
         WHERE id = ?
       `).run(newParentId, nextSortOrder, node.id)
 
-      reorderSiblings(db, oldParentId)
+      reorderSiblings(oldParentId)
     })
     try {
       tsx()

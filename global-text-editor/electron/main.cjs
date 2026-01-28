@@ -1,5 +1,6 @@
 const { app, BrowserWindow, protocol} = require('electron')
 const path = require('node:path')
+const db = require("./db/index.cjs")
 
 /** Eelectron Setup Flow
  * When Electron launches, it starts the main process (node.js) environment, and
@@ -26,9 +27,6 @@ if (isDev) {
   const devUserData = path.join(app.getPath("appData"), `${app.getName()}-dev`)
   app.setPath("userData", devUserData)
 }
-
-// load db after userData path is setup
-const db = require("./db/index.cjs")
 
 /** When electron config is complete, render window */
 function createBrowserWindow() {
