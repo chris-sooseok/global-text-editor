@@ -22,14 +22,12 @@ export async function submitNewNodePromptHandler(
   const { insertFsNodeRow } = FsTreeStore.getState()
 
   try {
-
     if (!newNodeType || !newNodePromptInputRef.current) return
-
     if (newNodePromptInputRef.current.value.trim() === '') return
-  
+
     const name = newNodePromptInputRef.current.value
-    const parentId = selectedFolder?.id ?? null
-    // ! Leaving memeType and fileType here for legacy
+    //? if selectedFolder is null, create it at the root level
+    const parentId = selectedFolder?.id ?? 0
 
     const res = await window.api.createFsNode(newNodeType, parentId, name)
 
