@@ -61,7 +61,7 @@ ipcMain.handle("editors:loadContent", (_event, payload) => {
 })
 
 ipcMain.handle('editors:saveContent', (_event, payload) => {
-  const { fileId, storagePath, fileContent, originTabId } = payload
+  const { storagePath, fileContent } = payload
   
   try {
     const dirPath = path.join(app.getPath("userData"), storagePath)

@@ -74,8 +74,8 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         parentId,
         name,
         storagePath,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: createdAt,
+        updatedAt: createdAt,
         sortOrder: nextSortOrder
       },
       }
@@ -150,22 +150,25 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
   }
 })
 
-
+/** Rules
+ * 1. Files can literally go anywhere 
+ *  - order update under its parent
+ *  - move into lower folder
+ *  - drop and order under another folder
+ * 
+ * 2. Folders can't either be moved or positioned in any of its child
+ */
 ipcMain.handle("fsNodes:move", (_event, payload) => {
 
+  debugger
   const node = payload.node
   const targetNode = payload.targetNode
   const newParentId = payload.newParentId
   const dropPosition = payload.dropPosition
 
-  // case 2: moving into sibling folder that the node (file/folder) doesn't belong to
-  // case 5: file moving into lower-level folder
-  if (targetNode.type === 'folder' && dropPosition === 'inside' &&
-      node.parentId !== newParentId && targetNode.id === newParentId) {
-
-    // case 3: folder cannot be moved into its own descendant
-    if (node.type === "folder") {
-      const hit = db.prepare(`
+  // Under any conditions, folder node can't be positioned anywhere in its children
+  if (node.type === 'folder') {
+    const hit = db.prepare(`
         -- build list of childNode ids
         WITH RECURSIVE childNodes(id) AS (
           SELECT id FROM fsNode WHERE id = ? -- initial starting node
@@ -180,8 +183,14 @@ ipcMain.handle("fsNodes:move", (_event, payload) => {
         WHERE id = ?
         LIMIT 1
       `).get(node.id, newParentId)
-      if (hit) return { ok: false }
-    }
+    if (hit) return { ok: false }
+  }
+
+ 
+  // Positioning inside folder
+  if (targetNode.type === 'folder' && dropPosition === 'inside' &&
+      node.parentId !== newParentId && targetNode.id === newParentId) {
+
     // when dropped into a folder, append it to the end
     const nextSortOrder = getNextSortOrder(newParentId)
     const oldParentId = node.parentId

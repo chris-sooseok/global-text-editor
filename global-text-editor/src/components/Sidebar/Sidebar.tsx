@@ -480,38 +480,38 @@ function Sidebar() {
               />
             </button>
           </div>
-        </div>
+      </div>
 
-        {/* FsNodes Container Rendering */}
+      {/* FsNodes Container Rendering */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {renderFsTree()}
+      </div>
+
+      {/* Dragging Node Name */}
+      {dragState ? (
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            overflowX: "hidden",
+            position: "fixed",
+            left: dragState.x + 12,
+            top: dragState.y + 12,
+            pointerEvents: "none",
+            zIndex: 99999,
+            padding: "4px 8px",
+            background: "transparent",
+            fontSize: fileFontSize,
+            whiteSpace: "nowrap",
           }}
         >
-          {renderFsTree()}
+          {dragState.draggingNode.name}
         </div>
-
-        {/* Dragging Node Name */}
-        {dragState ? (
-          <div
-            style={{
-              position: "fixed",
-              left: dragState.x + 12,
-              top: dragState.y + 12,
-              pointerEvents: "none",
-              zIndex: 99999,
-              padding: "4px 8px",
-              background: "transparent",
-              fontSize: fileFontSize,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {dragState.draggingNode.name}
-          </div>
-        ) : null}
+      ) : null}
       </aside>
     </>
   )

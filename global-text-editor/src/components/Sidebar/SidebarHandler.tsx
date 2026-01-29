@@ -164,11 +164,7 @@ export function renderNodeHandler(
 
 
   return (
-      <li key={node.id}
-        style={{
-          paddingLeft: 0
-        }}
-      >
+      <li key={node.id}>
         {/* FsNode */}
         <div 
           tabIndex={-1}
@@ -176,8 +172,10 @@ export function renderNodeHandler(
           style={{ 
             cursor: 'pointer',
             borderRadius: 2,
-            marginLeft: depth * 23,
-            padding: "2px 0px",
+            marginLeft: (depth === 0 ? "2px" : depth * 23),
+            marginRight: "2px",
+            marginTop: "2px",
+            marginBottom: "2px",
             // Highlight Styles
             fontWeight: (node.type === 'folder' 
               ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
