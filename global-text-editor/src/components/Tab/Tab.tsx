@@ -42,7 +42,6 @@ function Tab({tabId}: {tabId: string}) {
    * In that case, I need some strategy to normalize data
   */
 
-
   return (
   <>
   {/* Tab and FileEditor Container */}
@@ -172,7 +171,7 @@ function Tab({tabId}: {tabId: string}) {
             setDropdownIsOpen(false)
           }}
         >
-          Split right
+          {activeTabId === 'tab-1' ? "Split Right" : "Split Left"}
         </button>
         {/* TODO */}
         <button>
