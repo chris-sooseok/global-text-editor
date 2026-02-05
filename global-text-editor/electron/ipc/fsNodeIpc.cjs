@@ -160,7 +160,6 @@ ipcMain.handle("fsNodes:remove", (_event, payload) => {
  */
 ipcMain.handle("fsNodes:move", (_event, payload) => {
 
-  debugger
   const node = payload.node
   const targetNode = payload.targetNode
   const newParentId = payload.newParentId

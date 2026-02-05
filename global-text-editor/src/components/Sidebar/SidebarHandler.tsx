@@ -15,8 +15,8 @@ export async function submitNewNodePromptHandler(
   newNodeType: 'folder' | 'file' | null,
   selectedFolder: SelectedNodeType,
   cancelNewNodePrompt: () => void,
-  selectNodeHandler: (node: FsNode) => void, // Dispath is a function that tkaes one argument and returns void
-  toggleFolderHandler: (nodeId: number) => void 
+  selectFileHandler: (node: FileNode) => void,
+  selectFolderHandler: (folder: FolderNode) => void,
 ): Promise<void> {
 
   const { insertFsNodeRow } = FsTreeStore.getState()
@@ -34,10 +34,18 @@ export async function submitNewNodePromptHandler(
     if (res.ok) {
       const newNode: FsNodeRow = res.row
       const newFsNode: FsNode = insertFsNodeRow(newNode)
-      selectNodeHandler(newFsNode)
 
-      // Toggle Folder Node
-      if (newNode.type === "folder") toggleFolderHandler(newNode.id)
+      if (newFsNode.type === "file") {
+        selectFileHandler(newFsNode)
+      } else {
+        selectFolderHandler(newFsNode)
+      }
+
+      setTimeout(() => {
+        // find the element to set focus
+        const el = document.querySelector( `[data-node-id="${newFsNode.id}"]`) as HTMLElement | null
+        el?.focus()
+      }, 0)
       
     } else {
       console.error(res.message)
@@ -117,15 +125,13 @@ export function renderNodeHandler(
   depth: number,
   selectedFile: SelectedNodeType,
   selectedFolder: SelectedNodeType,
-  selectNodeHandler: (node: FsNode) => void,
+  selectFileHandler: (node: FileNode) => void,
   // only file
-  nodes: Map<number, FsNode>,
-  selectFolderHandler: (folder: FolderNode | null) => void,
+  selectFolderHandler: (folder: FolderNode) => void,
   // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   toggledFolderIds: Set<number>,
-  toggleFolderHandler: (nodeId: number) => void,
   renderNewNodePrompt: (depth: number) => ReactNode,
   // delete
   removeNodeHandler: (deletingNode: FsNode) => void,
@@ -191,26 +197,11 @@ export function renderNodeHandler(
           // FsNode onClick
           onClick={() =>
             {if (node.type === 'file'){ 
-              onClickFileHandler(
-                node,
-                isSelectedFile,
-                selectedFolder,
-                selectNodeHandler,
-                selectFolderHandler,
-                nodes,
-              )
+              selectFileHandler(node as FileNode)
             }
             // Folder selection logic
             {if (node.type === 'folder'){
-             onClickFolderHandler(
-                node,
-                isSelectedFolder,
-                isExpanded,
-                onlyFolderIsSelected,
-                selectNodeHandler,
-                selectFolderHandler,
-                toggleFolderHandler
-              )
+              selectFolderHandler(node as FolderNode)
             }}
           }}
           // FsNode KeyDown For Rename or Remove
@@ -226,15 +217,6 @@ export function renderNodeHandler(
                 setRenameNodeId(node.id)
               }
             }
-          }}
-          // FsNode onBlur
-          // Allow Setting Folder to Root
-          onBlur={(e) => {
-            const next = e.relatedTarget as HTMLElement | null
-            const clickedIconButton = !!next?.closest('[data-new-node-btn="true"]')
-            // focus on other node should not set folder to null
-            const focusWentToNode = !!next?.closest?.('[data-node-id]')
-            if (!clickedIconButton && !focusWentToNode && selectedFolder) selectFolderHandler(null)
           }}
           // Dragging
           onPointerDown={(e) => onPointerDownNode(e, node)}
@@ -260,11 +242,10 @@ export function renderNodeHandler(
               ? <ToolbarIcon
               whiteIcon={fileIcon}
               onlyWhiteIcon={true}
-            />
-            : undefined
+              />
+              : undefined
             
             }
-
 
             {/* FsNode Name or Rename Prompt */}
             {renameNodeId !== node.id 
@@ -334,76 +315,3 @@ export function renderNodeHandler(
       </li>
     )
 }
-
-function onClickFileHandler (
-  node: FsNode,
-  isSelectedFile: boolean,
-  selectedFolder: SelectedNodeType, // check if selectedFile.parentId matches this
-  selectNodeHandler:  (node: FsNode) => void,
-  selectFolderHandler: (folder: FolderNode | null) => void,
-  nodes: Map<number, FsNode>, // to get parent Node
-): void {
-
-  // if file is already highlighted, no need to highlight
-  // but make sure to update selectedFolder to its parent when
-  if (isSelectedFile && node.parentId !== selectedFolder?.id) {
-      // still trigger opening file 
-      TabManagerStore.getState().openFileInActiveTab(node as FileNode)
-
-      const parentNode = nodes.get(node.parentId) as FolderNode ?? null
-      selectFolderHandler(parentNode)
-      return
-  }
-  
-  // if file is unhighlighted, highlight
-  if (!isSelectedFile){
-    selectNodeHandler(node)
-    const parentNode = nodes.get(node.parentId) as FolderNode ?? null
-    selectFolderHandler(parentNode)
-  }
-}
-
-function onClickFolderHandler(
-  node: FsNode,
-  isSelectedFolder: boolean,
-  isExpanded: boolean,
-  onlyFolderIsSelected: boolean,
-  selectNodeHandler:  (node: FsNode) => void,
-  selectFolderHandler: (folder: FolderNode | null) => void,
-  toggleFolderHandler: (nodeId: number) => void,
-): void {
-
-  // if folder is collapsed -> highlight & open
-  if (!isSelectedFolder && !isExpanded) {
-    selectNodeHandler(node)
-    toggleFolderHandler(node.id)
-    return
-  }
-
-  // both file and folder are null, but folder is open -> highlight folder
-  if (!onlyFolderIsSelected && !isSelectedFolder && isExpanded) {
-    selectNodeHandler(node)
-    return
-  }
-
-  // some file is selected and highlighted, -> highlight folder
-  if (!onlyFolderIsSelected && isSelectedFolder && isExpanded) {
-    selectNodeHandler(node)
-    return
-  }
-
-  // no file is selected, but this folder is not highlight, and open -> highlight folder
-  if (onlyFolderIsSelected && !isSelectedFolder && isExpanded) {
-    selectNodeHandler(node)
-    return
-  }
-    
-  // no file is selected, but this folder is highlight, and open -> unhighlight and fold
-  if (onlyFolderIsSelected && isSelectedFolder && isExpanded) {
-    selectFolderHandler(null)
-    toggleFolderHandler(node.id)
-    return
-  }
-
-}
-

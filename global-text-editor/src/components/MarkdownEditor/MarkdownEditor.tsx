@@ -257,13 +257,13 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
 
       {/* Editor */}
       <div
-      style={{
-        flex: 1,
-        minHeight: 0,
-        overflow: "auto",
-        width: "100%",
-        display: "flex",
-      }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: "auto",
+          width: "100%",
+          display: "flex",
+        }}
       >
       {isMarkdownView ? (
         <textarea
@@ -271,22 +271,22 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
           onChange={(e) => onChangeMarkdown(e.currentTarget.value)}
           onFocus={() => switchActiveTab(tabId)}
           style={{
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    minHeight: 0,
-    boxSizing: "border-box",
+            flex: 1,
+            width: "100%",
+            height: "100%",
+            minHeight: 0,
+            boxSizing: "border-box",
 
-    background: "transparent",
-    outline: "none",
-    resize: "none",
-    fontSize: "16px",
-    padding: 12,
-    fontFamily: "monospace",
+            background: "transparent",
+            outline: "none",
+            resize: "none",
+            fontSize: "16px",
+            padding: 12,
+            fontFamily: "monospace",
 
-    whiteSpace: "pre-wrap",     // ✅ preserves newlines BUT wraps
-    overflowWrap: "anywhere",   // ✅ breaks long tokens/URLs
-    wordBreak: "break-word",    // ✅ extra safety
+            whiteSpace: "pre-wrap",     // ✅ preserves newlines BUT wraps
+            overflowWrap: "anywhere",   // ✅ breaks long tokens/URLs
+            wordBreak: "break-word",    // ✅ extra safety
           }}
         />
       ) : (

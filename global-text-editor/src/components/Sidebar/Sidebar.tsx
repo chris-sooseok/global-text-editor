@@ -70,6 +70,25 @@ export default function Sidebar({
     return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FOLDER), null)
   })
 
+  /** Mouse Down for Setting selectedFolder to null */
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      const target = e.target as HTMLElement | null
+      if (!target) return
+
+      const clickedIconButton = !!target.closest('[data-new-node-btn="true"]')
+      const clickedNode = !!target.closest('[data-node-id]')
+
+      if (!clickedIconButton && !clickedNode && selectedFolder) {
+        selectFolderNullHandler()
+      }
+    }
+
+    // capture=true runs before React handlers / focus changes
+    document.addEventListener("mousedown", onMouseDown, true)
+    return () => document.removeEventListener("mousedown", onMouseDown, true)
+  }, [])
+
   /** FsTree Manipulation */
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
@@ -89,57 +108,81 @@ export default function Sidebar({
     })
   }
 
-  /** 
-   * Based on node selected (file or folder), highlight them
-   * Also this is used to unhighlight folder for global click behavior: else case */ 
-  function selectNodeHandler(node: FsNode) {
-
-    if (node?.type === 'file') {
-      const nextSelectedFile: FsNode = node    
-      selectFileHandler(nextSelectedFile)
-      
-      //* We make separate check conditions to prevent state update on every selection
-      // when a root file is created or selected
-      if (nextSelectedFile.isRoot) { 
-        if (!selectedFolder) selectFolderHandler(null)
-      }
-      // when normal file is selected, update selectedFolder to its parent
-      if (nextSelectedFile.parentId !== selectedFolder?.id){
-        const parentNode = node.isRoot ? null : nodes.get(node.parentId)
-        if (parentNode && parentNode.type === 'folder') {
-          selectFolderHandler(parentNode)
-        } else {
-          selectFolderHandler(null)
-        }
-      }
-    } 
-    
-    if (node?.type === 'folder') {
-      const nextSelectedFolder: FsNode = node
-      // when folder is selected, nullify file so that folder is highlighted
-      selectFileHandler(null)
-      selectFolderHandler(nextSelectedFolder)
+  /**
+   * Whenever a file is to be selected, use this function
+   * When a file is selcted
+   * 1. always update selectedFolder to the selectedFile's parent
+   * 2. always open the selectedFile in the active tab
+   */
+  function selectFileHandler(fileNode: FileNode) {
+    setSelectedFile(fileNode)
+    localStorage.setItem(SELECTED_FILE, JSON.stringify(fileNode))
+    // update selectedFolder
+    const parentNode = nodes.get(fileNode.parentId) ?? null
+    if (parentNode) {
+      setSelectedFolder(parentNode)
+      localStorage.setItem(SELECTED_FOLDER, JSON.stringify(parentNode))
+    } else {
+      selectFolderNullHandler()
     }
-
-    // ensure to focus when new node is created
-    setTimeout(() => {
-      // find the element to set focus
-      const el = document.querySelector( `[data-node-id="${node.id}"]`) as HTMLElement | null
-      el?.focus()
-    }, 0)
-
+    // open the file in the active tab
+    openFileInActiveTab(fileNode)
   }
 
-  function selectFileHandler(file: FileNode | null) {
-    setSelectedFile(file)
-    localStorage.setItem(SELECTED_FILE, JSON.stringify(file))
-    if (!file) return
-    openFileInActiveTab(file)
+  // Whenever the selectedFile is nullified, use this function
+  function selectFileNullHandler() {
+    setSelectedFile(null)
+    localStorage.setItem(SELECTED_FILE, JSON.stringify(null))
   }
 
-  function selectFolderHandler(folder: FolderNode | null) {
-    setSelectedFolder(folder)
-    localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folder))
+  /**
+   * Whenever a folder is to be selected, use this function
+   * When a folder is selected
+   * 1. always nullify selectedFile
+   * 2. check one of the cases below
+   */
+  function selectFolderHandler(folderNode: FolderNode) {
+    if (folderNode) {
+      const isSelectedFilesFolder = folderNode.id === selectedFile?.parentId
+      const isSelectedFolder = folderNode.id === selectedFolder?.id
+      const isExpanded = toggledFolderIds.has(folderNode.id)
+      selectFileNullHandler()
+
+      // folder is not selected & not open -> select folder & open
+      if (!isSelectedFolder && !isExpanded) {
+        setSelectedFolder(folderNode as FolderNode)
+        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
+        toggleFolderHandler(folderNode.id)
+        return
+      }
+
+      // folder is not the selected folder & open -> select folder
+      if (!isSelectedFolder && isExpanded) {
+        setSelectedFolder(folderNode as FolderNode)
+        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
+        return
+      }
+
+      // folder is the selectedFolder as well as the selectedFile's folder, and open -> select folder
+      if (isSelectedFilesFolder && !isSelectedFolder && isExpanded) {
+        setSelectedFolder(folderNode as FolderNode)
+        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
+        return
+      }
+        
+      // if this folder is selected and not the selectedFile's folder, and open -> unselect and close
+      if (isSelectedFolder && isExpanded) {
+        selectFolderNullHandler()
+        toggleFolderHandler(folderNode.id)
+        return
+      }
+    }
+  }
+  
+  // whenever the selectedFolder is to be nullified, use this function
+  function selectFolderNullHandler() {
+    setSelectedFolder(null)
+    localStorage.setItem(SELECTED_FOLDER, JSON.stringify(null))
   }
 
   {/** FsNode Manipulations */}
@@ -170,7 +213,7 @@ export default function Sidebar({
          window.alert("This folder isn’t empty. Delete/move the contents first.")
          return
       }
-      selectFolderHandler(null)
+      selectFolderNullHandler()
       // if folder is removed, delete it from toggled list
       setToggledFolderIds((prev) => {
         if (!prev.has(removeNode.id)) return prev
@@ -181,7 +224,7 @@ export default function Sidebar({
       })
 
     } else {
-      selectFileHandler(null)
+      selectFileNullHandler()
       // close the file in tabs on remove
       for (const tabId of tabIdsByFileIds[removeNode.id] ?? []) {
         closeFileInTab(tabId, removeNode as FileNode)
@@ -345,9 +388,8 @@ export default function Sidebar({
       newNodeType, 
       selectedFolder, // identify folder under whose new node to be created
       cancelNewNodePrompt, 
-      selectNodeHandler, // selected newly created node
-      // only folder
-      toggleFolderHandler
+      selectFileHandler,
+      selectFolderHandler
     )
   }
 
@@ -368,15 +410,13 @@ export default function Sidebar({
       depth, // each node depth
       selectedFile,
       selectedFolder,
-      selectNodeHandler, // used to set selectedNode
+      selectFileHandler, // used to set selectedNode
       // only file
-      nodes,
       selectFolderHandler,
       // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
       toggledFolderIds, // keep track of folder node ids to expand
-      toggleFolderHandler,
       renderNewNodePrompt, // rendering newNodePrompt under folders
       // remove
       removeNodeHandler,
