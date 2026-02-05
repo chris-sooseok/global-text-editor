@@ -9,10 +9,7 @@ import {
   renderNewNodePromptHandler,
   renderNodeHandler,
 } from './SidebarHandler'
-import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
-import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
-import ToolbarIcon from 'shared/ToolbarIcon'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
 
 const SELECTED_FILE = String(import.meta.env.VITE_SELECTED_FILE)
