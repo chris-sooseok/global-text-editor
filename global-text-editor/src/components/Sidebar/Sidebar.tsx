@@ -25,7 +25,7 @@ export type DragState = {
     targetNodeId: number | null
     targetParentId: number | null
     dropPosition: "before" | "inside" | "after"
-  }
+}
 
 export default function Sidebar({
   newNodeType,
@@ -70,21 +70,25 @@ export default function Sidebar({
     return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FOLDER), null)
   })
 
-  /** Mouse Down for Setting selectedFolder to null */
+  /** Mouse Down for setting selectedFolder to null for allowing node creation at root level
+   * This is neccessary since when a file is selected, the selectedFolder needs to be set to the file's parent
+   * Originally, this was handled by onBlur on an individual node element. However, since editor needs focus
+   * selectedFolder can't possibly be set to the file's parent, thus controlling it with the mouse down rule
+   */
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement | null
       if (!target) return
+      if (!selectedFolder) return
 
       const clickedIconButton = !!target.closest('[data-new-node-btn="true"]')
       const clickedNode = !!target.closest('[data-node-id]')
 
-      if (!clickedIconButton && !clickedNode && selectedFolder) {
+      if (!clickedIconButton && !clickedNode) {
         selectFolderNullHandler()
       }
     }
 
-    // capture=true runs before React handlers / focus changes
     document.addEventListener("mousedown", onMouseDown, true)
     return () => document.removeEventListener("mousedown", onMouseDown, true)
   }, [])
@@ -97,7 +101,7 @@ export default function Sidebar({
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
 
-  /** Folder Toggle and Highlight Logics */
+  /** Folder Toggle */
   function toggleFolderHandler(nodeId: number) {
     setToggledFolderIds((prev) => {
       const next = new Set(prev) // create a new Set so React sees a new reference
@@ -129,7 +133,7 @@ export default function Sidebar({
     openFileInActiveTab(fileNode)
   }
 
-  // Whenever the selectedFile is nullified, use this function
+  // Whenever the selectedFile is to be nullified, use this function
   function selectFileNullHandler() {
     setSelectedFile(null)
     localStorage.setItem(SELECTED_FILE, JSON.stringify(null))
@@ -146,8 +150,7 @@ export default function Sidebar({
       const isSelectedFilesFolder = folderNode.id === selectedFile?.parentId
       const isSelectedFolder = folderNode.id === selectedFolder?.id
       const isExpanded = toggledFolderIds.has(folderNode.id)
-      selectFileNullHandler()
-
+      selectFileNullHandler() // nullifying file
       // folder is not selected & not open -> select folder & open
       if (!isSelectedFolder && !isExpanded) {
         setSelectedFolder(folderNode as FolderNode)
@@ -155,21 +158,18 @@ export default function Sidebar({
         toggleFolderHandler(folderNode.id)
         return
       }
-
       // folder is not the selected folder & open -> select folder
       if (!isSelectedFolder && isExpanded) {
         setSelectedFolder(folderNode as FolderNode)
         localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
         return
       }
-
       // folder is the selectedFolder as well as the selectedFile's folder, and open -> select folder
-      if (isSelectedFilesFolder && !isSelectedFolder && isExpanded) {
+      if (isSelectedFolder && isSelectedFilesFolder && isExpanded) {
         setSelectedFolder(folderNode as FolderNode)
         localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
         return
-      }
-        
+      } 
       // if this folder is selected and not the selectedFile's folder, and open -> unselect and close
       if (isSelectedFolder && isExpanded) {
         selectFolderNullHandler()
@@ -235,12 +235,10 @@ export default function Sidebar({
   }
 
   /** 
-   * ! Functions that manipulates FsTree with FsTreeStore supports
-   * Overall Rules
+   * Node Move and Drop Rules
    * 1. dropPostion must be "inside" for moving into folders
    * 2. Otherwise, "before" & "after" must be set
    * 3. Folders can't be dropped into its descendant folders
-   * Follow the listed cases for more
    * */
   useEffect(() => {
 
@@ -299,7 +297,6 @@ export default function Sidebar({
             } else {
               targetParentId = targetNode.parentId
             }
-
             return {
               ...prev,
               x: e.clientX,
@@ -338,8 +335,8 @@ export default function Sidebar({
       dragNodeRef.current = null
       setDragState(null)
     }
-      window.addEventListener("pointermove", onMouseMove, true)
-      window.addEventListener("pointerup", onMouseUp, true)
+    window.addEventListener("pointermove", onMouseMove, true)
+    window.addEventListener("pointerup", onMouseUp, true)
 
     return () => {
       window.removeEventListener("pointermove", onMouseMove, true)
@@ -406,12 +403,11 @@ export default function Sidebar({
   function renderNode(node: FsNode, depth = 0) {
     return renderNodeHandler(
       // both file/folder
-      node, // each node being renderer
-      depth, // each node depth
+      node,
+      depth,
       selectedFile,
       selectedFolder,
-      selectFileHandler, // used to set selectedNode
-      // only file
+      selectFileHandler,
       selectFolderHandler,
       // only folder
       renderNode, // recursively rendering fsNode

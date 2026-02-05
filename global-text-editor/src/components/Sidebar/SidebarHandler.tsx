@@ -7,7 +7,6 @@ import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
 import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { FsTreeStore } from "store/FsTreeStore/FsTreeStore"
-import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 export async function submitNewNodePromptHandler(
@@ -73,7 +72,7 @@ export function renderNewNodePromptHandler(
   return (
     <li key={`__create_new_node_under__:${selectedFolder?.id ?? 'root'}:${newNodeType}`}
       style={{
-        paddingLeft: depth * 8,
+        paddingLeft: depth * 23,
       }}
     >
       <div
@@ -126,7 +125,6 @@ export function renderNodeHandler(
   selectedFile: SelectedNodeType,
   selectedFolder: SelectedNodeType,
   selectFileHandler: (node: FileNode) => void,
-  // only file
   selectFolderHandler: (folder: FolderNode) => void,
   // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
