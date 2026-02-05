@@ -13,6 +13,9 @@ const SIDEBAR_WIDTH = String(import.meta.env.VITE_SIDEBAR_WIDTH)
 const SIDEBAR_COLLAPSED = String(import.meta.env.VITE_SIDEBAR_COLLAPSED)
 
 function SidebarRenderer() {
+
+  const [rootFolder, setRootFolder] = useState()
+  
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     return parseLocalStorage<number>
     (localStorage.getItem(SIDEBAR_WIDTH), SIDEBAR_DEFAULT_WIDTH)

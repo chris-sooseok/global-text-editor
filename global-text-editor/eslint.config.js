@@ -45,11 +45,7 @@ export default defineConfig([
         argsIgnorePattern: "^_",
       },
     ],
-
-    // optional, but often useful
-    "no-use-before-define": "error",
   },
 }
-
 
 ])

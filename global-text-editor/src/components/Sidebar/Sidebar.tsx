@@ -14,9 +14,9 @@ import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
 
-const SIDEBAR_SELECTED_FILE = String(import.meta.env.VITE_SIDEBAR_SELECTED_FILE)
-const SIDEBAR_SELECTED_FOLDER = String(import.meta.env.VITE_SIDEBAR_SELECTED_FOLDER)
-const SIDEBAR_TOGGLED_FOLDERS = String(import.meta.env.VITE_SIDEBAR_TOGGLED_FOLDERS)
+const SELECTED_FILE = String(import.meta.env.VITE_SELECTED_FILE)
+const SELECTED_FOLDER = String(import.meta.env.VITE_SELECTED_FOLDER)
+const TOGGLED_FOLDER_IDS = String(import.meta.env.VITE_TOGGLED_FOLDERS_IDS)
 
 export type SelectedNodeType = FsNode | null
 
@@ -45,19 +45,19 @@ function Sidebar() {
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     // localStorage only supports arr, so we make sure to conver to Set
     const arr = parseLocalStorage<number[]>
-    (localStorage.getItem(SIDEBAR_TOGGLED_FOLDERS), [])
+    (localStorage.getItem(TOGGLED_FOLDER_IDS), [])
     return new Set(arr)
   })
 
   /**  Separate states for selected file and folder to control highlight behaviors */
   const [selectedFile, setSelectedFile ] = useState(() => {
     return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SIDEBAR_SELECTED_FILE), null)
+    (localStorage.getItem(SELECTED_FILE), null)
   })
   
   const [selectedFolder, setSelectedFolder ] = useState(() => {
     return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SIDEBAR_SELECTED_FOLDER), null)
+    (localStorage.getItem(SELECTED_FOLDER), null)
   })
 
   /** FsTree Manipulation */
@@ -86,7 +86,7 @@ function Sidebar() {
       const next = new Set(prev) // create a new Set so React sees a new reference
       if (next.has(nodeId)) next.delete(nodeId)
       else next.add(nodeId)
-      localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
+      localStorage.setItem(TOGGLED_FOLDER_IDS, JSON.stringify(Array.from(next)))
       return next
     })
   }
@@ -135,14 +135,14 @@ function Sidebar() {
 
   function selectFileHandler(file: FileNode | null) {
     setSelectedFile(file)
-    localStorage.setItem(SIDEBAR_SELECTED_FILE, JSON.stringify(file))
+    localStorage.setItem(SELECTED_FILE, JSON.stringify(file))
     if (!file) return
     openFileInActiveTab(file)
   }
 
   function selectFolderHandler(folder: FolderNode | null) {
     setSelectedFolder(folder)
-    localStorage.setItem(SIDEBAR_SELECTED_FOLDER, JSON.stringify(folder))
+    localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folder))
   }
 
   {/** FsNode Manipulations */}
@@ -179,7 +179,7 @@ function Sidebar() {
         if (!prev.has(removeNode.id)) return prev
         const next = new Set(prev)
         next.delete(removeNode.id)
-        localStorage.setItem(SIDEBAR_TOGGLED_FOLDERS, JSON.stringify(Array.from(next)))
+        localStorage.setItem(TOGGLED_FOLDER_IDS, JSON.stringify(Array.from(next)))
         return next
       })
 
