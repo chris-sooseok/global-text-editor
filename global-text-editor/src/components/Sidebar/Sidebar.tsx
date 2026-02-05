@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { type RefObject, type Dispatch, type SetStateAction } from 'react'
 import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
 import { buildFsTree } from '../../store/FsTreeStore/FsTreeStoreHelper'
 import { TabManagerStore } from '../../store/TabManagerStore/TabManagerStore'
@@ -29,7 +30,17 @@ export type DragState = {
     dropPosition: "before" | "inside" | "after"
   }
 
-function Sidebar() {
+function Sidebar({
+  newNodeType,
+  newNodePromptRef,
+  newNodePromptInputRef,
+  setNewNodeType
+}: {
+  newNodeType: 'folder' | 'file' | null,
+  newNodePromptRef: RefObject<HTMLDivElement | null>,
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+}) {
   const { fileFontSize } = ThemeManagerStore.getState()
 
   const nodeRows = FsTreeStore((s) => s.nodeRows)
@@ -72,13 +83,6 @@ function Sidebar() {
 
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
-
-  /** Used for new node creation
-   * newNodeType should be set to some type only when prompt is to be displayed
-   * Unless some node is to be created, they all should be set to null */
-  const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
-  const newNodePromptRef = useRef<HTMLDivElement | null>(null)
-  const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
 
   /** Folder Toggle and Highlight Logics */
   function toggleFolderHandler(nodeId: number) {
@@ -312,23 +316,6 @@ function Sidebar() {
     }
   }
 
-  /** 
-   * ! New Prompt Behavior for creating new FsNode  
-   * Updates newNodeType to the selected type
-   * Once it changes, useEffect focues newNodePromptInputRef
-   * and renderNewNodePrompt will re-evaludate
-   * which <li> element to display newNodePromptRef and newNodePromptInputRef
-   * under the current selectedFolder */
-  function createNewNode(type: 'folder' | 'file') {
-    // if new node type is already set, highlight prompt again
-    if (newNodeType === type) {
-      if (newNodePromptInputRef.current) newNodePromptInputRef.current.focus()
-      return
-    }
-    // set new node type and delete prompt input if any
-    setNewNodeType(type)
-    if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
-  }
 
   /** 
    * Render <li> element that contains prompt refs which is to 
@@ -441,46 +428,7 @@ function Sidebar() {
         flexDirection: 'column', 
         overflow: 'hidden',
       }}>
-        {/* Sidebar Toolbar Container */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            minHeight: "35px",
-            paddingRight: "10px",
-            justifyContent: 'flex-end',
-            gap: 6,
-          }}
-        >
-
-          {/* right icons */}
-          <div 
-            style={{ 
-              display: 'flex', 
-              gap: 6,
-          }}>
-            <button
-              tabIndex={-1}
-              onClick={() => createNewNode('folder')}
-              data-new-node-btn="true"
-            >
-              <ToolbarIcon 
-                whiteIcon={newFolderIcon}
-                onlyWhiteIcon={true}
-              />
-            </button>
-            <button
-              tabIndex={-1} 
-              onClick={() => createNewNode('file')}
-              data-new-node-btn="true"
-            >
-              <ToolbarIcon 
-                whiteIcon={newFileIcon}
-                onlyWhiteIcon={true}
-              />
-            </button>
-          </div>
-      </div>
+        
 
       {/* FsNodes Container Rendering */}
       <div

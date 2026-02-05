@@ -4,6 +4,8 @@ import Sidebar from './Sidebar'
 import settingIcon from 'assets/Sidebar/icons8-settings-white-96.png'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
+import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
+import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
 
 const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
@@ -14,7 +16,6 @@ const SIDEBAR_COLLAPSED = String(import.meta.env.VITE_SIDEBAR_COLLAPSED)
 
 function SidebarRenderer() {
 
-  const [rootFolder, setRootFolder] = useState()
   
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     return parseLocalStorage<number>
@@ -90,6 +91,31 @@ function SidebarRenderer() {
     document.body.style.userSelect = 'none'
   }
 
+    /** Used for new node creation
+   * newNodeType should be set to some type only when prompt is to be displayed
+   * Unless some node is to be created, they all should be set to null */
+  const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
+  const newNodePromptRef = useRef<HTMLDivElement | null>(null)
+  const newNodePromptInputRef = useRef<HTMLInputElement | null>(null)
+
+    /** 
+   * ! New Prompt Behavior for creating new FsNode  
+   * Updates newNodeType to the selected type
+   * Once it changes, useEffect focues newNodePromptInputRef
+   * and renderNewNodePrompt will re-evaludate
+   * which <li> element to display newNodePromptRef and newNodePromptInputRef
+   * under the current selectedFolder */
+  function createNewNode(type: 'folder' | 'file') {
+    // if new node type is already set, highlight prompt again
+    if (newNodeType === type) {
+      if (newNodePromptInputRef.current) newNodePromptInputRef.current.focus()
+      return
+    }
+    // set new node type and delete prompt input if any
+    setNewNodeType(type)
+    if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
+  }
+
   return (
     <div
       style={{
@@ -111,22 +137,19 @@ function SidebarRenderer() {
           height: 45,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: sidebarCollapsed ? "flex-end" : "space-between",
+          justifyContent: "space-between",
           padding: '0px 10px',
           flexShrink: 0,
         }}
       >
 
-        {!sidebarCollapsed && (
-          <div style={{ fontWeight: 600, fontSize: 20 }}>
-            Files
-          </div>
-        )}
-
         <button
           type="button"
           onClick={setSidebarCollapsedHandler} 
           tabIndex={-1}
+          style={{
+            marginLeft: "4px"
+          }}
         >
           <ToolbarIcon
             whiteIcon={hideIcon}
@@ -134,6 +157,27 @@ function SidebarRenderer() {
             size={20}
           />
         </button>
+
+      {!sidebarCollapsed && (
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              tabIndex={-1}
+              onClick={() => createNewNode('folder')}
+              data-new-node-btn="true"
+            >
+              <ToolbarIcon whiteIcon={newFolderIcon} onlyWhiteIcon={true} />
+            </button>
+
+            <button
+              tabIndex={-1}
+              onClick={() => createNewNode('file')}
+              data-new-node-btn="true"
+            >
+              <ToolbarIcon whiteIcon={newFileIcon} onlyWhiteIcon={true} />
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Sidebar content */}
@@ -146,7 +190,12 @@ function SidebarRenderer() {
             transition: "opacity 120ms ease",
           }}
         >
-          <Sidebar />
+          <Sidebar 
+            newNodeType={newNodeType} 
+            newNodePromptRef={newNodePromptRef} 
+            newNodePromptInputRef={newNodePromptInputRef}
+            setNewNodeType={setNewNodeType}
+          />
         </div>
       </div>
 

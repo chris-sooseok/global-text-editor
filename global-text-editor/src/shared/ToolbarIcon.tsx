@@ -10,7 +10,7 @@ function ToolbarIcon({
   blackIcon,
   whiteIcon,
   alt = "",
-  size = 18,
+  size = 20,
   onlyBlackIcon = false,
   onlyWhiteIcon = false,
   fileId
@@ -31,6 +31,7 @@ function ToolbarIcon({
   }
 
   return (
+    
     <img
       src={onlyBlackIcon ? blackIcon :
             onlyWhiteIcon ? whiteIcon :
@@ -41,7 +42,7 @@ function ToolbarIcon({
         width: size,
         height: size,
         display: "block",
-        cursor: 'pointer'
+        cursor: 'pointer',
       }}
     />
   )
