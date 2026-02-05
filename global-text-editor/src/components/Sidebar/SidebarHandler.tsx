@@ -162,7 +162,6 @@ export function renderNodeHandler(
     node.parentId === dragState?.targetParentId
   const isDraggingNode = dragState?.draggingNode?.id === node.id
 
-
   return (
       <li key={node.id}>
         {/* FsNode */}
@@ -214,7 +213,7 @@ export function renderNodeHandler(
               )
             }}
           }}
-          // FsNode KeyDown For Rename and Remove
+          // FsNode KeyDown For Rename or Remove
           onKeyDown={(e) => {
             e.stopPropagation()
             if (renameNodeId === null) {
@@ -359,6 +358,8 @@ function onClickFileHandler (
   // if file is unhighlighted, highlight
   if (!isSelectedFile){
     selectNodeHandler(node)
+    const parentNode = nodes.get(node.parentId) as FolderNode ?? null
+    selectFolderHandler(parentNode)
   }
 }
 

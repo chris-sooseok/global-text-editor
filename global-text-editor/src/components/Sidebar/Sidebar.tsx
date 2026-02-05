@@ -230,7 +230,7 @@ export default function Sidebar({
         const targetNodeEl = mouseTarget?.closest?.("[data-node-id]") as HTMLElement | null
         const targetNodeId = targetNodeEl ? Number(targetNodeEl.getAttribute("data-node-id")) : null
         
-        let targetParentId: number | null = null
+        let targetParentId: number
         let dropPosition: "before" | "inside" | "after" = "after"
       
         // draggingNode itself can't be targetNode
@@ -241,6 +241,7 @@ export default function Sidebar({
             // r gives top and height of the target element
             const r = targetNodeEl!.getBoundingClientRect()
             const relativePos = (e.clientY - r.top) / r.height
+            // compute drop position
             if (targetNode.type === 'folder') {
               if (relativePos < 0.25) dropPosition = "before"
               else if (relativePos > 0.75) dropPosition = "after"
@@ -249,22 +250,30 @@ export default function Sidebar({
               dropPosition = relativePos < 0.5 ? "before" : "after"
             }
             // if targetNode is a folder, set the folder to the targetParent
+            // otherwise, set targetNode's parent to targetParentId
             if (dropPosition === "inside" && targetNode.type === "folder") {
               targetParentId = targetNode.id
             } else {
-              targetParentId = targetNode.parentId ?? null
+              targetParentId = targetNode.parentId
+            }
+
+            return {
+              ...prev,
+              x: e.clientX,
+              y: e.clientY,
+              targetNodeId,
+              targetParentId,
+              dropPosition,
             }
           }
         }
 
         return {
-            ...prev,
-            x: e.clientX,
-            y: e.clientY,
-            targetNodeId,
-            targetParentId,
-            dropPosition,
+          ...prev,
+          x: e.clientX,
+          y: e.clientY,
         }
+
       })
     }
 
