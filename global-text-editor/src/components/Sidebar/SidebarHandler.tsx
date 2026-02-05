@@ -140,7 +140,7 @@ export function renderNodeHandler(
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
 ): ReactNode {
 
-  const { fileFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
+  const { nodeFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
 
   // Highlight Logics
   const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
@@ -275,7 +275,7 @@ export function renderNodeHandler(
                 minWidth: 0,
                 overflow: 'hidden', 
                 whiteSpace: 'nowrap',
-                fontSize: fileFontSize
+                fontSize: nodeFontSize
               }}>
                 {node.name}
               </span>

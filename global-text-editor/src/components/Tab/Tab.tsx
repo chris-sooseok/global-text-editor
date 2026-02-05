@@ -13,7 +13,7 @@ function Tab({tabId}: {tabId: string}) {
 
   // styles
   const { 
-    fileFontSize, 
+    nodeFontSize, 
     activeFileUnderActiveTabBgr, 
     activeFileBorder, 
     activeFileBackground 
@@ -134,7 +134,7 @@ function Tab({tabId}: {tabId: string}) {
                 textAlign: "left", // left align filename
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
-                fontSize: fileFontSize,
+                fontSize: nodeFontSize,
                 fontWeight: activeFile.id === file.id ? 600 : 400,
                 opacity: activeFile.id === file.id ? 1 : 0.8,
               }}

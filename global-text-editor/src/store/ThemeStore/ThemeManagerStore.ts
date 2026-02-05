@@ -6,7 +6,7 @@ const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 
 const SIDEBAR_NODE_BGR = import.meta.env.VITE_SIDEBAR_NODE_BGR
-const FILE_FONT_SIZE = import.meta.env.VITE_FILE_FONT_SIZE
+const NODE_FONT_SIZE = import.meta.env.VITE_NODE_FONT_SIZE
 const SIDEBAR_NODE_DRAG_TARGET = import.meta.env.VITE_SIDEBAR_NODE_DRAG_TARGET
 
 const ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND = import.meta.env.VITE_ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND
@@ -30,7 +30,7 @@ type ThemeManagerStoreType = {
     toolbarBackgroundWhite: string,
 
     sidebarNodeBgr: string,
-    fileFontSize: string,
+    nodeFontSize: string,
     sidebar_node_drag_target: string,
 
     activeFileUnderActiveTabBgr: string,
@@ -63,7 +63,7 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set) => ({
   toolbarBackgroundWhite: TOOLBAR_BACKGROUND_WHITE,
 
   sidebarNodeBgr: SIDEBAR_NODE_BGR,
-  fileFontSize: FILE_FONT_SIZE,
+  nodeFontSize: NODE_FONT_SIZE,
   sidebar_node_drag_target: SIDEBAR_NODE_DRAG_TARGET,
 
   activeFileUnderActiveTabBgr: ACTIVE_FILE_UNDER_ACTIVE_TAB_BACKGROUND,

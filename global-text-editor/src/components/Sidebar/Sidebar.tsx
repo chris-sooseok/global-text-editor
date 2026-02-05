@@ -27,7 +27,7 @@ export type DragState = {
     dropPosition: "before" | "inside" | "after"
   }
 
-function Sidebar({
+export default function Sidebar({
   newNodeType,
   newNodePromptRef,
   newNodePromptInputRef,
@@ -38,7 +38,8 @@ function Sidebar({
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
 }) {
-  const { fileFontSize } = ThemeManagerStore.getState()
+  
+  const { nodeFontSize } = ThemeManagerStore.getState()
 
   const nodeRows = FsTreeStore((s) => s.nodeRows)
   const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
@@ -49,34 +50,30 @@ function Sidebar({
     void loadFsNodes(window.api)
   }, [loadFsNodes])
 
+  /** Interaction with Tabs */
+  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
+  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
+
   /** Folder Toggle and Highlight Logics */
   const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
     // localStorage only supports arr, so we make sure to conver to Set
-    const arr = parseLocalStorage<number[]>
-    (localStorage.getItem(TOGGLED_FOLDER_IDS), [])
+    const arr = parseLocalStorage<number[]>(localStorage.getItem(TOGGLED_FOLDER_IDS), [])
     return new Set(arr)
   })
 
   /**  Separate states for selected file and folder to control highlight behaviors */
   const [selectedFile, setSelectedFile ] = useState(() => {
-    return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SELECTED_FILE), null)
+    return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FILE), null)
   })
   
   const [selectedFolder, setSelectedFolder ] = useState(() => {
-    return parseLocalStorage<SelectedNodeType>
-    (localStorage.getItem(SELECTED_FOLDER), null)
+    return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FOLDER), null)
   })
 
   /** FsTree Manipulation */
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
-
   const { renameFsNode, removeFsNode, moveFsNode } = FsTreeStore.getState()
-
-  /** Interaction with Tabs */
-  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
-  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
 
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
@@ -103,13 +100,12 @@ function Sidebar({
       
       //* We make separate check conditions to prevent state update on every selection
       // when a root file is created or selected
-      if (nextSelectedFile.parentId === null) { 
+      if (nextSelectedFile.isRoot) { 
         if (!selectedFolder) selectFolderHandler(null)
       }
       // when normal file is selected, update selectedFolder to its parent
       if (nextSelectedFile.parentId !== selectedFolder?.id){
-        const parentId = node.parentId
-        const parentNode = parentId === null ? null : nodes.get(parentId)
+        const parentNode = node.isRoot ? null : nodes.get(node.parentId)
         if (parentNode && parentNode.type === 'folder') {
           selectFolderHandler(parentNode)
         } else {
@@ -450,7 +446,7 @@ function Sidebar({
             zIndex: 99999,
             padding: "4px 8px",
             background: "transparent",
-            fontSize: fileFontSize,
+            fontSize: nodeFontSize,
             whiteSpace: "nowrap",
           }}
         >
@@ -461,5 +457,3 @@ function Sidebar({
     </>
   )
 }
-
-export default Sidebar

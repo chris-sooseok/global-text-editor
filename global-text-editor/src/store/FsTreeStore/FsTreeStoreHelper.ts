@@ -37,29 +37,26 @@ export function buildFsTree(nodeRows: FsNodeRow[]): {
   const nodes = new Map<number, FsNode>()
   const roots: FsNode[] = []
 
+  // append all nodeRows to nodes
   for (const r of nodeRows) {
     const node: FsNode = r.type === 'folder' ? makeFolderNode(r) : makeFileNode(r)
     nodes.set(node.id, node)
   }
 
   for (const node of nodes.values()) {
-    if (node.parentId === null) {
+    // root nodes
+    if (node.parentId === 0) {
       roots.push(node)
       continue
     }
 
+    // if not root, get parent node, and append it to the parent's children
     const parent = nodes.get(node.parentId)
-    if (!parent || parent.type !== 'folder') {
-      roots.push(node)
+    if (parent && parent.type === 'folder') {
+      parent.children.push(node)
       continue
     }
-
-    parent.children.push(node)
   }
 
   return { roots, nodes }
-}
-
-export function buildRootNodes(nodeRows: FsNodeRow[]) {
-  
 }
