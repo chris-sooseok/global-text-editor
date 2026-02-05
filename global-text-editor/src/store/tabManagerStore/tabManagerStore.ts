@@ -35,7 +35,7 @@ type tabManagerStore = {
   closeTab: (closingTabId: string) => void
 }
 
-export const TabManagerStore = create<tabManagerStore>((set) => {
+export const TabManagerStore = create<tabManagerStore>()((set, get) => {
 
   const activeTabId = parseLocalStorage<string>
     (localStorage.getItem(ACTIVE_TAB_ID), DEFAULT_ACTIVE_TAB_ID)
@@ -138,30 +138,54 @@ export const TabManagerStore = create<tabManagerStore>((set) => {
     },
 
     openNewTab: (copyingFile: FileNode) => {
-      set((state) => {
-        const curActiveTabId: string = state.activeTabId
-        const curTabIds: string[] = state.tabIds
-        const curActiveFileByTabIds: Record<string, FileNode> = state.activeFileByTabIds
-        const curFilesByTabIds: Record<string, FileNode[]> = state.filesByTabIds
-        const curTabIdsByFileIds: Record<number, string[]> = state.tabIdsByFileIds
-        let nextActiveTabId = curActiveTabId
-        let nextTabIds = [...curTabIds]
-        let nextActiveFileByTabIds = {...curActiveFileByTabIds}
-        let nextFilesByTabIds = {...curFilesByTabIds}
-        let nextTabIdsByFileIds = {...curTabIdsByFileIds}
+  
+      const { tabIds, activeTabId } = get()
 
+        // if two tabs already exist, switch to other tab and open the file
+        if (tabIds.length === 2) {
+          const targetTabId = activeTabId === "tab-1" ? "tab-2" : "tab-1"
+          get().switchActiveTab(targetTabId)
+          get().openFileInActiveTab(copyingFile)
+          return
+        }
+
+        // create the 2nd tab
+        if (tabIds.length === 1) {
+          set((state) => {
+            const newTabId = "tab-2"
+            const nextTabIds = [...state.tabIds, newTabId]
+            const nextActiveTabId = newTabId
+
+            const nextActiveFileByTabIds = { ...state.activeFileByTabIds, [newTabId]: copyingFile }
+            const nextFilesByTabIds = { ...state.filesByTabIds, [newTabId]: [copyingFile] }
+            const nextTabIdsByFileIds = {
+              ...state.tabIdsByFileIds,
+              [copyingFile.id]: [...(state.tabIdsByFileIds[copyingFile.id] ?? []), newTabId],
+            }
+
+            return tabStateCommiter(
+              nextActiveTabId,
+              nextTabIds,
+              nextActiveFileByTabIds,
+              nextFilesByTabIds,
+              nextTabIdsByFileIds
+            )
+          })
+        }
+
+        // * This is code for more than two tabs logic. We restrict only two tabs to exist for current version
         // making sure not to add already existing tabId
-        const maxNum = Math.max(...curTabIds.map((id) => Number(id.split('-')[1])))
-        const newTabId = `tab-${maxNum + 1}`
-        nextActiveTabId = newTabId
-        nextTabIds = [...curTabIds, newTabId]
-        nextFilesByTabIds[newTabId] = [copyingFile]
-        nextActiveFileByTabIds[newTabId] = copyingFile
-        nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id] ?? [], newTabId]
+        // const maxNum = Math.max(...curTabIds.map((id) => Number(id.split('-')[1])))
+        // const newTabId = `tab-${maxNum + 1}`
+        // nextActiveTabId = newTabId
+        // nextTabIds = [...curTabIds, newTabId]
+        // nextFilesByTabIds[newTabId] = [copyingFile]
+        // nextActiveFileByTabIds[newTabId] = copyingFile
+        // nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id] ?? [], newTabId]
         
-        return tabStateCommiter(nextActiveTabId, nextTabIds,
-           nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
-      })
+        // return tabStateCommiter(nextActiveTabId, nextTabIds,
+        //    nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
+    
     },
 
     switchActiveFile: (tabId: string, nextFile: FileNode) => {
