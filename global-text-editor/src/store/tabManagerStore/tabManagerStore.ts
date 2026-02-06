@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import type { FileNode } from '../FsTreeStore/FsTreeTypes'
 import { tabStateCommiter } from './TabMangerStoreHelper'
+import { SidebarStore } from 'store/FsTreeStore/SidebarStore'
 
 const ACTIVE_TAB_ID = import.meta.env.VITE_ACTIVE_TAB_ID
 const TABS_IDS = import.meta.env.VITE_TABS_IDS
@@ -193,8 +194,9 @@ export const TabManagerStore = create<tabManagerStore>()((set, get) => {
         const curActiveFileByTabIds = state.activeFileByTabIds
         let nextActiveFileByTabIds = {...curActiveFileByTabIds}
 
+        const { setActiveFile } = SidebarStore.getState()
+        setActiveFile(nextFile)
         if (curActiveFileByTabIds[tabId].id === nextFile.id) return state
-
         nextActiveFileByTabIds[tabId] = nextFile
         return tabStateCommiter(undefined, undefined, nextActiveFileByTabIds)})
     },

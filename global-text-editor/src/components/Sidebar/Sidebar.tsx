@@ -28,13 +28,13 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
   const activeFile = SidebarStore((s) => s.activeFile)
   const activeFolder = SidebarStore((s) => s.activeFolder)
   const toggledFolderIds = SidebarStore((s) => s.toggledFolderIds)
-
-  const { setActiveFolder, loadFsNodes } = SidebarStore.getState()
+  const loadFsNodes = SidebarStore((s) => s.loadFsNodes)
+  const { setActiveFolder } = SidebarStore.getState()
   const { nodeFontSize } = ThemeManagerStore.getState()
-  
+
   useEffect(() => {
     void loadFsNodes(window.api)
-  }, [])
+  }, [loadFsNodes])
  
   /** Mouse Down for setting selectedFolder to null for allowing node creation at root level
    * This is neccessary since when a file is selected, the selectedFolder needs to be set to the file's parent
