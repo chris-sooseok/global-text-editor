@@ -114,7 +114,9 @@ export function renderNewNodePromptHandler(
 export function renderNodeHandler(
   node: FsNode,
   depth: number,
-  // only folder
+  activeFile: FileNode | null,
+  activeFolder: FolderNode | null,
+  toggledFolderIds: Set<number>,
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
   renderNewNodePrompt: (depth: number) => ReactNode,
@@ -131,7 +133,8 @@ export function renderNodeHandler(
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
 ): ReactNode {
 
-  const { activeFile, activeFolder, setActiveFile, setActiveFolder , toggledFolderIds} = SidebarStore.getState()
+  const { setActiveFile, setActiveFolder } = SidebarStore.getState()
+
   const { nodeFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
 
   // Highlight Logics
@@ -187,7 +190,7 @@ export function renderNodeHandler(
             }
             // Folder selection logic
             {if (node.type === 'folder'){
-              setActiveFolder(node as FolderNode)
+              setActiveFolder(node as FolderNode, false)
             }}
           }}
           // FsNode KeyDown For Rename or Remove
@@ -219,7 +222,6 @@ export function renderNodeHandler(
               ? <ToolbarIcon 
                 whiteIcon={isExpanded ? downIcon : rightIcon}
                 onlyWhiteIcon={true}
-                
               />
               : undefined
             }

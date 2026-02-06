@@ -24,7 +24,7 @@ type SidebarStore = {
   activeFolder: FolderNode | null
   toggledFolderIds: Set<number>
   setActiveFile: (activeFile: FileNode | null) => void
-  setActiveFolder: (activeFolder: FolderNode | null) => void
+  setActiveFolder: (activeFolder: FolderNode | null, fromFile: boolean) => void
   toggleFolderHandler: (folderId: number) => void
   loadFsNodes: (api: Window['api']) => Promise<void>
   buildFsTree: () => void
@@ -70,17 +70,24 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       set({ activeFile: nextFile })
       // always assign file's parent to active folder
       const parentNode = get().nodes.get(nextFile.parentId) ?? null
-      get().setActiveFolder(parentNode as FolderNode)
+      get().setActiveFolder(parentNode as FolderNode, true)
       // always try to open the file in active tab
       const { openFileInActiveTab } = TabManagerStore.getState()
       openFileInActiveTab(nextFile as FileNode)
     },
 
-    setActiveFolder: (nextFolder) => {
+    setActiveFolder: (nextFolder, fromFile) => {
       // nullifying folder
       if (!nextFolder) {
         localStorage.setItem(SELECTED_FOLDER, JSON.stringify(null))
         set({ activeFolder: null })
+        return
+      }
+
+      // setting active folder to active's file's parent
+      if (fromFile) {
+        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(nextFolder))
+        set({ activeFolder: nextFolder })
         return
       }
 
@@ -184,7 +191,7 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       if (newFsNode.type === 'file'){
         get().setActiveFile(newFsNode)
       } else {
-        get().setActiveFolder(newFsNode)
+        get().setActiveFolder(newFsNode, false)
       }
       // return to set focus on new node
       return newFsNode
@@ -223,24 +230,27 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       if (!res.ok) return
 
       // handle FsNode deletion for file and folder
-      if (removeNode.type === 'folder') {
-        if (removeNode.children.length !== 0) {
-          window.alert("This folder isn’t empty. Delete/move the contents first.")
-          return
-        }
-        get().setActiveFolder(null)
-        // remove folder from toggledFolderIds
-        set((state) => {
-          if (!state.toggledFolderIds.has(removeNode.id)) return state
-          return { toggledFolderIds: new Set([...state.toggledFolderIds].filter((id) => id !== removeNode.id)) }
-        })
-      } else {
-        get().setActiveFile(null)
+      if (removeNode.type === 'file') {
+
+                get().setActiveFile(null)
         // remove file from tabs
         const { tabIdsByFileIds, closeFileInTab } = TabManagerStore.getState()
         for (const tabId of tabIdsByFileIds[removeNode.id] ?? []) {
           closeFileInTab(tabId, removeNode as FileNode)
         }
+
+      } else {
+        // prevent folder deletion if any child
+        if (removeNode.children.length !== 0) {
+          window.alert("This folder isn’t empty. Delete/move the contents first.")
+          return
+        }
+        get().setActiveFolder(null, false)
+        // remove folder from toggledFolderIds
+        set((state) => {
+          if (!state.toggledFolderIds.has(removeNode.id)) return state
+          return { toggledFolderIds: new Set([...state.toggledFolderIds].filter((id) => id !== removeNode.id)) }
+        })
       }
 
       // reload
@@ -271,7 +281,7 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
   }
 })
 
-
+// Whenever nodeRows updates, build new FsTree
 SidebarStore.subscribe((state, prevState) => {
   if (state.nodeRows !== prevState.nodeRows) {
     SidebarStore.getState().buildFsTree()

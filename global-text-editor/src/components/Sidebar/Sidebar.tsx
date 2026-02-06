@@ -1,13 +1,9 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { type RefObject, type Dispatch, type SetStateAction } from 'react'
-import { SidebarStore } from '../../store/FsTreeStore/SidebarStore'
 import type { FsNode } from 'store/FsTreeStore/FsTreeTypes'
-import { 
-  submitNewNodePromptHandler,  
-  renderNewNodePromptHandler,
-  renderNodeHandler,
-} from './SidebarHandler'
+import { SidebarStore } from '../../store/FsTreeStore/SidebarStore'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
+import { submitNewNodePromptHandler, renderNewNodePromptHandler, renderNodeHandler } from './SidebarHandler'
 
 export type DragState = {
     draggingNode: FsNode
@@ -18,23 +14,28 @@ export type DragState = {
     dropPosition: "before" | "inside" | "after"
 }
 
-export default function Sidebar({
-  newNodeType,
-  newNodePromptRef,
-  newNodePromptInputRef,
-  setNewNodeType
-}: {
-  newNodeType: 'folder' | 'file' | null,
-  newNodePromptRef: RefObject<HTMLDivElement | null>,
-  newNodePromptInputRef: RefObject<HTMLInputElement | null>,
+type SidebarProps = {
+  newNodeType: 'folder' | 'file' | null
+  newNodePromptRef: RefObject<HTMLDivElement | null>
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>
   setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
-}) {
+}
+
+export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptInputRef, setNewNodeType }: SidebarProps) {
   
+  const roots = SidebarStore((s) => s.roots)
+  const nodes = SidebarStore((s) => s.nodes)
+  const activeFile = SidebarStore((s) => s.activeFile)
+  const activeFolder = SidebarStore((s) => s.activeFolder)
+  const toggledFolderIds = SidebarStore((s) => s.toggledFolderIds)
+
+  const { setActiveFolder, loadFsNodes } = SidebarStore.getState()
   const { nodeFontSize } = ThemeManagerStore.getState()
-
-  const { roots, nodes } = SidebarStore.getState()
-  const { activeFolder, setActiveFolder } = SidebarStore.getState()
-
+  
+  useEffect(() => {
+    void loadFsNodes(window.api)
+  }, [])
+ 
   /** Mouse Down for setting selectedFolder to null for allowing node creation at root level
    * This is neccessary since when a file is selected, the selectedFolder needs to be set to the file's parent
    * Originally, this was handled by onBlur on an individual node element. However, since editor needs focus
@@ -50,7 +51,7 @@ export default function Sidebar({
       const clickedNode = !!target.closest('[data-node-id]')
 
       if (!clickedIconButton && !clickedNode) {
-        setActiveFolder(null)
+        setActiveFolder(null, false)
       }
     }
 
@@ -65,7 +66,6 @@ export default function Sidebar({
 
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
-
 
   {/** FsNode Manipulations */}
   function renameNodeHandler(renameNode: FsNode, newName: string) {
@@ -250,6 +250,9 @@ export default function Sidebar({
       // both file/folder
       node,
       depth,
+      activeFile,
+      activeFolder,
+      toggledFolderIds,
       // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
