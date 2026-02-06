@@ -1,24 +1,21 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/FsTreeTypes"
-import type { SelectedNodeType, DragState } from "./Sidebar"
+import type { DragState } from "./Sidebar"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
 import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import { FsTreeStore } from "store/FsTreeStore/FsTreeStore"
+import { SidebarStore } from "store/FsTreeStore/SidebarStore"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 export async function submitNewNodePromptHandler(
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
-  selectedFolder: SelectedNodeType,
   cancelNewNodePrompt: () => void,
-  selectFileHandler: (node: FileNode) => void,
-  selectFolderHandler: (folder: FolderNode) => void,
 ): Promise<void> {
 
-  const { insertFsNodeRow } = FsTreeStore.getState()
+  const { activeFolder, insertFsNodeRow } = SidebarStore.getState()
 
   try {
     if (!newNodeType || !newNodePromptInputRef.current) return
@@ -26,19 +23,13 @@ export async function submitNewNodePromptHandler(
 
     const name = newNodePromptInputRef.current.value
     //? if selectedFolder is null, create it at the root level
-    const parentId = selectedFolder?.id ?? 0
+    const parentId = activeFolder?.id ?? 0
 
     const res = await window.api.createFsNode(newNodeType, parentId, name)
 
     if (res.ok) {
       const newNode: FsNodeRow = res.row
       const newFsNode: FsNode = insertFsNodeRow(newNode)
-
-      if (newFsNode.type === "file") {
-        selectFileHandler(newFsNode)
-      } else {
-        selectFolderHandler(newFsNode)
-      }
 
       setTimeout(() => {
         // find the element to set focus
@@ -60,7 +51,6 @@ export async function submitNewNodePromptHandler(
 
 export function renderNewNodePromptHandler(
   newNodeType: 'folder' | 'file' | null,
-  selectedFolder: SelectedNodeType,
   depth: number,
   newNodePromptRef: RefObject<HTMLDivElement | null>,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
@@ -69,8 +59,10 @@ export function renderNewNodePromptHandler(
 ): ReactNode  {
   if (!newNodeType) return null
 
+  const { activeFolder } = SidebarStore.getState()
+
   return (
-    <li key={`__create_new_node_under__:${selectedFolder?.id ?? 'root'}:${newNodeType}`}
+    <li key={`__create_new_node_under__:${activeFolder?.id ?? 'root'}:${newNodeType}`}
       style={{
         paddingLeft: depth * 23,
       }}
@@ -122,14 +114,9 @@ export function renderNewNodePromptHandler(
 export function renderNodeHandler(
   node: FsNode,
   depth: number,
-  selectedFile: SelectedNodeType,
-  selectedFolder: SelectedNodeType,
-  selectFileHandler: (node: FileNode) => void,
-  selectFolderHandler: (folder: FolderNode) => void,
   // only folder
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
-  toggledFolderIds: Set<number>,
   renderNewNodePrompt: (depth: number) => ReactNode,
   // delete
   removeNodeHandler: (deletingNode: FsNode) => void,
@@ -144,12 +131,13 @@ export function renderNodeHandler(
   onPointerDownNode: (e: React.PointerEvent, node: FsNode) => void,
 ): ReactNode {
 
+  const { activeFile, activeFolder, setActiveFile, setActiveFolder , toggledFolderIds} = SidebarStore.getState()
   const { nodeFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
 
   // Highlight Logics
-  const onlyFolderIsSelected = (selectedFolder && !selectedFile) ? true : false
-  const isSelectedFile = node.id === selectedFile?.id
-  const isSelectedFolder = node.id === selectedFolder?.id
+  const onlyFolderIsSelected = (activeFolder && !activeFile) ? true : false
+  const isSelectedFile = node.id === activeFile?.id
+  const isSelectedFolder = node.id === activeFolder?.id
 
   // Folder Nodes
   const isExpanded = node.type === "folder" && toggledFolderIds.has(node.id)
@@ -195,11 +183,11 @@ export function renderNodeHandler(
           // FsNode onClick
           onClick={() =>
             {if (node.type === 'file'){ 
-              selectFileHandler(node as FileNode)
+              setActiveFile(node as FileNode)
             }
             // Folder selection logic
             {if (node.type === 'folder'){
-              selectFolderHandler(node as FolderNode)
+              setActiveFolder(node as FolderNode)
             }}
           }}
           // FsNode KeyDown For Rename or Remove
@@ -242,7 +230,6 @@ export function renderNodeHandler(
               onlyWhiteIcon={true}
               />
               : undefined
-            
             }
 
             {/* FsNode Name or Rename Prompt */}

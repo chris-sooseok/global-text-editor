@@ -1,22 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { type RefObject, type Dispatch, type SetStateAction } from 'react'
-import { FsTreeStore } from '../../store/FsTreeStore/FsTreeStore'
-import { buildFsTree } from '../../store/FsTreeStore/FsTreeStoreHelper'
-import { TabManagerStore } from '../../store/TabManagerStore/TabManagerStore'
-import type { FileNode, FolderNode, FsNode } from '../../store/FsTreeStore/FsTreeTypes'
+import { SidebarStore } from '../../store/FsTreeStore/SidebarStore'
+import type { FsNode } from 'store/FsTreeStore/FsTreeTypes'
 import { 
   submitNewNodePromptHandler,  
   renderNewNodePromptHandler,
   renderNodeHandler,
 } from './SidebarHandler'
-import { parseLocalStorage } from 'shared/parseLocalStorage'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
-
-const SELECTED_FILE = String(import.meta.env.VITE_SELECTED_FILE)
-const SELECTED_FOLDER = String(import.meta.env.VITE_SELECTED_FOLDER)
-const TOGGLED_FOLDER_IDS = String(import.meta.env.VITE_TOGGLED_FOLDERS_IDS)
-
-export type SelectedNodeType = FsNode | null
 
 export type DragState = {
     draggingNode: FsNode
@@ -41,34 +32,8 @@ export default function Sidebar({
   
   const { nodeFontSize } = ThemeManagerStore.getState()
 
-  const nodeRows = FsTreeStore((s) => s.nodeRows)
-  const loadFsNodes = FsTreeStore((s) => s.loadFsNodes)
-  const { roots, nodes } = useMemo(() => buildFsTree(nodeRows), [nodeRows])
-  
-  /** ensure loading fsTree when mounting sidebar */
-  useEffect(() => {
-    void loadFsNodes(window.api)
-  }, [loadFsNodes])
-
-  /** Interaction with Tabs */
-  const { openFileInActiveTab, renameFileInTab, closeFileInTab } = TabManagerStore.getState()
-  const tabIdsByFileIds = TabManagerStore((s) => s.tabIdsByFileIds)
-
-  /** Folder Toggle and Highlight Logics */
-  const [toggledFolderIds, setToggledFolderIds] = useState<Set<number>>(() => {
-    // localStorage only supports arr, so we make sure to conver to Set
-    const arr = parseLocalStorage<number[]>(localStorage.getItem(TOGGLED_FOLDER_IDS), [])
-    return new Set(arr)
-  })
-
-  /**  Separate states for selected file and folder to control highlight behaviors */
-  const [selectedFile, setSelectedFile ] = useState(() => {
-    return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FILE), null)
-  })
-  
-  const [selectedFolder, setSelectedFolder ] = useState(() => {
-    return parseLocalStorage<SelectedNodeType>(localStorage.getItem(SELECTED_FOLDER), null)
-  })
+  const { roots, nodes } = SidebarStore.getState()
+  const { activeFolder, setActiveFolder } = SidebarStore.getState()
 
   /** Mouse Down for setting selectedFolder to null for allowing node creation at root level
    * This is neccessary since when a file is selected, the selectedFolder needs to be set to the file's parent
@@ -79,13 +44,13 @@ export default function Sidebar({
     function onMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement | null
       if (!target) return
-      if (!selectedFolder) return
+      if (!activeFolder) return
 
       const clickedIconButton = !!target.closest('[data-new-node-btn="true"]')
       const clickedNode = !!target.closest('[data-node-id]')
 
       if (!clickedIconButton && !clickedNode) {
-        selectFolderNullHandler()
+        setActiveFolder(null)
       }
     }
 
@@ -96,105 +61,15 @@ export default function Sidebar({
   /** FsTree Manipulation */
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
-  const { renameFsNode, removeFsNode, moveFsNode } = FsTreeStore.getState()
+  const { renameFsNode, removeFsNode, moveFsNode } = SidebarStore.getState()
 
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
 
-  /** Folder Toggle */
-  function toggleFolderHandler(nodeId: number) {
-    setToggledFolderIds((prev) => {
-      const next = new Set(prev) // create a new Set so React sees a new reference
-      if (next.has(nodeId)) next.delete(nodeId)
-      else next.add(nodeId)
-      localStorage.setItem(TOGGLED_FOLDER_IDS, JSON.stringify(Array.from(next)))
-      return next
-    })
-  }
-
-  /**
-   * Whenever a file is to be selected, use this function
-   * When a file is selcted
-   * 1. always update selectedFolder to the selectedFile's parent
-   * 2. always open the selectedFile in the active tab
-   */
-  function selectFileHandler(fileNode: FileNode) {
-    setSelectedFile(fileNode)
-    localStorage.setItem(SELECTED_FILE, JSON.stringify(fileNode))
-    // update selectedFolder
-    const parentNode = nodes.get(fileNode.parentId) ?? null
-    if (parentNode) {
-      setSelectedFolder(parentNode)
-      localStorage.setItem(SELECTED_FOLDER, JSON.stringify(parentNode))
-    } else {
-      selectFolderNullHandler()
-    }
-    // open the file in the active tab
-    openFileInActiveTab(fileNode)
-  }
-
-  // Whenever the selectedFile is to be nullified, use this function
-  function selectFileNullHandler() {
-    setSelectedFile(null)
-    localStorage.setItem(SELECTED_FILE, JSON.stringify(null))
-  }
-
-  /**
-   * Whenever a folder is to be selected, use this function
-   * When a folder is selected
-   * 1. always nullify selectedFile
-   * 2. check one of the cases below
-   */
-  function selectFolderHandler(folderNode: FolderNode) {
-    if (folderNode) {
-      const isSelectedFilesFolder = folderNode.id === selectedFile?.parentId
-      const isSelectedFolder = folderNode.id === selectedFolder?.id
-      const isExpanded = toggledFolderIds.has(folderNode.id)
-      selectFileNullHandler() // nullifying file
-      // folder is not selected & not open -> select folder & open
-      if (!isSelectedFolder && !isExpanded) {
-        setSelectedFolder(folderNode as FolderNode)
-        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
-        toggleFolderHandler(folderNode.id)
-        return
-      }
-      // folder is not the selected folder & open -> select folder
-      if (!isSelectedFolder && isExpanded) {
-        setSelectedFolder(folderNode as FolderNode)
-        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
-        return
-      }
-      // folder is the selectedFolder as well as the selectedFile's folder, and open -> select folder
-      if (isSelectedFolder && isSelectedFilesFolder && isExpanded) {
-        setSelectedFolder(folderNode as FolderNode)
-        localStorage.setItem(SELECTED_FOLDER, JSON.stringify(folderNode))
-        return
-      } 
-      // if this folder is selected and not the selectedFile's folder, and open -> unselect and close
-      if (isSelectedFolder && isExpanded) {
-        selectFolderNullHandler()
-        toggleFolderHandler(folderNode.id)
-        return
-      }
-    }
-  }
-  
-  // whenever the selectedFolder is to be nullified, use this function
-  function selectFolderNullHandler() {
-    setSelectedFolder(null)
-    localStorage.setItem(SELECTED_FOLDER, JSON.stringify(null))
-  }
 
   {/** FsNode Manipulations */}
   function renameNodeHandler(renameNode: FsNode, newName: string) {
     renameFsNode(renameNode, newName)
-    
-    // Update names in tabs
-    if (renameNode.type === "file") {
-      for (const tabId of tabIdsByFileIds[renameNode.id] ?? []) {
-        renameFileInTab(tabId, renameNode.id, newName)
-      }
-    }
   }
 
   function cancelRenameHandler() {
@@ -205,32 +80,6 @@ export default function Sidebar({
   function removeNodeHandler(removeNode: FsNode) {
     const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
     if (!ok) return
-
-    if (removeNode.type === "folder") {
-      const folderNode = nodes.get(removeNode.id)
-      // ! Currently we prevent deleting folder when child exists
-      if (folderNode?.type === 'folder' && folderNode.children.length !== 0) {
-         window.alert("This folder isn’t empty. Delete/move the contents first.")
-         return
-      }
-      selectFolderNullHandler()
-      // if folder is removed, delete it from toggled list
-      setToggledFolderIds((prev) => {
-        if (!prev.has(removeNode.id)) return prev
-        const next = new Set(prev)
-        next.delete(removeNode.id)
-        localStorage.setItem(TOGGLED_FOLDER_IDS, JSON.stringify(Array.from(next)))
-        return next
-      })
-
-    } else {
-      selectFileNullHandler()
-      // close the file in tabs on remove
-      for (const tabId of tabIdsByFileIds[removeNode.id] ?? []) {
-        closeFileInTab(tabId, removeNode as FileNode)
-      }
-    }
-
     removeFsNode(removeNode)
   }
 
@@ -365,7 +214,6 @@ export default function Sidebar({
   function renderNewNodePrompt(depth: number) {
     return renderNewNodePromptHandler( 
       newNodeType, // prompt type
-      selectedFolder, // parent where to render prompt under
       depth, // indent
       newNodePromptRef,
       newNodePromptInputRef,
@@ -382,11 +230,8 @@ export default function Sidebar({
     await submitNewNodePromptHandler(
       // both file/folder
       newNodePromptInputRef,
-      newNodeType, 
-      selectedFolder, // identify folder under whose new node to be created
+      newNodeType,
       cancelNewNodePrompt, 
-      selectFileHandler,
-      selectFolderHandler
     )
   }
 
@@ -405,14 +250,9 @@ export default function Sidebar({
       // both file/folder
       node,
       depth,
-      selectedFile,
-      selectedFolder,
-      selectFileHandler,
-      selectFolderHandler,
       // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
-      toggledFolderIds, // keep track of folder node ids to expand
       renderNewNodePrompt, // rendering newNodePrompt under folders
       // remove
       removeNodeHandler,
@@ -449,7 +289,7 @@ export default function Sidebar({
               {/* FsNodes Rendering */}
               {roots.map((root) => renderNode(root, 0))}
               {/* Root Prompt When Items */}
-              {newNodeType && !selectedFolder ? renderNewNodePrompt(0) : null}
+              {newNodeType && !activeFolder ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
