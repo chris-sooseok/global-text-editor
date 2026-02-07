@@ -156,7 +156,7 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
 
         focusEditor()
       } catch {
-        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        editor.commands.setContent(makeDefaultDocTemplate(activeFile.name), { emitUpdate: false })
         if (isMarkdownView) setMarkdownText(editor.getMarkdown())
       }
     }

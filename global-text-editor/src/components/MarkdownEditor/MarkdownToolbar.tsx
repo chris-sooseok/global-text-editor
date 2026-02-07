@@ -20,6 +20,7 @@ import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
+import ParagraphButton from "./MarkdownButtons/ParagraphButton"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
@@ -96,6 +97,7 @@ function EditorToolbar({
           {/* TODO
           font style */}
           <BoldButton editor={editor} fileId={activeFile.id} />
+          <ParagraphButton editor={editor} fileId={activeFile.id} />
           <ItalicButton editor={editor} fileId={activeFile.id}/>
           <UnderlineButton editor={editor} fileId={activeFile.id} />
           <StrikethroughButton editor={editor} fileId={activeFile.id} />
