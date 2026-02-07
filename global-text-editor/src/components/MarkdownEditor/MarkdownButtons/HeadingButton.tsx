@@ -34,6 +34,7 @@ function HeadingButton({
     }}>
       {/* Toolbar Button */}
       <button
+        tabIndex={-1}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()

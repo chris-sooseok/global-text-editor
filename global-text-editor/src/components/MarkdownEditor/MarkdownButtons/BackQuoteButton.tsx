@@ -14,6 +14,7 @@ function BackQuoteButton({
 
   return (
     <button
+      tabIndex={-1}
       type="button"
       aria-label="Toggle blockquote"
       onMouseDown={(e) => {

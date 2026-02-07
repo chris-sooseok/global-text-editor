@@ -28,6 +28,7 @@ function ExportButton({
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
       {/* Toolbar Button */}
       <button
+        tabIndex={-1}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
@@ -51,6 +52,7 @@ function ExportButton({
       >
         {/* Markdown */}
         <button
+          tabIndex={-1}
           type="button"
           onMouseDown={async () => {
             const md = editor.getMarkdown()
@@ -70,6 +72,7 @@ function ExportButton({
         </button>
         {/* PDF */}
         <button
+          tabIndex={-1}
           type="button"
           onMouseDown={async () => {
             // const res = await window.api.exportToPDF()

@@ -100,6 +100,7 @@ function HighlightButton({
   return (
     <div ref={rootRef} style={{ position: "relative", display: "inline-block" }}>
       <button
+        tabIndex={-1}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()

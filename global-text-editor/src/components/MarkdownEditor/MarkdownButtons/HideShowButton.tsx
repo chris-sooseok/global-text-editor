@@ -18,6 +18,7 @@ function HideShowButton({
 
   return (
     <button
+      tabIndex={-1}
       type="button"
       onMouseDown={(e) => {
         e.preventDefault()
