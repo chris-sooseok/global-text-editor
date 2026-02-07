@@ -27,7 +27,7 @@ declare global {
   interface Window {
     api: {
       /* FsNode Apis */
-      createFsNode(type: string, parentId: number, name: string): Promise<CreateFsNodeRes>
+      createFsNode(type: string, parentId: number, name: string, fileType: string | null): Promise<CreateFsNodeRes>
       renameFsNode(id: number, newName: string): Promise<{ok: true}>
       removeFsNode(removeNode: FsNode): Promise<{ok: boolean}>
       moveFsNode(

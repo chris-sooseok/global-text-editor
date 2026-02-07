@@ -21,9 +21,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
 
   const uuid = randomUUID()
   const type = payload.type
+  const fileType = payload.fileType ?? null
   const isRoot = payload.parentId === 0 ? 1 : 0
   const parentId = payload.parentId
-  const name = payload.name  
+  const name = payload.name
   let storagePath = ''
   const createdAt = Date.now()
   const nextSortOrder = getNextSortOrder(parentId)
@@ -45,10 +46,10 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
   const tsx = db.transaction(() => {
     info = db
       .prepare(`
-        INSERT INTO fsNode (uuid, type, is_root, parent_id, name, storage_path, created_at, updated_at, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO fsNode (uuid, type, file_type, is_root, parent_id, name, storage_path, created_at, updated_at, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
-      .run(uuid, type, isRoot, parentId, name, storagePath, createdAt, createdAt, nextSortOrder)
+      .run(uuid, type, fileType, isRoot, parentId, name, storagePath, createdAt, createdAt, nextSortOrder)
     
     lastInsertRowid = Number(info.lastInsertRowid)
 
@@ -70,6 +71,7 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
         id: lastInsertRowid,
         uuid,
         type,
+        fileType,
         isRoot,
         parentId,
         name,
@@ -325,7 +327,8 @@ ipcMain.handle('fsNodes:fetch', (_event, _payload) => {
         SELECT 
           id,
           uuid,
-          type, 
+          type,
+          file_type AS fileType,
           is_root AS isRoot,
           parent_id AS parentId,
           name,

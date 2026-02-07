@@ -16,8 +16,8 @@ async function invokeLogged(channel, payload) {
 contextBridge.exposeInMainWorld('api', {
 
   /* FsNode Apis */
-  createFsNode: (type, parentId, name) =>
-    invokeLogged('fsNodes:create', { type, parentId, name}),
+  createFsNode: (type, parentId, name, fileType) =>
+    invokeLogged('fsNodes:create', { type, parentId, name, fileType}),
   renameFsNode: (id, newName) =>
     invokeLogged('fsNodes:rename', { id, newName}),
   removeFsNode: (removeNode) =>

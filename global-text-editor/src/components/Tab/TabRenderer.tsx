@@ -8,7 +8,7 @@ import { TabManagerStore } from "../../store/TabManagerStore/TabManagerStore"
  * tab into tabIds
  */
 
-function TabRenderer() {
+export default function TabRenderer() {
 
   const tabIds = TabManagerStore((s) => s.tabIds)
 
@@ -47,5 +47,4 @@ function TabRenderer() {
   </>)
 }
 
-export default TabRenderer
 

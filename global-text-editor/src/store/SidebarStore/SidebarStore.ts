@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { makeFolderNode, makeFileNode } from './SidebarStoreHelper'
 import type { FsNode, FsNodeRow, FileNode, FolderNode } from './FsTreeTypes'
 import type { FetchFsNodeRes } from 'api/Apis'
-import { parseLocalStorage } from 'shared/parseLocalStorage'
+import { parseLocalStorage } from 'shared/helperFunctions'
 import { TabManagerStore } from 'store/TabManagerStore/TabManagerStore'
 
 type SidebarStore = {
@@ -47,6 +47,11 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
     activeFolder,
     toggledFolderIds,
 
+    /** setActiveFile
+     * This is the only place where openFileInActiveTab is called, meaning whenever
+     * a valid file is set to be active, it will always prompt to open the file in
+     * the active tab. 
+     */
     setActiveFile: (nextFile) => {
       // nullifying file
       if (!nextFile) {

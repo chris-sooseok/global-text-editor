@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS fsNode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uuid TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
+    file_type TEXT CHECK (file_type IN ('markdown', 'today') OR file_type IS NULL),
     -- nodes under seed node are root nodes
     is_root INTEGER NOT NULL CHECK (is_root IN (0, 1)),
     -- nullable for seed node
@@ -15,10 +16,6 @@ CREATE TABLE IF NOT EXISTS fsNode (
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
 
--- enforce: ensure unique name under same parent
-CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_name_nocase
-ON fsNode(COALESCE(parent_id, -1), name COLLATE NOCASE);
-
 -- enforce: ensure file node has unique storage path
 CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_file_storage_path
 ON fsNode(storage_path)
@@ -26,12 +23,13 @@ WHERE type = 'file';
 
 -- seed: create seed node (id=0)
 INSERT OR IGNORE INTO fsNode
-  (id, uuid, type, parent_id, is_root, name, storage_path, created_at, updated_at, sort_order)
+  (id, uuid, type, file_type, parent_id, is_root, name, storage_path, created_at, updated_at, sort_order)
 VALUES
   (
     0,
     '00000000-0000-0000-0000-000000000000',
     'folder',
+    NULL,
     NULL,
     1,
     'root',
