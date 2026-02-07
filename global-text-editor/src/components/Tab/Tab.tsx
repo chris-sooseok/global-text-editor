@@ -5,7 +5,7 @@ import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
 import ToolbarIcon from "shared/ToolbarIcon"
-import DropdownOverlay from "shared/DropdownOverlay"
+import { DropdownOverlay } from "shared/DropdownOverlay"
 import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
 
 
@@ -20,9 +20,8 @@ function Tab({tabId}: {tabId: string}) {
   } =ThemeManagerStore.getState()
 
   // dropdown
-  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+  const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   const [dropdownFile, setDropdownFile] = useState<FileNode | null>(null)
-  const btnRef = useRef<HTMLButtonElement | null>(null)
 
   // tab logics
   const activeTabId = TabManagerStore((s) => s.activeTabId)
@@ -114,7 +113,6 @@ function Tab({tabId}: {tabId: string}) {
           }}> 
             {/* Filename */}
             <button
-              ref={btnRef}
               tabIndex={-1}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
@@ -123,9 +121,8 @@ function Tab({tabId}: {tabId: string}) {
               // dropdown on right-click on filename
               onContextMenu={(e) => {
                 e.preventDefault()
-                btnRef.current = e.currentTarget
                 setDropdownFile(file)
-                setDropdownIsOpen(true)
+                setDropdown({ open: true, x: e.clientX, y: e.clientY })
               }}
               style={{
                 flex: 1,
@@ -157,18 +154,17 @@ function Tab({tabId}: {tabId: string}) {
       </div>
       {/* Dropdown */}
       <DropdownOverlay
-        dropdownIsOpen={dropdownIsOpen}
-        setDropdownIsOpen={() => setDropdownIsOpen(false)}
-        parentRef={btnRef}
-        scrollable={true}
-        align="center"
+        open={dropdown.open}
+        x={dropdown.x}
+        y={dropdown.y}
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
       >
         <button
           onMouseDown={(e) => {
             e.preventDefault()
             if (!dropdownFile) return
             openNewTab(dropdownFile)
-            setDropdownIsOpen(false)
+            setDropdown({ open: false, x: 0, y: 0 })
           }}
         >
           {activeTabId === 'tab-1' ? "Split Right" : "Split Left"}

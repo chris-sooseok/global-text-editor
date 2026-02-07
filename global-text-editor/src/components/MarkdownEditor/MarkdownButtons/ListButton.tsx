@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
-import DropdownOverlay from "shared/DropdownOverlay"
+import { DropdownOverlay } from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackBulletIcon from "assets/NormalTypeIcons/icons8-list-black-96.png"
 import whiteBulletIcon from "assets/NormalTypeIcons/icons8-list-white-96.png"
@@ -19,8 +19,7 @@ function ListButton({
 }) {
   if (!editor) return null
 
-  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
-  const btnRef = useRef<HTMLButtonElement | null>(null)
+  const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
   const activeIcons =
     editor.isActive("taskList")
@@ -38,11 +37,10 @@ function ListButton({
     }}>
       {/* Toolbar Button */}
       <button
-        ref={btnRef}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
-          setDropdownIsOpen(dropdownIsOpen ? false : true)
+          setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
         <ToolbarIcon 
@@ -54,11 +52,10 @@ function ListButton({
 
       {/* Dropdown Options */}
       <DropdownOverlay
-        dropdownIsOpen={dropdownIsOpen}
-        setDropdownIsOpen={() => setDropdownIsOpen(false)}
-        parentRef={btnRef}
-        activeCheck={(key) => editor.isActive(key)}
-        scrollable={true}
+        open={dropdown.open}
+        x={dropdown.x}
+        y={dropdown.y}
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
       >
         {/* BulletList */}
         <button

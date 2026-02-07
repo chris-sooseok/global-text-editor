@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import type { Editor } from "@tiptap/core"
-import DropdownOverlay from "shared/DropdownOverlay"
+import { DropdownOverlay } from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackDownloadIcon from "assets/NormalTypeIcons/icons8-download-black-96.png"
@@ -19,8 +19,8 @@ function ExportButton({
   editor: Editor | null
   fileId: number
 }) {
-  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
-  const btnRef = useRef<HTMLButtonElement | null>(null)
+  const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
+
 
   if (!editor) return null
 
@@ -28,11 +28,10 @@ function ExportButton({
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
       {/* Toolbar Button */}
       <button
-        ref={btnRef}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
-          setDropdownIsOpen((v) => !v)
+          setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
         <ToolbarIcon
@@ -44,10 +43,11 @@ function ExportButton({
 
       {/* Dropdown Options (explicit buttons + icons) */}
       <DropdownOverlay
-        dropdownIsOpen={dropdownIsOpen}
-        setDropdownIsOpen={() => setDropdownIsOpen(false)}
-        parentRef={btnRef}
-        align="right"
+        open={dropdown.open}
+        x={dropdown.x}
+        y={dropdown.y}
+        align="left"
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
       >
         {/* Markdown */}
         <button
@@ -72,9 +72,9 @@ function ExportButton({
         <button
           type="button"
           onMouseDown={async () => {
-            const res = await window.api.exportToPDF()
-            if (!res.ok || res.canceled) return
-            window.alert(`Saved PDF: ${res.filePath}`)
+            // const res = await window.api.exportToPDF()
+            // if (!res.ok || res.canceled) return
+            // window.alert(`Saved PDF: ${res.filePath}`)
           }}
         >
           <ToolbarIcon
