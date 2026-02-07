@@ -5,6 +5,13 @@ import { SidebarStore } from '../../store/FsTreeStore/SidebarStore'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
 import { submitNewNodePromptHandler, renderNewNodePromptHandler, renderNodeHandler } from './SidebarHandler'
 
+type SidebarProps = {
+  newNodeType: 'folder' | 'file' | null
+  newNodePromptRef: RefObject<HTMLDivElement | null>
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+}
+
 export type DragState = {
     draggingNode: FsNode
     x: number
@@ -14,60 +21,47 @@ export type DragState = {
     dropPosition: "before" | "inside" | "after"
 }
 
-type SidebarProps = {
-  newNodeType: 'folder' | 'file' | null
-  newNodePromptRef: RefObject<HTMLDivElement | null>
-  newNodePromptInputRef: RefObject<HTMLInputElement | null>
-  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
-}
-
-export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptInputRef, setNewNodeType }: SidebarProps) {
+export default function Sidebar({ 
+  newNodeType, newNodePromptRef, newNodePromptInputRef, setNewNodeType 
+}: SidebarProps) {
   
   const roots = SidebarStore((s) => s.roots)
   const nodes = SidebarStore((s) => s.nodes)
-  const activeFile = SidebarStore((s) => s.activeFile)
-  const activeFolder = SidebarStore((s) => s.activeFolder)
-  const toggledFolderIds = SidebarStore((s) => s.toggledFolderIds)
   const loadFsNodes = SidebarStore((s) => s.loadFsNodes)
-  const { setActiveFolder } = SidebarStore.getState()
-  const { nodeFontSize } = ThemeManagerStore.getState()
 
+  /** Load FsTree */
   useEffect(() => {
     void loadFsNodes(window.api)
   }, [loadFsNodes])
+
+  const activeFile = SidebarStore((s) => s.activeFile)
+  const activeFolder = SidebarStore((s) => s.activeFolder)
+  const toggledFolderIds = SidebarStore((s) => s.toggledFolderIds)
+  const { setActiveFolder, renameFsNode, removeFsNode, moveFsNode } = SidebarStore.getState()
+  const { nodeFontSize } = ThemeManagerStore.getState()
  
-  /** Mouse Down for setting selectedFolder to null for allowing node creation at root level
-   * This is neccessary since when a file is selected, the selectedFolder needs to be set to the file's parent
-   * Originally, this was handled by onBlur on an individual node element. However, since editor needs focus
-   * selectedFolder can't possibly be set to the file's parent, thus controlling it with the mouse down rule
-   */
+  /** Folder Nullifying Global MouseEvent */
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement | null
       if (!target) return
       if (!activeFolder) return
-
       const clickedIconButton = !!target.closest('[data-new-node-btn="true"]')
       const clickedNode = !!target.closest('[data-node-id]')
-
       if (!clickedIconButton && !clickedNode) {
-        setActiveFolder(null, false)
+        setActiveFolder(null)
       }
     }
-
     document.addEventListener("mousedown", onMouseDown, true)
     return () => document.removeEventListener("mousedown", onMouseDown, true)
   }, [])
 
-  /** FsTree Manipulation */
+  /*** FsTree Manipulation ***/
   const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
   const renameInputRef = useRef<HTMLInputElement | null>(null)
-  const { renameFsNode, removeFsNode, moveFsNode } = SidebarStore.getState()
-
   const [dragState, setDragState] = useState<DragState | null>(null)
   const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
 
-  {/** FsNode Manipulations */}
   function renameNodeHandler(renameNode: FsNode, newName: string) {
     renameFsNode(renameNode, newName)
   }
@@ -81,6 +75,20 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
     const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
     if (!ok) return
     removeFsNode(removeNode)
+  }
+
+  // Update dragNodeRef on Every Node Selection
+  function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
+    // only left click
+    if (e.button !== 0) return
+    // not applicable during rename
+    if (renameNodeId !== null) return
+
+    dragNodeRef.current = {
+      draggingNode: node,
+      startX: e.clientX,
+      startY: e.clientY,
+    }
   }
 
   /** 
@@ -193,21 +201,6 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
     }
   }, [nodes, dragState])
 
-  // Update dragNodeRef on Every Node Selection
-  function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
-    // only left click
-    if (e.button !== 0) return
-    // not applicable during rename
-    if (renameNodeId !== null) return
-
-    dragNodeRef.current = {
-      draggingNode: node,
-      startX: e.clientX,
-      startY: e.clientY,
-    }
-  }
-
-
   /** 
    * Render <li> element that contains prompt refs which is to 
    * be inserted under the current selectedFolder inside <ul> element */
@@ -215,6 +208,7 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
     return renderNewNodePromptHandler( 
       newNodeType, // prompt type
       depth, // indent
+      activeFolder,
       newNodePromptRef,
       newNodePromptInputRef,
       submitNewNodePrompt, // prompt submission
@@ -228,7 +222,7 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
    * and the new node to be highlighted */
   async function submitNewNodePrompt() {
     await submitNewNodePromptHandler(
-      // both file/folder
+      activeFolder,
       newNodePromptInputRef,
       newNodeType,
       cancelNewNodePrompt, 
@@ -243,8 +237,7 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
     if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
   }
 
-  /** 
-   * ! Render FsTree */
+  /** Render FsNode Recursively */
   function renderNode(node: FsNode, depth = 0) {
     return renderNodeHandler(
       // both file/folder
@@ -252,8 +245,8 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
       depth,
       activeFile,
       activeFolder,
+      // folder
       toggledFolderIds,
-      // only folder
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
       renderNewNodePrompt, // rendering newNodePrompt under folders
@@ -310,7 +303,6 @@ export default function Sidebar({ newNodeType, newNodePromptRef, newNodePromptIn
         overflow: 'hidden',
       }}>
         
-
       {/* FsNodes Container Rendering */}
       <div
         style={{

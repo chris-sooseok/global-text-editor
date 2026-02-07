@@ -19,11 +19,6 @@ type tabManagerStore = {
   filesByTabIds: Record<string, FileNode[]>
 
   tabIdsByFileIds: Record<number, string[]>
-  /**  tabIdsByFileIds
-   * it is possible during file editing, we will have to update the content of the same file
-   * in other tabs. 
-   * 
-   */
   // Sidebar
   openFileInActiveTab: (file: FileNode) => void
   renameFileInTab: (tabId: string, renameNodeId: number, newName: string) => void
@@ -88,7 +83,6 @@ export const TabManagerStore = create<tabManagerStore>()((set, get) => {
          * 3. if the selectedFile doesn't exist in activeTab
          *  -> append and set it as active file
          */
-
         // case 1 and 2
         const fileExists = curFilesByTabIds[curActiveTabId].find((f) => f.id === selectedFile.id)
         if (fileExists) {
@@ -182,8 +176,7 @@ export const TabManagerStore = create<tabManagerStore>()((set, get) => {
         // nextTabIds = [...curTabIds, newTabId]
         // nextFilesByTabIds[newTabId] = [copyingFile]
         // nextActiveFileByTabIds[newTabId] = copyingFile
-        // nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id] ?? [], newTabId]
-        
+        // nextTabIdsByFileIds[copyingFile.id] = [...curTabIdsByFileIds[copyingFile.id] ?? [], newTabId]     
         // return tabStateCommiter(nextActiveTabId, nextTabIds,
         //    nextActiveFileByTabIds, nextFilesByTabIds, nextTabIdsByFileIds)
     
@@ -193,7 +186,7 @@ export const TabManagerStore = create<tabManagerStore>()((set, get) => {
       set((state) => {
         const curActiveFileByTabIds = state.activeFileByTabIds
         let nextActiveFileByTabIds = {...curActiveFileByTabIds}
-
+        // ! update active file to the selected file 
         const { setActiveFile } = SidebarStore.getState()
         setActiveFile(nextFile)
         if (curActiveFileByTabIds[tabId].id === nextFile.id) return state

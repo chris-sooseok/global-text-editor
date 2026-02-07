@@ -1,38 +1,36 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
 import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/FsTreeTypes"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import { SidebarStore } from "store/FsTreeStore/SidebarStore"
 import type { DragState } from "./Sidebar"
+import ToolbarIcon from "shared/ToolbarIcon"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
 import fileIcon from 'assets/Sidebar/icons8-file-96.png'
 import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
 import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
-import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import { SidebarStore } from "store/FsTreeStore/SidebarStore"
-import ToolbarIcon from "shared/ToolbarIcon"
 
 export async function submitNewNodePromptHandler(
+  activeFolder: FolderNode | null,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   newNodeType: 'folder' | 'file' | null,
   cancelNewNodePrompt: () => void,
 ): Promise<void> {
 
-  const { activeFolder, insertFsNodeRow } = SidebarStore.getState()
+  const { insertFsNodeRow } = SidebarStore.getState()
 
   try {
     if (!newNodeType || !newNodePromptInputRef.current) return
     if (newNodePromptInputRef.current.value.trim() === '') return
 
     const name = newNodePromptInputRef.current.value
-    //? if selectedFolder is null, create it at the root level
+    // if selectedFolder is null, create it at the root level
     const parentId = activeFolder?.id ?? 0
-
     const res = await window.api.createFsNode(newNodeType, parentId, name)
-
     if (res.ok) {
       const newNode: FsNodeRow = res.row
       const newFsNode: FsNode = insertFsNodeRow(newNode)
-
+      // focus on the newly created node
       setTimeout(() => {
-        // find the element to set focus
         const el = document.querySelector( `[data-node-id="${newFsNode.id}"]`) as HTMLElement | null
         el?.focus()
       }, 0)
@@ -48,18 +46,16 @@ export async function submitNewNodePromptHandler(
   }
 }
 
-
 export function renderNewNodePromptHandler(
   newNodeType: 'folder' | 'file' | null,
   depth: number,
+  activeFolder: FolderNode | null,
   newNodePromptRef: RefObject<HTMLDivElement | null>,
   newNodePromptInputRef: RefObject<HTMLInputElement | null>,
   submitNewNodePrompt: () => Promise<void>,
   cancelNewNodePrompt: () => void
 ): ReactNode  {
   if (!newNodeType) return null
-
-  const { activeFolder } = SidebarStore.getState()
 
   return (
     <li key={`__create_new_node_under__:${activeFolder?.id ?? 'root'}:${newNodeType}`}
@@ -116,6 +112,7 @@ export function renderNodeHandler(
   depth: number,
   activeFile: FileNode | null,
   activeFolder: FolderNode | null,
+  // folder
   toggledFolderIds: Set<number>,
   renderNode: (node: FsNode, depth?: number) => ReactNode,
   newNodeType: 'folder' | 'file' | null,
@@ -138,9 +135,9 @@ export function renderNodeHandler(
   const { nodeFontSize, sidebarNodeBgr, sidebar_node_drag_target } = ThemeManagerStore.getState()
 
   // Highlight Logics
-  const onlyFolderIsSelected = (activeFolder && !activeFile) ? true : false
-  const isSelectedFile = node.id === activeFile?.id
-  const isSelectedFolder = node.id === activeFolder?.id
+  const onlyFolderIsActive = (activeFolder && !activeFile) ? true : false
+  const isActiveFile = node.id === activeFile?.id
+  const isActiveFolder = node.id === activeFolder?.id
 
   // Folder Nodes
   const isExpanded = node.type === "folder" && toggledFolderIds.has(node.id)
@@ -172,11 +169,11 @@ export function renderNodeHandler(
             marginBottom: "2px",
             // Highlight Styles
             fontWeight: (node.type === 'folder' 
-              ? (onlyFolderIsSelected && isSelectedFolder ? 700 : 400)
-              : (!onlyFolderIsSelected && isSelectedFile ? 700 : 400)),
+              ? (onlyFolderIsActive && isActiveFolder ? 700 : 400)
+              : (!onlyFolderIsActive && isActiveFile ? 700 : 400)),
             background: (node.type === 'folder' 
-              ? ((onlyFolderIsSelected && isSelectedFolder) ? sidebarNodeBgr : 'transparent')
-              : ((!onlyFolderIsSelected && isSelectedFile)  ? sidebarNodeBgr : 'transparent')),
+              ? ((onlyFolderIsActive && isActiveFolder) ? sidebarNodeBgr : 'transparent')
+              : ((!onlyFolderIsActive && isActiveFile)  ? sidebarNodeBgr : 'transparent')),
             // Dragging Styles
             opacity: isDraggingNode ? 0.35 : 1,
             outline: (isDropTargetFolder && dropPosition === "inside" ? sidebar_node_drag_target: "none"),
@@ -190,18 +187,16 @@ export function renderNodeHandler(
             }
             // Folder selection logic
             {if (node.type === 'folder'){
-              setActiveFolder(node as FolderNode, false)
+              setActiveFolder(node as FolderNode)
             }}
           }}
-          // FsNode KeyDown For Rename or Remove
+          // FsNode KeyDown for rename or remove
           onKeyDown={(e) => {
             e.stopPropagation()
             if (renameNodeId === null) {
               if (e.key === 'Backspace') {
                 removeNodeHandler(node)
               }
-
-              // initiate rename update
               if (e.key === 'Enter') {
                 setRenameNodeId(node.id)
               }
@@ -217,7 +212,7 @@ export function renderNodeHandler(
             gap: 6, 
             width: '100%' 
           }}>
-
+            {/* Folder Icon */}
             {node.type === 'folder' 
               ? <ToolbarIcon 
                 whiteIcon={isExpanded ? downIcon : rightIcon}
@@ -225,7 +220,7 @@ export function renderNodeHandler(
               />
               : undefined
             }
-            {/* FsNode Icon */}
+            {/* File Icon */}
             { node.type === 'file' 
               ? <ToolbarIcon
               whiteIcon={fileIcon}
@@ -233,7 +228,6 @@ export function renderNodeHandler(
               />
               : undefined
             }
-
             {/* FsNode Name or Rename Prompt */}
             {renameNodeId !== node.id 
             ? (
@@ -284,9 +278,7 @@ export function renderNodeHandler(
                   cancelRenameHandler()
                 }}
               />
-              
             )}    
-
           </span>
         </div>
         
@@ -295,7 +287,7 @@ export function renderNodeHandler(
           <ul style={{ margin: 0, paddingLeft: 0}}>
             {children.map((child) => renderNode(child, depth + 1))}
             {/* folder prompt */}
-            {newNodeType && isSelectedFolder ? renderNewNodePrompt(depth + 1) : null}
+            {newNodeType && isActiveFolder ? renderNewNodePrompt(depth + 1) : null}
           </ul>
           : undefined
         }

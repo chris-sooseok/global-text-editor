@@ -4,17 +4,6 @@ import type { FsNode, FsNodeRow, FileNode, FolderNode } from './FsTreeTypes'
 import type { FetchFsNodeRes } from 'api/Apis'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import { TabManagerStore } from 'store/TabManagerStore/TabManagerStore'
-/** Imuutable Rows
- * Decided to provide FsNodeRows instead of FsTree object because
- * 1. With FsTree class instance, I had to manually update the changes to FsTree mutably
- *    whenever create, update, and delete happened. This requireed having publish function
- *    to every mutable function and to enforce subscribers to update their FsTree
- * 2. With immutable rows, now I can create, update, and delete nodes immutably
- *    This makes updates easy because I don't have to handle FsTree state manually
- *    However, this requires having buildFsTree function and builds FsTree instance
- *    whenever the nodeRows it relies on changes
- */
-
 
 type SidebarStore = {
   nodeRows: FsNodeRow[]
@@ -24,7 +13,7 @@ type SidebarStore = {
   activeFolder: FolderNode | null
   toggledFolderIds: Set<number>
   setActiveFile: (activeFile: FileNode | null) => void
-  setActiveFolder: (activeFolder: FolderNode | null, fromFile: boolean) => void
+  setActiveFolder: (activeFolder: FolderNode | null, fromFile?: boolean) => void
   toggleFolderHandler: (folderId: number) => void
   loadFsNodes: (api: Window['api']) => Promise<void>
   buildFsTree: () => void
@@ -65,6 +54,7 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
         set({ activeFile: null })
         return
       }
+
       // update active file
       localStorage.setItem(SELECTED_FILE, JSON.stringify(nextFile))
       set({ activeFile: nextFile })
@@ -76,7 +66,8 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       openFileInActiveTab(nextFile as FileNode)
     },
 
-    setActiveFolder: (nextFolder, fromFile) => {
+    //* fromFile arg is set for active file to set its parent to active folder
+    setActiveFolder: (nextFolder, fromFile = false) => {
       // nullifying folder
       if (!nextFolder) {
         localStorage.setItem(SELECTED_FOLDER, JSON.stringify(null))
@@ -178,20 +169,15 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       set({ roots, nodes})
     },
 
-    /**
-     * If manage to control active file and folder here
-     * it wont also be neccessary to return the new node
-     * 
-     */
     insertFsNodeRow: (node: FsNodeRow) => {
       // insert new node into nodeRows
       set((state) => ({ nodeRows: [...state.nodeRows, node] }))
       // set new node active
       const newFsNode =  node.type === 'folder' ? makeFolderNode(node) : makeFileNode(node)
       if (newFsNode.type === 'file'){
-        get().setActiveFile(newFsNode)
+        get().setActiveFile(newFsNode as FileNode)
       } else {
-        get().setActiveFolder(newFsNode, false)
+        get().setActiveFolder(newFsNode as FolderNode)
       }
       // return to set focus on new node
       return newFsNode
@@ -213,6 +199,7 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
         }
       }
 
+      // update nodeRows
       set((state) => ({
         nodeRows: state.nodeRows.map((r) =>
           r.id === node.id
@@ -229,23 +216,23 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
       const res = await window.api.removeFsNode(removeNode)
       if (!res.ok) return
 
-      // handle FsNode deletion for file and folder
+      // file deletion
       if (removeNode.type === 'file') {
-
-                get().setActiveFile(null)
+        get().setActiveFile(null)
         // remove file from tabs
         const { tabIdsByFileIds, closeFileInTab } = TabManagerStore.getState()
         for (const tabId of tabIdsByFileIds[removeNode.id] ?? []) {
           closeFileInTab(tabId, removeNode as FileNode)
         }
-
-      } else {
+      } 
+      // folder deletion
+      else {
         // prevent folder deletion if any child
         if (removeNode.children.length !== 0) {
           window.alert("This folder isn’t empty. Delete/move the contents first.")
           return
         }
-        get().setActiveFolder(null, false)
+        get().setActiveFolder(null)
         // remove folder from toggledFolderIds
         set((state) => {
           if (!state.toggledFolderIds.has(removeNode.id)) return state
@@ -253,7 +240,7 @@ export const SidebarStore = create<SidebarStore>()((set, get) => {
         })
       }
 
-      // reload
+      // though reload here isn't necessary, later when recursive deletion is supportive
       await SidebarStore.getState().loadFsNodes(window.api)
     },
 
