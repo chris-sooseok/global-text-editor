@@ -4,8 +4,9 @@ import Sidebar from './Sidebar'
 import settingIcon from 'assets/Sidebar/icons8-settings-white-96.png'
 import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
-import newFolderIcon from 'assets/Sidebar/icons8-add-folder-96.png'
-import newFileIcon from 'assets/Sidebar/icons8-add-file-96.png'
+import newFolderIcon from 'assets/Sidebar/icons8-new-folder-96.png'
+import newFileIcon from 'assets/Sidebar/icons8-new-file-96.png'
+import todayIcon from 'assets/Sidebar/icons8-today-white-96.png'
 
 const SIDEBAR_DEFAULT_WIDTH = Number(import.meta.env.VITE_SIDEBAR_DEFAULT_WIDTH)
 const SIDEBAR_MIN_WIDTH =  Number(import.meta.env.VITE_SIDEBAR_MIN_WIDTH)
@@ -141,7 +142,6 @@ function SidebarRenderer() {
           flexShrink: 0,
         }}
       >
-
         <button
           type="button"
           onClick={setSidebarCollapsedHandler} 
@@ -173,6 +173,13 @@ function SidebarRenderer() {
               data-new-node-btn="true"
             >
               <ToolbarIcon whiteIcon={newFileIcon} onlyWhiteIcon={true} />
+            </button>
+            <button
+              tabIndex={-1}
+              // onClick={() => createNewNode('today')}
+              data-new-node-btn="true"
+            >
+              <ToolbarIcon whiteIcon={todayIcon} onlyWhiteIcon={true} />
             </button>
           </div>
         )}

@@ -17,7 +17,6 @@ type tabManagerStore = {
   tabIds: string[]
   activeFileByTabIds: Record<string, FileNode>
   filesByTabIds: Record<string, FileNode[]>
-
   tabIdsByFileIds: Record<number, string[]>
   // Sidebar
   openFileInActiveTab: (file: FileNode) => void

@@ -5,7 +5,7 @@ import { SidebarStore } from "store/SidebarStore/SidebarStore"
 import type { DragState } from "./Sidebar"
 import ToolbarIcon from "shared/ToolbarIcon"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
-import fileIcon from 'assets/Sidebar/icons8-file-96.png'
+import fileIcon from 'assets/Sidebar/language-markdown-3135632568.png'
 import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
 import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
 
