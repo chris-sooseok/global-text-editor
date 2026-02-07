@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
-import DropdownOverlay from "shared/DropdownOverlay"
+import {DropdownOverlay} from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackHIcon from "assets/NormalTypeIcons/icons8-h-black-96.png"
@@ -15,11 +15,10 @@ function HeadingButton({
 }) {
   if (!editor) return null
 
-  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
-  const btnRef = useRef<HTMLButtonElement | null>(null)
+  const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
+  
   const levels = [1, 2, 3, 4] as const
   
-
   const activeLevel =
     editor.isActive("heading", { level: 1 }) ? 1 :
     editor.isActive("heading", { level: 2 }) ? 2 :
@@ -35,11 +34,10 @@ function HeadingButton({
     }}>
       {/* Toolbar Button */}
       <button
-        ref={btnRef}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
-          setDropdownIsOpen((v) => !v)
+          setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
         style={{
           background: "rgba(255,255,255,0.05)",
@@ -71,11 +69,10 @@ function HeadingButton({
 
       {/* Dropdown Options */}
       <DropdownOverlay
-        dropdownIsOpen={dropdownIsOpen}
-        setDropdownIsOpen={() => setDropdownIsOpen(false)}
-        parentRef={btnRef}
-        activeCheck={(level) => editor.isActive("heading", { level: Number(level) })}
-        scrollable={true}
+        open={dropdown.open}
+        x={dropdown.x}
+        y={dropdown.y}
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
       >
         {levels.map((level) => {
           return (
@@ -86,7 +83,7 @@ function HeadingButton({
               onMouseDown={(e) => {
                 e.preventDefault()
                 editor.chain().focus().toggleHeading({ level }).run()
-                setDropdownIsOpen(false)
+                setDropdown({ open: true, x: e.clientX, y: e.clientY })
               }}
             >
               Heading {level}

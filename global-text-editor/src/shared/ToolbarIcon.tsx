@@ -21,7 +21,7 @@ function ToolbarIcon({
   size?: number
   onlyBlackIcon?: boolean
   onlyWhiteIcon?: boolean
-  fileId?: number
+  fileId?: number // use for editorTheme
 }) {
   
   let editorTheme
@@ -31,7 +31,6 @@ function ToolbarIcon({
   }
 
   return (
-    
     <img
       src={onlyBlackIcon ? blackIcon :
             onlyWhiteIcon ? whiteIcon :

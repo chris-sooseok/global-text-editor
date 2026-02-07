@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import type { Editor } from "@tiptap/core"
-import DropdownOverlay from "shared/DropdownOverlay"
+import { DropdownOverlay } from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackImageIcon from "assets/NormalTypeIcons/icons8-add-image-black-96.png"
 import whiteImageIcon from "assets/NormalTypeIcons/icons8-add-image-white-96.png"
@@ -14,7 +14,7 @@ function ImageButton({
   fileId: number
   storagePath: string
 }) {
-  const [dropdownIsOpen, setDropdownIsOpen] = useState(false)
+  const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   const [urlInput, setUrlInput] = useState("")
   const btnRef = useRef<HTMLButtonElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -31,7 +31,7 @@ function ImageButton({
 
   function insertUrl() {
     if (!editor) {
-      setDropdownIsOpen(false)
+      setDropdown({ open: false, x: 0, y: 0 })
       return
     }
 
@@ -40,7 +40,7 @@ function ImageButton({
 
     editor.chain().focus().setImage({ src }).run()
     setUrlInput("")
-    setDropdownIsOpen(false)
+    setDropdown({ open: false, x: 0, y: 0 })
   }
 
   if (!editor) return null
@@ -52,7 +52,7 @@ function ImageButton({
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
-          setDropdownIsOpen((v) => !v)
+          setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
         <ToolbarIcon blackIcon={blackImageIcon} whiteIcon={whiteImageIcon} fileId={fileId} />
@@ -73,11 +73,10 @@ function ImageButton({
       />
 
       <DropdownOverlay
-        dropdownIsOpen={dropdownIsOpen}
-        setDropdownIsOpen={() => setDropdownIsOpen(false)}
-        parentRef={btnRef}
-        scrollable={false}
-        align="center"
+        open={dropdown.open}
+        x={dropdown.x}
+        y={dropdown.y}
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
       >
         {/* URL input */}
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -92,7 +91,7 @@ function ImageButton({
               }
               if (e.key === "Escape") {
                 e.preventDefault()
-                setDropdownIsOpen(false)
+                setDropdown({ open: false, x: 0, y: 0 })
               }
             }}
             style={{
@@ -119,7 +118,7 @@ function ImageButton({
         <button
           onMouseDown={(e) => {
             e.preventDefault()
-            setDropdownIsOpen(false)
+            setDropdown({ open: false, x: 0, y: 0 })
             fileInputRef.current?.click()
           }}
         >

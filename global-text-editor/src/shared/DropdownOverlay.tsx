@@ -25,7 +25,7 @@ export function DropdownOverlay({
   const dropdownBackground = ThemeManagerStore((s)=>s.dropdownBackground)
   const dropdownColor= ThemeManagerStore((s)=>s.dropdownColor)
 
-  const OFFSET = 8
+  const OFFSET = 12
 
   return createPortal(
     <div
@@ -36,7 +36,7 @@ export function DropdownOverlay({
         className={styles.dropdownOverlayMenu}
         style={{
           position: "fixed",
-          top: y,
+          top: y + OFFSET,
           left: align === "right" ? x + OFFSET : x - OFFSET,
           transform: align === "left" ? "translateX(-100%)" : undefined,
           background: dropdownBackground,
