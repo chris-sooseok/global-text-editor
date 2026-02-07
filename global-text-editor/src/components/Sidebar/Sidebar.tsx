@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { type RefObject, type Dispatch, type SetStateAction } from 'react'
-import type { FsNode } from 'store/FsTreeStore/FsTreeTypes'
-import { SidebarStore } from '../../store/FsTreeStore/SidebarStore'
+import type { FsNode } from 'store/SidebarStore/FsTreeTypes'
+import { SidebarStore } from '../../store/SidebarStore/SidebarStore'
 import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
 import { submitNewNodePromptHandler, renderNewNodePromptHandler, renderNodeHandler } from './SidebarHandler'
 

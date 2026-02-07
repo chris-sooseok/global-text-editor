@@ -19,7 +19,7 @@ import { useState } from "react"
 import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
-import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
@@ -56,6 +56,7 @@ function EditorToolbar({
       zIndex: 10,
       padding: "5px 20px",
       minHeight: 30,
+      borderBottom: `1px solid ${editorTheme === "black" ? "#333" : "#ddd"}`,
       // change toolbar theme color and border color
       background: editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE
     }}
@@ -88,7 +89,7 @@ function EditorToolbar({
               display: "flex",
               flexWrap: "nowrap",
               alignItems: "center",
-              gap: 14,
+              gap: 16,
               width: "max-content", // forces buttons to overflow
             }}
           >
@@ -126,7 +127,7 @@ function EditorToolbar({
         <div
           style={{
             display: "flex",
-            gap: 8,
+            gap: 16,
             paddingLeft: "5px",
             flexShrink: 0,
           }}

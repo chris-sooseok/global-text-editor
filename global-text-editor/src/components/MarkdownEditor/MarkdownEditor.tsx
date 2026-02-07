@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { EditorContent } from "@tiptap/react"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import EditorToolbar from "./MarkdownToolbar"
-import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { ListKit } from "@tiptap/extension-list"
@@ -31,7 +31,6 @@ const DEFAULT_DOC_TEMPLATE = {
   ],
 }
 
-
 function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
 
   const [isMarkdownView, setIsMarkdownView] = useState(false)
@@ -41,7 +40,7 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
   {/*** Editor Config and Supports ***/}
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
   const { loadFileConfig } = ThemeManagerStore.getState()
-  const { switchActiveTab } = TabManagerStore.getState()
+  const { switchActiveTab, switchActiveFile } = TabManagerStore.getState()
   useEffect(() => {
     void loadFileConfig(activeFile.id)
   }, [activeFile.id])
@@ -269,7 +268,10 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
         <textarea
           value={markdownText}
           onChange={(e) => onChangeMarkdown(e.currentTarget.value)}
-          onFocus={() => switchActiveTab(tabId)}
+          onFocus={() => {
+            switchActiveTab(tabId)
+            switchActiveFile(tabId, activeFile)
+          }}
           style={{
             flex: 1,
             width: "100%",
@@ -293,7 +295,10 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
         <EditorContent
           editor={editor}
           className={editorTheme === "black" ? "prose prose-invert max-w-none " : "prose max-w-none"}
-          onFocus={() => switchActiveTab(tabId)}
+          onFocus={() => {
+            switchActiveTab(tabId)
+            switchActiveFile(tabId, activeFile)
+          }}
           style={{ flex: 1, display: "flex", width: "100%", minHeight: "100%" }}
         />
       )}

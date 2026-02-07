@@ -1,7 +1,7 @@
 import { type Dispatch, type ReactNode, type RefObject, type SetStateAction } from "react"
-import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/FsTreeStore/FsTreeTypes"
+import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/SidebarStore/FsTreeTypes"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import { SidebarStore } from "store/FsTreeStore/SidebarStore"
+import { SidebarStore } from "store/SidebarStore/SidebarStore"
 import type { DragState } from "./Sidebar"
 import ToolbarIcon from "shared/ToolbarIcon"
 import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
@@ -167,10 +167,7 @@ export function renderNodeHandler(
             marginRight: "2px",
             marginTop: "2px",
             marginBottom: "2px",
-            // Highlight Styles
-            fontWeight: (node.type === 'folder' 
-              ? (onlyFolderIsActive && isActiveFolder ? 700 : 400)
-              : (!onlyFolderIsActive && isActiveFile ? 700 : 400)),
+            fontWeight: 300,
             background: (node.type === 'folder' 
               ? ((onlyFolderIsActive && isActiveFolder) ? sidebarNodeBgr : 'transparent')
               : ((!onlyFolderIsActive && isActiveFile)  ? sidebarNodeBgr : 'transparent')),
@@ -236,7 +233,7 @@ export function renderNodeHandler(
                 minWidth: 0,
                 overflow: 'hidden', 
                 whiteSpace: 'nowrap',
-                fontSize: nodeFontSize
+                fontSize: nodeFontSize,
               }}>
                 {node.name}
               </span>

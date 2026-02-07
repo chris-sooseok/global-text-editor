@@ -1,4 +1,4 @@
-import type { FsNodeRow } from "store/FsTreeStore/FsTreeTypes";
+import type { FsNodeRow } from "store/SidebarStore/FsTreeTypes";
 import type { EditorTheme } from "store/ThemeStore/ThemeManagerStore";
 type CreateFsNodeRes =
   | { ok: true; row: FsNodeRow }

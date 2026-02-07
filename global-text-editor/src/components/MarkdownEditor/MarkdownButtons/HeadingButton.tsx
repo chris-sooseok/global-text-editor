@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
-import {DropdownOverlay} from "shared/DropdownOverlay"
+import { DropdownOverlay } from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackHIcon from "assets/NormalTypeIcons/icons8-h-black-96.png"

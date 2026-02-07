@@ -6,7 +6,7 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
 import ToolbarIcon from "shared/ToolbarIcon"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import type { FileNode } from "store/FsTreeStore/FsTreeTypes"
+import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 
 
 function Tab({tabId}: {tabId: string}) {
@@ -116,7 +116,7 @@ function Tab({tabId}: {tabId: string}) {
               tabIndex={-1}
               onClick={() => {
                 if (!isActiveTab) switchActiveTab(tabId)
-                if (activeFile.id !== file.id) switchActiveFile(tabId, file)
+                switchActiveFile(tabId, file)
               }}
               // dropdown on right-click on filename
               onContextMenu={(e) => {
@@ -131,7 +131,7 @@ function Tab({tabId}: {tabId: string}) {
                 padding: "0 5px", // padding around fileanme
                 cursor: "pointer",
                 fontSize: nodeFontSize,
-                fontWeight: activeFile.id === file.id ? 600 : 400,
+                fontWeight: 300,
                 opacity: activeFile.id === file.id ? 1 : 0.8,
               }}
             >

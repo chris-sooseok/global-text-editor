@@ -1,4 +1,4 @@
-import type { FileNode } from "../FsTreeStore/FsTreeTypes"
+import type { FileNode } from "../SidebarStore/FsTreeTypes"
 
 const ACTIVE_TAB_ID = String(import.meta.env.VITE_ACTIVE_TAB_ID)
 const TABS_IDS = String(import.meta.env.VITE_TABS_IDS)
