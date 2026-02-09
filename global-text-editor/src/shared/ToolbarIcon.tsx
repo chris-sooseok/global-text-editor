@@ -13,7 +13,8 @@ function ToolbarIcon({
   size = 20,
   onlyBlackIcon = false,
   onlyWhiteIcon = false,
-  fileId
+  fileId,
+  isActive = false
 }: {
   blackIcon?: string
   whiteIcon?: string
@@ -22,6 +23,7 @@ function ToolbarIcon({
   onlyBlackIcon?: boolean
   onlyWhiteIcon?: boolean
   fileId?: number // use for editorTheme
+  isActive?: boolean
 }) {
   
   let editorTheme
@@ -31,19 +33,27 @@ function ToolbarIcon({
   }
 
   return (
-    <img
-      src={onlyBlackIcon ? blackIcon :
-            onlyWhiteIcon ? whiteIcon :
-            editorTheme === "black" ? whiteIcon : blackIcon}
-      alt={alt}
-      aria-hidden={alt === ""}
-      style={{ 
-        width: size,
-        height: size,
-        display: "block",
-        cursor: 'pointer',
+    <span
+      style={{
+        display: "flex",
+        borderRadius: 6,
+        outline: isActive ? "1px solid currentColor" : "none",
       }}
-    />
+    >
+      <img
+        src={onlyBlackIcon ? blackIcon :
+              onlyWhiteIcon ? whiteIcon :
+              editorTheme === "black" ? whiteIcon : blackIcon}
+        alt={alt}
+        aria-hidden={alt === ""}
+        style={{ 
+          width: size,
+          height: size,
+          display: "block",
+          cursor: 'pointer',
+        }}
+      />
+    </span>
   )
 }
 
