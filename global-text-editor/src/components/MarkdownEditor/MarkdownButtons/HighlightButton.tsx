@@ -17,14 +17,12 @@ function HighlightButton({
   fileId,
   isMarkdownView,
   markdownText,
-  onChangeMarkdown,
   textareaRef,
 }: {
   editor: Editor | null
   fileId: number
   isMarkdownView: boolean
-  markdownText: string
-  onChangeMarkdown: (next: string) => void
+  markdownText: React.RefObject<string>
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
   const [open, setOpen] = useState(false)
@@ -48,9 +46,9 @@ function HighlightButton({
     const start = ta.selectionStart ?? 0
     const end = ta.selectionEnd ?? 0
 
-    const before = markdownText.slice(0, start)
-    const selected = markdownText.slice(start, end)
-    const after = markdownText.slice(end)
+    const before = markdownText.current.slice(0, start)
+    const selected = markdownText.current.slice(start, end)
+    const after = markdownText.current.slice(end)
 
     const openMatch = before.match(/<span style="color:([^"]+)">$/)
     const hasClose = after.startsWith("</span>")
@@ -61,7 +59,6 @@ function HighlightButton({
       const newOpen = `<span style="color:${color}">`
 
       const next = before.slice(0, -oldOpenLen) + newOpen + selected + after
-      onChangeMarkdown(next)
 
       requestAnimationFrame(() => {
         ta.focus()
@@ -75,7 +72,6 @@ function HighlightButton({
     const openTag = `<span style="color:${color}">`
     const closeTag = `</span>`
     const next = before + openTag + selected + closeTag + after
-    onChangeMarkdown(next)
 
     requestAnimationFrame(() => {
       ta.focus()

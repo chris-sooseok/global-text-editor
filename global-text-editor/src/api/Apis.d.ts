@@ -40,7 +40,7 @@ declare global {
 
       /* Editor Apis */
       loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
-      saveFileContent(fileId: number, storagePath: string, fileContent: string, originTabId: string): Promise<SaveNormalEditorRes>
+      saveFileContent(storagePath: string, fileContent: string): Promise<SaveNormalEditorRes>
       saveImageAsset(
         storagePath: string,
         fileContent: ArrayBuffer,

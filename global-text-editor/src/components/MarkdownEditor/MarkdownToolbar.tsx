@@ -14,8 +14,6 @@ import SubscriptButton from "./MarkdownButtons/SubscriptButton"
 import ImageButton from "./MarkdownButtons/ImageButton"
 import ThemeButton from "./MarkdownButtons/ThemeButton"
 import ExportButton from "./MarkdownButtons/ExportButton"
-import HideShowButton from "./MarkdownButtons/HideShowButton"
-import { useState } from "react"
 import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
@@ -32,7 +30,6 @@ function EditorToolbar({
   isMarkdownView,
   toggleMarkdownView,
   markdownText,
-  onChangeMarkdown,
   textareaRef,
 }: {
   activeFile: FileNode
@@ -40,13 +37,10 @@ function EditorToolbar({
   isMarkdownView: boolean
   toggleMarkdownView: () => void
   markdownText: string
-  onChangeMarkdown: (next: string) => void
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
 
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-
-  const [ toolbarIsVisible, setToolbarIsVisible ] = useState<boolean>(true)
 
   return (<>
   {/* Toolbar Container */}
@@ -82,8 +76,6 @@ function EditorToolbar({
             flexWrap: "nowrap",
             alignItems: "center",
             gap: 14,
-            visibility: toolbarIsVisible ? "visible" : "hidden",
-            pointerEvents: toolbarIsVisible ? "auto" : "none",
           }}
         >
           <div
@@ -109,7 +101,6 @@ function EditorToolbar({
             fileId={activeFile.id}
             isMarkdownView={isMarkdownView}
             markdownText={markdownText}
-            onChangeMarkdown={onChangeMarkdown}
             textareaRef={textareaRef}
           />
           <SuperscriptButton editor={editor} fileId={activeFile.id} />
@@ -140,11 +131,6 @@ function EditorToolbar({
             fileId={activeFile.id}
             isMarkdownView={isMarkdownView}
             toggleMarkdownView={toggleMarkdownView}
-          />
-          <HideShowButton
-            fileId={activeFile.id}
-            toolbarIsVisible={toolbarIsVisible}
-            setToolbarIsVisible={setToolbarIsVisible}
           />
           <ThemeButton fileId={activeFile.id} />
           <ExportButton editor={editor} fileId={activeFile.id} />
