@@ -7,6 +7,7 @@ import { EditorContent } from "@tiptap/react"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { ListKit } from "@tiptap/extension-list"
+import TextAlign from "@tiptap/extension-text-align"
 import SuperScript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
 import Image from "@tiptap/extension-image"
@@ -39,6 +40,9 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
         listItem: false,
       }),
       ListKit,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
       TextStyleWithMarkdown,
       Color,
       Highlight,
