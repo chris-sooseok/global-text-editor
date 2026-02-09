@@ -1,6 +1,7 @@
 import { TextStyle } from "@tiptap/extension-text-style"
 import type { JSONContent } from "@tiptap/core"
 
+// custom function
 const TextStyleMarkdown = TextStyle.extend({
   renderMarkdown: (node, helpers) => {
     const content = helpers.renderChildren(node.content || [])
