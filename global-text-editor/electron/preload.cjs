@@ -28,11 +28,11 @@ contextBridge.exposeInMainWorld('api', {
     invokeLogged('fsNodes:fetch', {}),
 
   /* Editor Apis */
-  loadFileContent: (storagePath) => invokeLogged('editors:loadContent', {storagePath}),
-  saveFileContent: (storagePath, fileContent) => invokeLogged('editors:saveContent', { storagePath, fileContent }),
+  loadJsonContent: (storagePath) => invokeLogged('editors:loadContent', {storagePath}),
+  saveJsonContent: (storagePath, jsonContent) => invokeLogged('editors:saveContent', { storagePath, jsonContent }),
 
-  saveImageAsset: (storagePath, fileContent, originalName) =>
-    invokeLogged("editors:saveImageAsset", { storagePath, fileContent, originalName }),
+  saveImageAsset: (storagePath, jsonContent, originalName) =>
+    invokeLogged("editors:saveImageAsset", { storagePath, jsonContent, originalName }),
 
   // onFileContentUpdated: (handler) => {
   //   const listener = (_e, payload) => handler(payload)
@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld('api', {
   // },
 
   /* Editor Config */
-  loadFileConfig: (id) => invokeLogged('editors:loadConfig', {id}),
+  loadContentConfig: (id) => invokeLogged('editors:loadContentConfig', {id}),
   changeEditorTheme: (id, theme) => invokeLogged('editors:changeEditorTheme', {id, theme}),
 
 })

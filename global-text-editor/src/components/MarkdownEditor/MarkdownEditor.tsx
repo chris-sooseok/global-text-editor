@@ -36,7 +36,6 @@ import ParagraphButton from "./MarkdownButtons/ParagraphButton"
 import TextAlignButton from "./MarkdownButtons/TextAlignButton"
 
 import TextStyleWithMarkdown from "./MarkdownHelper"
-import { makeDefaultDocTemplate } from "./MarkdownHelper"
 import { broadcastEditorContentUpdated, onEditorContentUpdated } from "./EditorSyncBus"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
@@ -94,10 +93,9 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
 
   /** Editor Config */
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-  const { loadFileConfig } = ThemeManagerStore.getState()
   
   useEffect(() => {
-    void loadFileConfig(activeFile.id)
+    void ThemeManagerStore.getState().loadContentConfig(activeFile.id)
   }, [activeFile.id])
 
   /** Supports Markdown */
@@ -114,60 +112,46 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
       if (next) {
         const md = editor.getMarkdown()
         markdownContentRef.current = md
-        // if textarea already exists for some reason, update it
-        if (textareaRef.current) textareaRef.current.value = md
       }
       return next
     })
   }
 
-  {/*** Load File Content ***/}
+  {/*** Load Json Content ***/}
   useEffect(() => {
 
-    function focusEditor() {
-      setTimeout(() => {
-        editor.commands.focus("start")
-      }, 0)
-    }
-
-    async function loadFileContent() {
-      const res = await window.api.loadFileContent(activeFile.storagePath)
+    async function loadJsonContent() {
+      const res = await window.api.loadJsonContent(activeFile.storagePath)
 
       if (!res.ok) {
         console.error(res.message)
         return
       }
 
-      const raw = res.fileContent
-      if (!raw) {
-        const defaultContent = makeDefaultDocTemplate(activeFile.name)
-        editor.commands.setContent(defaultContent, { emitUpdate: false })
-        focusEditor()
-        return
-      }
-
       try {
-        const json = JSON.parse(raw)
+        const json = JSON.parse(res.jsonContent)
         editor.commands.setContent(json, { emitUpdate: false })
-        focusEditor()
+        setTimeout(() => {
+          editor.commands.focus("start")
+        }, 0)
       } catch {
         console.error('File content could not be loaded')
         return
-      }
+      } 
     }
 
-    void loadFileContent()
+    void loadJsonContent()
 
-  }, [editor, activeFile, isMarkdownView])
+  }, [editor, activeFile.storagePath])
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
 
-    function saveFileContent() {
-      const fileContent = JSON.stringify(editor.getJSON())
-      void window.api.saveFileContent(activeFile.storagePath, fileContent)
+    function saveJsonContent() {
+      const jsonContent = JSON.stringify(editor.getJSON())
+      void window.api.saveJsonContent(activeFile.storagePath, jsonContent)
     }
 
     function onUpdate() {
@@ -185,7 +169,7 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
       // on update, set timeout for saving content
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
       saveTimerRef.current = window.setTimeout(() => {
-        void window.api.saveFileContent(activeFile.storagePath, jsonContent)
+        void window.api.saveJsonContent(activeFile.storagePath, jsonContent)
         saveTimerRef.current = null
       }, 500)
     }
@@ -199,7 +183,7 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
-        saveFileContent()
+        saveJsonContent()
       }
     }
   }, [editor, activeFile])
@@ -255,7 +239,7 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
             gap: 12,
           } 
           }>
-            {/* Left Buttons */}
+            {/* Left Buttons: Scrollable */}
             <div
               className="toolbar-scroll"
               style={{
@@ -264,7 +248,6 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
                 display: "flex",
                 flexWrap: "nowrap",
                 alignItems: "center",
-                gap: 14,
               }}
             >
               <div

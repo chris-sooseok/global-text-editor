@@ -6,46 +6,6 @@ const { connect_db } = require("../db/index.cjs")
 
 const db = connect_db()
 
-ipcMain.handle("editors:loadConfig", (_event, payload) => {
-  const id = payload.id
-
-  try {
-    const row = db
-      .prepare(`
-        SELECT editor_theme
-        FROM fileConfig
-        WHERE file_id = ?
-      `)
-      .get(id)
-
-    return {
-      ok: true,
-      editorTheme: row.editor_theme,
-    }
-
-  } catch (err) {
-    console.error('[editors:loadConfig] failed:', err)
-    return { ok: false}
-  }
-})
-
-ipcMain.handle('editors:changeEditorTheme', (_event, payload) => {
-
-  const id = payload.id
-  const theme = payload.theme // "black" | "white"
-  try {
-    db.prepare(`
-        UPDATE fileConfig
-        SET editor_theme = ?
-        WHERE file_id = ?
-    `).run(theme, id)
-
-    return { ok: true }
-  } catch {
-    return { ok: false }
-  }
-})
-
 ipcMain.handle("editors:loadContent", (_event, payload) => {
   const storagePath = payload.storagePath
   const dirPath = path.join(app.getPath("userData"), storagePath)
@@ -53,7 +13,7 @@ ipcMain.handle("editors:loadContent", (_event, payload) => {
 
   try {    
     const fileContent = fs.readFileSync(filePath, "utf8")
-    return { ok: true, fileContent: fileContent }
+    return { ok: true, jsonContent: fileContent }
   } catch(err) {
     console.error('[editors:load] failed:', err)
     return {ok : false, message: "Failed to load file content"}
@@ -61,11 +21,11 @@ ipcMain.handle("editors:loadContent", (_event, payload) => {
 })
 
 ipcMain.handle('editors:saveContent', (_event, payload) => {
-  const { storagePath, fileContent } = payload
+  const { storagePath, jsonContent } = payload
   
   try {
     const dirPath = path.join(app.getPath("userData"), storagePath)
-    fs.writeFileSync(path.join(dirPath, "index.json"), fileContent, "utf8")
+    fs.writeFileSync(path.join(dirPath, "index.json"), jsonContent, "utf8")
 
     // ? Not needed now
     // for (const win of BrowserWindow.getAllWindows()) {
@@ -103,5 +63,46 @@ ipcMain.handle("editors:saveImageAsset", (_event, payload) => {
   } catch (err) {
     console.error("[editors:saveImageAsset] failed:", err)
     return { ok: false, message: "Failed to save image asset" }
+  }
+})
+
+
+ipcMain.handle("editors:loadContentConfig", (_event, payload) => {
+  const id = payload.id
+
+  try {
+    const row = db
+      .prepare(`
+        SELECT editor_theme
+        FROM fileConfig
+        WHERE file_id = ?
+      `)
+      .get(id)
+
+    return {
+      ok: true,
+      editorTheme: row.editor_theme,
+    }
+
+  } catch (err) {
+    console.error('[editors:loadContentConfig] failed:', err)
+    return { ok: false}
+  }
+})
+
+ipcMain.handle('editors:changeEditorTheme', (_event, payload) => {
+
+  const id = payload.id
+  const theme = payload.theme // "black" | "white"
+  try {
+    db.prepare(`
+        UPDATE fileConfig
+        SET editor_theme = ?
+        WHERE file_id = ?
+    `).run(theme, id)
+
+    return { ok: true }
+  } catch {
+    return { ok: false }
   }
 })

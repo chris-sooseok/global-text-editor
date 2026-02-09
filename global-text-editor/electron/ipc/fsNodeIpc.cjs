@@ -54,12 +54,29 @@ ipcMain.handle('fsNodes:create', (_event, payload) => {
     lastInsertRowid = Number(info.lastInsertRowid)
 
     if (type === "file") {
+      // create file config
       db.prepare(`
         INSERT INTO fileConfig (file_id, editor_theme)
         VALUES (?, ?)
       `).run(lastInsertRowid, "black")
       fs.mkdirSync(absStoragePath, { recursive: true})
-      fs.writeFileSync(path.join(absStoragePath, "index.json"), "", { flag: "wx" })
+      // set default doc template
+      const defaultDoc = {
+        type: "doc",
+        content: [
+          {
+            type: "heading",
+            attrs: { level: 1 },
+            content: [{ type: "text", text: name }],
+          },
+          { type: "paragraph" },
+        ],
+      }
+      fs.writeFileSync(
+        path.join(absStoragePath, "index.json"),
+        JSON.stringify(defaultDoc),
+        { flag: "wx" }
+      )
     }
   })
   

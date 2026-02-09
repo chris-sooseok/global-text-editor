@@ -9,7 +9,7 @@ type FetchFsNodeRes =
   | { ok: false; message: string }
 
 type FetchNormalEditorRes =
-    | { ok: true; fileContent: string }
+    | { ok: true; jsonContent: string }
     | { ok: false; message: string }
 
 type MoveFsNodePayload = {node: FsNode, targetNode: FsNode, newParentId: number,
@@ -39,11 +39,12 @@ declare global {
       fetchFsNodes(): Promise<FetchFsNodeRes>
 
       /* Editor Apis */
-      loadFileContent(storagePath: string): Promise<FetchNormalEditorRes>
-      saveFileContent(storagePath: string, fileContent: string): Promise<SaveNormalEditorRes>
+      loadJsonContent(storagePath: string): Promise<FetchNormalEditorRes>
+      saveJsonContent(storagePath: string, jsonContent: string): Promise<SaveNormalEditorRes>
+
       saveImageAsset(
         storagePath: string,
-        fileContent: ArrayBuffer,
+        jsonContent: ArrayBuffer,
         originalName: string
       ): Promise<{ ok: boolean; src?: string; filename?: string; message?: string }>
       
@@ -54,7 +55,7 @@ declare global {
       //   }) => void): () => void
 
       /* Editor Config Apis */
-      loadFileConfig(id: number): Promise<loadFileConfigRes>
+      loadContentConfig(id: number): Promise<loadFileConfigRes>
       changeEditorTheme(id: number, theme: EditorTheme): Promise<{ok: boolean}>
     }
   }
