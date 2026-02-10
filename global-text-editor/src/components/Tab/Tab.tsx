@@ -5,6 +5,8 @@ import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
 import ToolbarIcon from "shared/ToolbarIcon"
+import markdownIcon from 'assets/Sidebar/icons8-markdown-white-96.png'
+import dateIcon from 'assets/Sidebar/icons8-date-white-96.png'
 import { DropdownOverlay } from "shared/DropdownOverlay"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 
@@ -127,6 +129,9 @@ export default function Tab({tabId}: TabProps) {
               }}
               style={{
                 flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
                 minWidth: 0,
                 textAlign: "left", // left align filename
                 padding: "0 5px", // padding around fileanme
@@ -136,6 +141,21 @@ export default function Tab({tabId}: TabProps) {
                 opacity: activeFile.id === file.id ? 1 : 0.8,
               }}
             >
+              { file.type === 'file' && file.fileType === 'markdown'
+                ? <ToolbarIcon
+                whiteIcon={markdownIcon}
+                onlyWhiteIcon={true}
+                />
+                : undefined
+              }
+              {/* Date Icon */}
+              { file.type === 'file' && file.fileType === 'today'
+                ? <ToolbarIcon
+                whiteIcon={dateIcon}
+                onlyWhiteIcon={true}
+                />
+                : undefined
+              }
               {file.name}
             </button>
   
@@ -190,11 +210,7 @@ export default function Tab({tabId}: TabProps) {
       minWidth: 0, // force width to shrink
       minHeight: 0, // force height to shrink 
     }}>
-      <MarkdownEditor 
-        key="normal" 
-        activeFile={activeFile} 
-        tabId={tabId} 
-      />
+      <MarkdownEditor key={`${tabId}-editor`} tabId={tabId} />
     </div>
 
   </div>

@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core"
+import { useEditorState } from "@tiptap/react"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackSuperscriptIcon from "assets/NormalTypeIcons/superscript-black.png"
@@ -8,10 +9,16 @@ function SuperscriptButton({
   editor,
   fileId
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
-  if (!editor) return null
+
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor}: { editor: Editor}) => ({
+      isSuperscript: editor.isActive("superscript")
+    })
+  })
 
   return (
       <button
@@ -26,6 +33,7 @@ function SuperscriptButton({
           blackIcon={blackSuperscriptIcon}
           whiteIcon={whiteSuperscriptIcon}
           fileId={fileId}
+          isActive={editorState.isSuperscript}
         />
       </button>
   )

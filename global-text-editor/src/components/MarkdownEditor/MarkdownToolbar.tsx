@@ -8,18 +8,18 @@ import ItalicButton from "./MarkdownButtons/ItalicButton"
 import HighlightButton from "./MarkdownButtons/HighlightButton"
 import LinkButton from "./MarkdownButtons/LinkButton"
 import CodeBlockButton from "./MarkdownButtons/CodeBlockButton"
-import CodeButton from "../Buttons/CodeButton"
+import CodeButton from "./MarkdownButtons/CodeButton"
 import SuperscriptButton from "./MarkdownButtons/SuperscriptButton"
 import SubscriptButton from "./MarkdownButtons/SubscriptButton"
 import ImageButton from "./MarkdownButtons/ImageButton"
 import ThemeButton from "./MarkdownButtons/ThemeButton"
 import ExportButton from "./MarkdownButtons/ExportButton"
-import HideShowButton from "./MarkdownButtons/HideShowButton"
-import { useState } from "react"
 import UnderlineButton from "./MarkdownButtons/UnderlineButton"
 import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
+import ParagraphButton from "./MarkdownButtons/ParagraphButton"
+import TextAlignButton from "./MarkdownButtons/TextAlignButton"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
@@ -30,7 +30,6 @@ function EditorToolbar({
   isMarkdownView,
   toggleMarkdownView,
   markdownText,
-  onChangeMarkdown,
   textareaRef,
 }: {
   activeFile: FileNode
@@ -38,13 +37,10 @@ function EditorToolbar({
   isMarkdownView: boolean
   toggleMarkdownView: () => void
   markdownText: string
-  onChangeMarkdown: (next: string) => void
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
 
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-
-  const [ toolbarIsVisible, setToolbarIsVisible ] = useState<boolean>(true)
 
   return (<>
   {/* Toolbar Container */}
@@ -80,8 +76,6 @@ function EditorToolbar({
             flexWrap: "nowrap",
             alignItems: "center",
             gap: 14,
-            visibility: toolbarIsVisible ? "visible" : "hidden",
-            pointerEvents: toolbarIsVisible ? "auto" : "none",
           }}
         >
           <div
@@ -96,16 +90,17 @@ function EditorToolbar({
           {/* TODO
           font style */}
           <BoldButton editor={editor} fileId={activeFile.id} />
+          <ParagraphButton editor={editor} fileId={activeFile.id} />
           <ItalicButton editor={editor} fileId={activeFile.id}/>
           <UnderlineButton editor={editor} fileId={activeFile.id} />
           <StrikethroughButton editor={editor} fileId={activeFile.id} />
           <ListButton editor={editor} fileId={activeFile.id} />
+          <TextAlignButton editor={editor} fileId={activeFile.id} />
           <HighlightButton
             editor={editor}
             fileId={activeFile.id}
             isMarkdownView={isMarkdownView}
             markdownText={markdownText}
-            onChangeMarkdown={onChangeMarkdown}
             textareaRef={textareaRef}
           />
           <SuperscriptButton editor={editor} fileId={activeFile.id} />
@@ -136,11 +131,6 @@ function EditorToolbar({
             fileId={activeFile.id}
             isMarkdownView={isMarkdownView}
             toggleMarkdownView={toggleMarkdownView}
-          />
-          <HideShowButton
-            fileId={activeFile.id}
-            toolbarIsVisible={toolbarIsVisible}
-            setToolbarIsVisible={setToolbarIsVisible}
           />
           <ThemeButton fileId={activeFile.id} />
           <ExportButton editor={editor} fileId={activeFile.id} />

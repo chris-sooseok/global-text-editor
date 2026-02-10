@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { EditorContent } from "@tiptap/react"
-import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
-import EditorToolbar from "./MarkdownToolbar"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
+import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
+
+import { EditorContent } from "@tiptap/react"
 import { useEditor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { ListKit } from "@tiptap/extension-list"
+import TextAlign from "@tiptap/extension-text-align"
 import SuperScript from "@tiptap/extension-superscript"
 import Subscript from "@tiptap/extension-subscript"
 import Image from "@tiptap/extension-image"
@@ -13,175 +15,149 @@ import Highlight from "@tiptap/extension-highlight"
 import Color from "@tiptap/extension-color"
 import Link from "@tiptap/extension-link"
 import { Markdown } from '@tiptap/markdown'
-import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
-import { 
-  broadcastEditorContentUpdated, 
-  onEditorContentUpdated,
-} from "store/EditorContentStore/EditorSyncBus"
-import TextStyleWithMarkdown from "./MarkdownHelper"
-import { makeDefaultDocTemplate } from "./MarkdownHelper"
 
+import ListButton from "./MarkdownButtons/ListButton"
+import BackQuoteButton from "./MarkdownButtons/BackQuoteButton"
+import BoldButton from "./MarkdownButtons/BoldButton"
+import ItalicButton from "./MarkdownButtons/ItalicButton"
+import HighlightButton from "./MarkdownButtons/HighlightButton"
+import LinkButton from "./MarkdownButtons/LinkButton"
+import CodeBlockButton from "./MarkdownButtons/CodeBlockButton"
+import CodeButton from "./MarkdownButtons/CodeButton"
+import SuperscriptButton from "./MarkdownButtons/SuperscriptButton"
+import SubscriptButton from "./MarkdownButtons/SubscriptButton"
+import ImageButton from "./MarkdownButtons/ImageButton"
+import ThemeButton from "./MarkdownButtons/ThemeButton"
+import ExportButton from "./MarkdownButtons/ExportButton"
+import UnderlineButton from "./MarkdownButtons/UnderlineButton"
+import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
+import MarkdownButton from "./MarkdownButtons/MarkdownButton"
+import ParagraphButton from "./MarkdownButtons/ParagraphButton"
+import TextAlignButton from "./MarkdownButtons/TextAlignButton"
+
+import TextStyleWithMarkdown from "./MarkdownHelper"
+import { broadcastEditorContentUpdated, onEditorContentUpdated } from "./EditorSyncBus"
+
+const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
+const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-type MarkdownEditorProps = {
-  activeFile: FileNode,
-  tabId: string,
-}
 
-function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
+function MarkdownEditor({tabId}: {tabId: string} ) {
 
-  const [isMarkdownView, setIsMarkdownView] = useState(false)
-  const [markdownText, setMarkdownText] = useState("")
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-    
-  {/*** Editor Config and Supports ***/}
-  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-  const { loadFileConfig } = ThemeManagerStore.getState()
-  const { switchActiveTab, switchActiveFile } = TabManagerStore.getState()
-  useEffect(() => {
-    void loadFileConfig(activeFile.id)
-  }, [activeFile.id])
+  const activeFile: FileNode =  TabManagerStore((s) => s.activeFileByTabIds)[tabId]
+  if (!activeFile) return undefined
 
-  /* Editor Setup */
-    const editor = useEditor({
-      extensions: [
-        // List Kit already has these extensions
-        StarterKit.configure({
-          bulletList: false,
-          orderedList: false,
-          listItem: false,
-        }),
-        ListKit,
-        TextStyleWithMarkdown,
-        Color,
-        Highlight,
-        SuperScript,
-        Subscript,
-        Link.configure({
-          openOnClick: true,      // click opens in browser
-          autolink: false,
-          linkOnPaste: true,
-        }),
-        Image,
-        Markdown,
-      ],
-      editable: true,
-      autofocus: "start",
-      editorProps: {
-        attributes: {
-          class: "normal-editor",
-          spellcheck: "false"
-        }
-      },
-      coreExtensionOptions: {
-        // making a single newline instead of two. This prevents copy/paste from
-        // tiptap to other text editor having two lines
-        clipboardTextSerializer: {
-          blockSeparator: "\n",
-        },
-      },
-      // checking schema derived from registered extensions
-      enableContentCheck: true,
-      // checking if initial content provided is not compatible with the schema =
-      onContentError(props) {
-        console.log(props.error)
+  const editor = useEditor({
+    extensions: [
+      // List Kit already has these extensions
+      StarterKit.configure({
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+      }),
+      ListKit,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      TextStyleWithMarkdown,
+      Color,
+      Highlight,
+      SuperScript,
+      Subscript,
+      Link.configure({
+        openOnClick: true,      // click opens in browser
+        autolink: false,
+        linkOnPaste: true,
+      }),
+      Image,
+      Markdown,
+    ],
+    editorProps: {
+      attributes: {
+        class: 'normal-editor', // applying index.css styles
+        spellcheck: "false"
       }
+    },
+    coreExtensionOptions: {
+      // This prevents copy/paste from tiptap to other text editor having two lines
+      clipboardTextSerializer: {
+        blockSeparator: "\n",
+      },
+    },
   })
 
-  function onChangeMarkdown(next: string) {
-    setMarkdownText(next)
-    if (!editor) return
+  if (!editor) return undefined
 
-    try {
-      // This updates the Tiptap doc from markdown (will trigger editor "update")
-      editor.commands.setContent(next, { contentType: "markdown" })
-    } catch {
-      // ignore parse errors while typing
-    }
-  }
+  /** Editor Config */
+  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
+  
+  useEffect(() => {
+    void ThemeManagerStore.getState().loadContentConfig(activeFile.id)
+  }, [activeFile.id])
+
+  /** Supports Markdown */
+  const [isMarkdownView, setIsMarkdownView] = useState(false)
+  const markdownContentRef = useRef<string>("")
+
+  // const [markdownContent, setMarkdownContent] = useState("")
+  // currently used for highlight features
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   function toggleMarkdownView() {
-    if (!editor) return
-
     setIsMarkdownView((prev) => {
       const next = !prev
-      if (next) setMarkdownText(editor.getMarkdown())
+      if (next) {
+        const md = editor.getMarkdown()
+        markdownContentRef.current = md
+      }
       return next
     })
   }
 
-  {/*** Load File Content ***/}
+  {/*** Load Json Content ***/}
   useEffect(() => {
-    if (!editor) return
 
-    let cancelled = false
+    async function loadJsonContent() {
+      const res = await window.api.loadJsonContent(activeFile.storagePath)
 
-    // optional: prevent showing old content while loading
-    if (isMarkdownView) setMarkdownText("")
-
-    function focusEditor() {
-      setTimeout(() => {
-        if (!cancelled) editor.commands.focus("start")
-      }, 0)
-    }
-
-    async function loadFileContent() {
-      const contentRes = await window.api.loadFileContent(activeFile.storagePath)
-      if (cancelled) return
-
-      if (!contentRes.ok) {
-        editor.commands.setContent(makeDefaultDocTemplate(activeFile.name), { emitUpdate: false })
-        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
-        return
-      }
-
-      const raw = contentRes.fileContent
-      if (!raw) {
-        editor.commands.setContent(makeDefaultDocTemplate(activeFile.name), { emitUpdate: false })
-        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
-        focusEditor()
+      if (!res.ok) {
+        console.error(res.message)
         return
       }
 
       try {
-        const json = JSON.parse(raw)
+        const json = JSON.parse(res.jsonContent)
         editor.commands.setContent(json, { emitUpdate: false })
-
-        if (isMarkdownView) {
-          setTimeout(() => {
-            if (!cancelled) setMarkdownText(editor.getMarkdown())
-          }, 0)
-        }
-
-        focusEditor()
+        setTimeout(() => {
+          editor.commands.focus("start")
+        }, 0)
       } catch {
-        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
-        if (isMarkdownView) setMarkdownText(editor.getMarkdown())
-      }
+        console.error('File content could not be loaded')
+        return
+      } 
     }
 
-    void loadFileContent()
-    return () => {
-      cancelled = true
-    }
-  }, [editor, activeFile.storagePath, isMarkdownView])
+    void loadJsonContent()
+
+  }, [editor, activeFile.storagePath])
 
   {/*** Update File Content ***/}
   const saveTimerRef = useRef<number | null>(null)
-  const updateTime = 500
 
   useEffect(() => {
 
-    function saveFileContent() {
-      const fileContent = JSON.stringify(editor.getJSON())
-      void window.api.saveFileContent(activeFile.id, activeFile.storagePath, fileContent, tabId)
+    function saveJsonContent() {
+      const jsonContent = JSON.stringify(editor.getJSON())
+      void window.api.saveJsonContent(activeFile.storagePath, jsonContent)
     }
 
     function onUpdate() {
       const jsonContent = JSON.stringify(editor.getJSON())
       const markdownContent = editor.getMarkdown()
 
+      // On update, broadcast changes to other tabs that may display the same file
       broadcastEditorContentUpdated({
         fileId: activeFile.id,
         jsonContent,
@@ -189,12 +165,12 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
         originTabId: tabId,
       })
 
-      // your existing debounced save (keep as-is)
+      // on update, set timeout for saving content
       if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
       saveTimerRef.current = window.setTimeout(() => {
-        void window.api.saveFileContent(activeFile.id, activeFile.storagePath, jsonContent, tabId)
+        void window.api.saveJsonContent(activeFile.storagePath, jsonContent)
         saveTimerRef.current = null
-      }, updateTime)
+      }, 500)
     }
 
     editor.on("update", onUpdate)
@@ -206,25 +182,24 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current)
         saveTimerRef.current = null
-        saveFileContent()
+        saveJsonContent()
       }
     }
   }, [editor, activeFile])
 
-  {/** Local Update Sync */}
+  {/** Local Update Sync data from other tabs * */}
   useEffect(() => {
-    if (!editor) return
-
     const unsubscribe = onEditorContentUpdated(({ fileId, jsonContent, markdownContent, originTabId }) => {
-      if (fileId !== activeFile.id) return
-      if (originTabId === tabId) return
+      if (activeFile.id !== fileId) return
+      if (tabId === originTabId) return
 
       try {
         editor.commands.setContent(JSON.parse(jsonContent), { emitUpdate: false })
       } catch {}
 
       if (isMarkdownView) {
-        setMarkdownText(markdownContent)
+        markdownContentRef.current = markdownContent
+        if (textareaRef.current) textareaRef.current.value = markdownContent
       }
     })
 
@@ -242,15 +217,95 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
         background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
-      <EditorToolbar
-        activeFile={activeFile}
-        editor={editor}
-        isMarkdownView={isMarkdownView}
-        toggleMarkdownView={toggleMarkdownView}
-        markdownText={markdownText}
-        onChangeMarkdown={onChangeMarkdown}
-        textareaRef={textareaRef}
-      />
+      <div
+        style={{
+          // keep toolbar at the top and adove editor
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          padding: "7px 20px",
+          minHeight: 3,
+          borderBottom: `1px solid ${editorTheme === "black" ? "#333" : "#ddd"}`,
+          // change toolbar theme color and border color
+          background: editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE
+        }}
+      >
+        {/* Button List */}
+        <div 
+          style={{ 
+            display: "flex", // set center and right buttons
+            alignItems: "center",
+            gap: 12,
+          } 
+          }>
+            {/* Left Buttons: Scrollable */}
+            <div
+              className="toolbar-scroll"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                flexWrap: "nowrap",
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "nowrap",
+                  alignItems: "center",
+                  gap: 16,
+                  width: "max-content", // forces buttons to overflow
+                }}
+              >
+              {/* TODO
+              font style */}
+              <BoldButton editor={editor} fileId={activeFile.id} />
+              <ParagraphButton editor={editor} fileId={activeFile.id} />
+              <ItalicButton editor={editor} fileId={activeFile.id}/>
+              <UnderlineButton editor={editor} fileId={activeFile.id} />
+              <StrikethroughButton editor={editor} fileId={activeFile.id} />
+              <ListButton editor={editor} fileId={activeFile.id} />
+              <TextAlignButton editor={editor} fileId={activeFile.id} />
+              <HighlightButton
+                editor={editor}
+                fileId={activeFile.id}
+                isMarkdownView={isMarkdownView}
+                markdownText={markdownContentRef}
+                textareaRef={textareaRef}
+              />
+              <SuperscriptButton editor={editor} fileId={activeFile.id} />
+              <SubscriptButton editor={editor} fileId={activeFile.id} />
+              <BackQuoteButton editor={editor} fileId={activeFile.id}/>
+              <CodeButton editor={editor} fileId={activeFile.id} />
+              <CodeBlockButton editor={editor} fileId={activeFile.id} />          
+              <LinkButton editor={editor} fileId={activeFile.id} />
+              <ImageButton
+                editor={editor}
+                fileId={activeFile.id}
+                storagePath={activeFile.storagePath}
+              />   
+            </div>
+          </div>
+            {/* Right Buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: 16,
+                paddingLeft: "5px",
+                flexShrink: 0,
+              }}
+            >
+              <MarkdownButton
+                fileId={activeFile.id}
+                isMarkdownView={isMarkdownView}
+                toggleMarkdownView={toggleMarkdownView}
+              />
+              <ThemeButton fileId={activeFile.id} />
+              <ExportButton editor={editor} fileId={activeFile.id} />
+            </div>
+          </div>
+      </div>
 
       {/* Editor */}
       <div
@@ -264,11 +319,11 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
       >
       {isMarkdownView ? (
         <textarea
-          value={markdownText}
-          onChange={(e) => onChangeMarkdown(e.currentTarget.value)}
+          readOnly
+          defaultValue={markdownContentRef.current}
           onFocus={() => {
-            switchActiveTab(tabId)
-            switchActiveFile(tabId, activeFile)
+            TabManagerStore.getState().switchActiveTab(tabId)
+            TabManagerStore.getState().switchActiveFile(tabId, activeFile)
           }}
           style={{
             flex: 1,
@@ -294,8 +349,8 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
           editor={editor}
           className={editorTheme === "black" ? "prose prose-invert max-w-none " : "prose max-w-none"}
           onFocus={() => {
-            switchActiveTab(tabId)
-            switchActiveFile(tabId, activeFile)
+            TabManagerStore.getState().switchActiveTab(tabId)
+            TabManagerStore.getState().switchActiveFile(tabId, activeFile)
           }}
           style={{ flex: 1, display: "flex", width: "100%", minHeight: "100%" }}
         />

@@ -16,18 +16,17 @@ function ExportButton({
   editor,
   fileId
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
 
-  if (!editor) return null
-
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
       {/* Toolbar Button */}
       <button
+        tabIndex={-1}
         type="button"
         onMouseDown={(e) => {
           e.preventDefault()
@@ -51,6 +50,7 @@ function ExportButton({
       >
         {/* Markdown */}
         <button
+          tabIndex={-1}
           type="button"
           onMouseDown={async () => {
             const md = editor.getMarkdown()
@@ -70,6 +70,7 @@ function ExportButton({
         </button>
         {/* PDF */}
         <button
+          tabIndex={-1}
           type="button"
           onMouseDown={async () => {
             // const res = await window.api.exportToPDF()

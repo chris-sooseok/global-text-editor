@@ -52,7 +52,7 @@ type ThemeManagerStoreType = {
      * allows files in different tabs subscribe this attribute to update their config
      */
     fileConfigByFileId: Record<number, FileConfig>
-    loadFileConfig: (id: number) => Promise<void>
+    loadContentConfig: (id: number) => Promise<void>
     changeEditorTheme: (id: number, theme: EditorTheme) => Promise<void>
 }
 
@@ -77,8 +77,8 @@ export const ThemeManagerStore = create<ThemeManagerStoreType>((set) => ({
 
   fileConfigByFileId: {},
 
-  loadFileConfig: async (id) => {
-    const res = await window.api.loadFileConfig(id)
+  loadContentConfig: async (id) => {
+    const res = await window.api.loadContentConfig(id)
 
     // default to black if fails
     if (!res.ok) {
