@@ -14,7 +14,7 @@ import Highlight from "@tiptap/extension-highlight"
 import Color from "@tiptap/extension-color"
 import Link from "@tiptap/extension-link"
 import { Markdown } from '@tiptap/markdown'
-import TextStyleWithMarkdown from "./MarkdownHelper"
+import { TextStyleMarkdown, TabIndent } from "./MarkdownHelper"
 // Toolbar Buttons
 import ListButton from "./MarkdownButtons/ListButton"
 import BackQuoteButton from "./MarkdownButtons/BackQuoteButton"
@@ -36,6 +36,7 @@ import ParagraphButton from "./MarkdownButtons/ParagraphButton"
 import TextAlignButton from "./MarkdownButtons/TextAlignButton"
 // Sync
 import { broadcastEditorContentUpdated, onEditorContentUpdated } from "./EditorSyncBus"
+import HeadingButton from "./MarkdownButtons/HeadingButton"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
 const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
@@ -58,7 +59,8 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
       TextAlign.configure({
         types: ["heading", "paragraph"],
       }),
-      TextStyleWithMarkdown,
+      TextStyleMarkdown,
+      TabIndent,
       Color,
       Highlight,
       SuperScript,
@@ -263,6 +265,7 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
                 >
                   {/* TODO
                   font style */}
+                  <HeadingButton />
                   <BoldButton />
                   <ParagraphButton />
                   <ItalicButton />

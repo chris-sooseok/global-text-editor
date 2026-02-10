@@ -64,7 +64,6 @@ function ListButton() {
       >
         {/* BulletList */}
         <button
-          data-active-key="bulletList"
           onMouseDown={() => editor.chain().focus().toggleBulletList().run()}
         >
           <EditorIcon 
@@ -76,7 +75,6 @@ function ListButton() {
         </button>
         {/* OrderedList */}
         <button
-          data-active-key="orderedList"
           onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <EditorIcon 
@@ -88,7 +86,6 @@ function ListButton() {
         </button>
         {/* TaskList */}
         <button
-          data-active-key="taskList"
           onMouseDown={() => editor.chain().focus().toggleTaskList().run()}
         >
           <EditorIcon 

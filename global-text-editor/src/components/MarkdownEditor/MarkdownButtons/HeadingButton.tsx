@@ -1,29 +1,36 @@
-import { useState, useRef } from "react"
-import type { Editor } from "@tiptap/core"
+import { useState } from "react"
+import type { Editor } from "@tiptap/react"
+import { useEditorState } from "@tiptap/react"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import Icon from "shared/Icon"
 
 import blackHIcon from "assets/NormalTypeIcons/icons8-h-black-96.png"
 import whiteHIcon from "assets/NormalTypeIcons/icons8-h-white-96.png"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
+import EditorIcon from "shared/EditorIcon"
 
-function HeadingButton({
-  editor,
-  fileId
-}: {
-  editor: Editor | null
-  fileId: number
-}) {
-  if (!editor) return null
+function HeadingButton() {
+
+  const { editor } = useMarkdownEditorContext()
 
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   
   const levels = [1, 2, 3, 4] as const
   
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor}: { editor: Editor}) => ({
+      isHeading1: editor.isActive("heading", { level: 1 }),
+      isHeading2: editor.isActive("heading", { level: 2 }),
+      isHeading3: editor.isActive("heading", { level: 3 }),
+      isHeading4: editor.isActive("heading", { level: 4 }), 
+    })
+  })
+
   const activeLevel =
-    editor.isActive("heading", { level: 1 }) ? 1 :
-    editor.isActive("heading", { level: 2 }) ? 2 :
-    editor.isActive("heading", { level: 3 }) ? 3 :
-    editor.isActive("heading", { level: 4 }) ? 4 :
+    editorState.isHeading1 ? 1 :
+    editorState.isHeading2 ? 2 :
+    editorState.isHeading3? 3 :
+    editorState.isHeading4 ? 4 :
     null
   
   return (
@@ -47,17 +54,17 @@ function HeadingButton({
           alignItems: "center",
         }}
       >
-        <Icon
+        <EditorIcon
           blackIcon={blackHIcon}
           whiteIcon={whiteHIcon}
-          fileId={fileId}
+          isActive={activeLevel ? true : false}
         />
 
         {activeLevel ? (
           <span
             style={{
               position: "absolute",
-              right: -2,
+              right: 0,
               bottom: 1,
               fontSize: 10,
               lineHeight: "10px",

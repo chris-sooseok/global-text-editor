@@ -1,8 +1,9 @@
 import React, { createContext, useContext } from 'react'
 import type { Editor } from '@tiptap/core'
 
+export type EditerTheme = 'black' | 'white'
 export type ContentConfig = {
-  editorTheme: "black" | "white"
+  editorTheme: EditerTheme
 }
 
 type MarkdownEditorContenxtProviderProps = {
@@ -24,6 +25,11 @@ export function MarkdownEditorContextProvider({
   children
 }: MarkdownEditorContenxtProviderProps) {
 
+  async function changeEditorTheme(id: number, theme: EditerTheme) {
+    const res = await window.api.changeEditorTheme(id, theme)
+
+  }
+  
   return (
     <MarkdownEditorContext.Provider value={{ editor, contentConfig}}>
       {children}
