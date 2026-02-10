@@ -1,7 +1,7 @@
 import { useRef, useState } from "react"
-import type { Editor } from "@tiptap/core"
+import { Editor } from "@tiptap/core"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 
 import blackDownloadIcon from "assets/NormalTypeIcons/icons8-download-black-96.png"
 import whiteDownloadIcon from "assets/NormalTypeIcons/icons8-download-white-96.png"
@@ -11,16 +11,13 @@ import whiteMarkdownIcon from "assets/NormalTypeIcons/icons8-markdown-white-96.p
 
 import blackPdfIcon from "assets/NormalTypeIcons/icons8-pdf-black-96.png"
 import whitePdfIcon from "assets/NormalTypeIcons/icons8-pdf-white-96.png"
+import EditorIcon from "shared/EditorIcon"
+import { useMarkdownEditorContext } from "context/EditorContext"
 
-function ExportButton({
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function ExportButton() {
+  
+  const { editor } = useMarkdownEditorContext()
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
-
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -33,10 +30,9 @@ function ExportButton({
           setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
-        <ToolbarIcon
+        <EditorIcon
           blackIcon={blackDownloadIcon}
           whiteIcon={whiteDownloadIcon}
-          fileId={fileId}
         />
       </button>
 
@@ -61,10 +57,9 @@ function ExportButton({
             }
           }}
         >
-          <ToolbarIcon
+          <EditorIcon
             blackIcon={blackMarkdownIcon}
             whiteIcon={whiteMarkdownIcon}
-            onlyBlackIcon={true}
           />
           <span>Export to markdown</span>
         </button>
@@ -78,10 +73,9 @@ function ExportButton({
             // window.alert(`Saved PDF: ${res.filePath}`)
           }}
         >
-          <ToolbarIcon
+          <EditorIcon
             blackIcon={blackPdfIcon}
             whiteIcon={whitePdfIcon}
-            onlyBlackIcon={true}
           />
           <span>Export to PDF</span>
         </button>

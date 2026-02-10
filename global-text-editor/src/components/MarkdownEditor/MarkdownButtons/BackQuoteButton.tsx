@@ -1,16 +1,13 @@
 import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
-import ToolbarIcon from "shared/ToolbarIcon"
+import EditorIcon from "shared/EditorIcon"
 import blackQuoteIcon from "assets/NormalTypeIcons/icons8-quote-black-96.png"
 import whiteQuoteIcon from "assets/NormalTypeIcons/icons8-quote-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
 
-function BackQuoteButton({
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function BackQuoteButton() {
+  
+  const { editor } = useMarkdownEditorContext()
   
   const editorState = useEditorState({
     editor,
@@ -29,10 +26,9 @@ function BackQuoteButton({
         editor.chain().focus().toggleBlockquote().run()
       }}
     >
-      <ToolbarIcon 
+      <EditorIcon 
         blackIcon={blackQuoteIcon}
         whiteIcon={whiteQuoteIcon}
-        fileId={fileId}
         isActive={editorState.isBlockquote}
       />
     </button>

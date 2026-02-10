@@ -1,17 +1,14 @@
 import { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackBoldIcon from "assets/NormalTypeIcons/icons8-bold-black-96.png"
 import whiteBoldIcon from "assets/NormalTypeIcons/icons8-bold-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
 
-function BoldButton({ 
-  editor,
-  fileId
-}: { 
-  editor: Editor
-  fileId: number
-}) {
+function BoldButton(){
+
+  const { editor } = useMarkdownEditorContext()
 
   const editorState = useEditorState({
     editor,
@@ -29,10 +26,9 @@ function BoldButton({
         editor.chain().focus().toggleBold().run()
       }}
     >
-      <ToolbarIcon 
+      <EditorIcon 
         blackIcon={blackBoldIcon}
         whiteIcon={whiteBoldIcon}
-        fileId={fileId}
         isActive={editorState.isBold}
       />
     </button>

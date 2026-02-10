@@ -1,18 +1,14 @@
 import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackStrikeIcon from "assets/NormalTypeIcons/icons8-strikethrough-black-96.png"
 import whiteStrikeIcon from "assets/NormalTypeIcons/icons8-strikethrough-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
 
-function StrikethroughButton({ 
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function StrikethroughButton() {
 
+  const { editor } = useMarkdownEditorContext()
   const editorState = useEditorState({
     editor,
     selector: ({ editor}: { editor: Editor}) => ({
@@ -28,10 +24,9 @@ function StrikethroughButton({
         editor.chain().focus().toggleStrike().run()
       }}
     >
-      <ToolbarIcon 
+      <EditorIcon 
         blackIcon={blackStrikeIcon}
         whiteIcon={whiteStrikeIcon}
-        fileId={fileId}
         isActive={editorState.isStrike}
       />
     </button>

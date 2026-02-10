@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
+import { MarkdownEditorProvider } from "context/EditorContext"
 
 import { EditorContent } from "@tiptap/react"
 import { useEditor } from "@tiptap/react"
@@ -217,6 +218,7 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
         background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
+      <MarkdownEditorProvider editor={editor} activeFile={activeFile} >
       <div
         style={{
           // keep toolbar at the top and adove editor
@@ -260,31 +262,25 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
               >
               {/* TODO
               font style */}
-              <BoldButton editor={editor} fileId={activeFile.id} />
-              <ParagraphButton editor={editor} fileId={activeFile.id} />
-              <ItalicButton editor={editor} fileId={activeFile.id}/>
-              <UnderlineButton editor={editor} fileId={activeFile.id} />
-              <StrikethroughButton editor={editor} fileId={activeFile.id} />
-              <ListButton editor={editor} fileId={activeFile.id} />
-              <TextAlignButton editor={editor} fileId={activeFile.id} />
+              <BoldButton />
+              <ParagraphButton />
+              <ItalicButton />
+              <UnderlineButton />
+              <StrikethroughButton />
+              <ListButton />
+              <TextAlignButton />
               <HighlightButton
-                editor={editor}
-                fileId={activeFile.id}
                 isMarkdownView={isMarkdownView}
                 markdownText={markdownContentRef}
                 textareaRef={textareaRef}
               />
-              <SuperscriptButton editor={editor} fileId={activeFile.id} />
-              <SubscriptButton editor={editor} fileId={activeFile.id} />
-              <BackQuoteButton editor={editor} fileId={activeFile.id}/>
-              <CodeButton editor={editor} fileId={activeFile.id} />
-              <CodeBlockButton editor={editor} fileId={activeFile.id} />          
-              <LinkButton editor={editor} fileId={activeFile.id} />
-              <ImageButton
-                editor={editor}
-                fileId={activeFile.id}
-                storagePath={activeFile.storagePath}
-              />   
+              <SuperscriptButton />
+              <SubscriptButton />
+              <BackQuoteButton />
+              <CodeButton />
+              <CodeBlockButton />          
+              <LinkButton />
+              <ImageButton storagePath={activeFile.storagePath} />   
             </div>
           </div>
             {/* Right Buttons */}
@@ -297,15 +293,15 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
               }}
             >
               <MarkdownButton
-                fileId={activeFile.id}
                 isMarkdownView={isMarkdownView}
                 toggleMarkdownView={toggleMarkdownView}
               />
-              <ThemeButton fileId={activeFile.id} />
-              <ExportButton editor={editor} fileId={activeFile.id} />
+              <ThemeButton />
+              <ExportButton />
             </div>
           </div>
       </div>
+      </MarkdownEditorProvider>
 
       {/* Editor */}
       <div

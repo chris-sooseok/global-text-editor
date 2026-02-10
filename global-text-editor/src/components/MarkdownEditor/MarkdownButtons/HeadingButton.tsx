@@ -1,7 +1,7 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 
 import blackHIcon from "assets/NormalTypeIcons/icons8-h-black-96.png"
 import whiteHIcon from "assets/NormalTypeIcons/icons8-h-white-96.png"
@@ -47,7 +47,7 @@ function HeadingButton({
           alignItems: "center",
         }}
       >
-        <ToolbarIcon
+        <Icon
           blackIcon={blackHIcon}
           whiteIcon={whiteHIcon}
           fileId={fileId}

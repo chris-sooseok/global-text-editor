@@ -1,17 +1,15 @@
-import ToolbarIcon from "shared/ToolbarIcon"
 import whiteHideIcon from "assets/NormalTypeIcons/icons8-hide-white-96.png"
 import blackHideIcon from "assets/NormalTypeIcons/icons8-hide-black-96.png"
 import blackShowIcon from "assets/NormalTypeIcons/icons8-show-black-96.png"
 import whiteShowIcon from "assets/NormalTypeIcons/icons8-show-white-96.png"
 import type { Dispatch, SetStateAction } from "react"
+import EditorIcon from "shared/EditorIcon"
 
 
 function HideShowButton({
-  fileId,
   toolbarIsVisible,
   setToolbarIsVisible,  
 }: {
-  fileId: number
   toolbarIsVisible: boolean
   setToolbarIsVisible: Dispatch<SetStateAction<boolean>>
 }) {
@@ -26,15 +24,13 @@ function HideShowButton({
       }}
     >
       {toolbarIsVisible 
-        ? <ToolbarIcon 
+        ? <EditorIcon 
           blackIcon={blackShowIcon}
           whiteIcon={whiteShowIcon}
-          fileId={fileId}
         />
-        : <ToolbarIcon 
+        : <EditorIcon 
           blackIcon={blackHideIcon}
           whiteIcon={whiteHideIcon}
-          fileId={fileId}
         />
     }
 

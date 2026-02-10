@@ -33,7 +33,8 @@
       "assets/*": ["src/assets/*"],
       "shared/*": ["src/shared/*"],
       "store/*": ["src/store/*"],
-      "api/*": ["src/api/*"]
+      "api/*": ["src/api/*"],
+      "context/*": ["src/context/*"]
     }
   },
 

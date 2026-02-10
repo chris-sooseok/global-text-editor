@@ -4,17 +4,13 @@ import MarkdownEditor from "../MarkdownEditor/MarkdownEditor"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import xIcon from "assets/Tab/icons8-x-96.png"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import markdownIcon from 'assets/Sidebar/icons8-markdown-white-96.png'
 import dateIcon from 'assets/Sidebar/icons8-date-white-96.png'
 import { DropdownOverlay } from "shared/DropdownOverlay"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 
-type TabProps = {
-  tabId: string
-}
-
-export default function Tab({tabId}: TabProps) {
+export default function Tab({tabId}: {tabId: string}) {
 
   // styles
   const { 
@@ -142,18 +138,12 @@ export default function Tab({tabId}: TabProps) {
               }}
             >
               { file.type === 'file' && file.fileType === 'markdown'
-                ? <ToolbarIcon
-                whiteIcon={markdownIcon}
-                onlyWhiteIcon={true}
-                />
+                ? <Icon icon={markdownIcon}/>
                 : undefined
               }
               {/* Date Icon */}
               { file.type === 'file' && file.fileType === 'today'
-                ? <ToolbarIcon
-                whiteIcon={dateIcon}
-                onlyWhiteIcon={true}
-                />
+                ? <Icon icon={dateIcon} />
                 : undefined
               }
               {file.name}
@@ -168,7 +158,7 @@ export default function Tab({tabId}: TabProps) {
                 cursor: "pointer",
               }}
             >
-              <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={16} />
+              <Icon icon={xIcon} size={16} />
             </button>
           </div>
         ))}
@@ -199,7 +189,7 @@ export default function Tab({tabId}: TabProps) {
       {/* Tab Close Button */}
       <div style={{ display: "flex", alignItems: "center", paddingLeft: "15px", cursor: "pointer" }} >
         <button tabIndex={-1} onClick={() => closeTab(tabId)}>
-          <ToolbarIcon whiteIcon={xIcon} onlyWhiteIcon={true} size={18} />
+          <Icon icon={xIcon} size={18} />
         </button>
       </div>
     </div>

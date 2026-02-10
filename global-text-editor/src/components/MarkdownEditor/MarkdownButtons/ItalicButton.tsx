@@ -1,18 +1,15 @@
 import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackItalicIcon from "assets/NormalTypeIcons/icons8-italic-black-96.png"
 import whiteItalicIcon from "assets/NormalTypeIcons/icons8-italic-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
 
-function ItalicButton({ 
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function ItalicButton() {
   
+  const { editor } = useMarkdownEditorContext()
+
   const editorState = useEditorState({
     editor,
     selector: ({ editor}: { editor: Editor}) => ({
@@ -28,10 +25,9 @@ function ItalicButton({
         editor.chain().focus().toggleItalic().run()
       }}
     >
-      <ToolbarIcon 
+      <EditorIcon 
         blackIcon={blackItalicIcon}
         whiteIcon={whiteItalicIcon}
-        fileId={fileId}
         isActive={editorState.isItalic}
       />
     </button>

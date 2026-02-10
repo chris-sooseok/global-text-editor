@@ -18,6 +18,7 @@ export default defineConfig({
       shared: path.resolve(__dirname, "src/shared"),
       store: path.resolve(__dirname, "src/store"),
       api: path.resolve(__dirname, "src/api"),
+      context: path.resolve(__dirname, "src/context"),
     },
   },
 })
