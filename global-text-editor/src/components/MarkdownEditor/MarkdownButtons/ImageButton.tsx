@@ -3,7 +3,7 @@ import { DropdownOverlay } from "shared/DropdownOverlay"
 import blackImageIcon from "assets/NormalTypeIcons/icons8-add-image-black-96.png"
 import whiteImageIcon from "assets/NormalTypeIcons/icons8-add-image-white-96.png"
 import EditorIcon from "shared/EditorIcon"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 
 function ImageButton({storagePath}: {storagePath: string}) {
 

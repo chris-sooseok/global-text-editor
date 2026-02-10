@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import blackHighlightIcon from "assets/NormalTypeIcons/icons8-highlight-black-96.png"
 import whiteHighlightIcon from "assets/NormalTypeIcons/icons8-highlight-white-96.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 const COLORS = [

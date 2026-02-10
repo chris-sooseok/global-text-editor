@@ -3,7 +3,7 @@ import { useEditorState } from '@tiptap/react'
 import Icon from "shared/Icon"
 import blackCodeIcon from "assets/NormalTypeIcons/icons8-code-black-96.png"
 import whiteCodeIcon from "assets/NormalTypeIcons/icons8-code-white-96.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 function CodeButton() {

@@ -11,7 +11,7 @@ import whiteCenterAlignIcon from "assets/NormalTypeIcons/icons8-align-center-whi
 import blackJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-black-96.png"
 import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-white-96.png"
 import TextAlign from "@tiptap/extension-text-align"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 function TextAlignButton() {

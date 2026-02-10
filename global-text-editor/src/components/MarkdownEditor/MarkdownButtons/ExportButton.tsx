@@ -12,7 +12,7 @@ import whiteMarkdownIcon from "assets/NormalTypeIcons/icons8-markdown-white-96.p
 import blackPdfIcon from "assets/NormalTypeIcons/icons8-pdf-black-96.png"
 import whitePdfIcon from "assets/NormalTypeIcons/icons8-pdf-white-96.png"
 import EditorIcon from "shared/EditorIcon"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 
 function ExportButton() {
   

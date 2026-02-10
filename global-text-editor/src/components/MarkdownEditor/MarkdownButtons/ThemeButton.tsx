@@ -6,7 +6,7 @@ import blackMoonIcon from "assets/NormalTypeIcons/icons8-moon-black-96.png"
 import whiteMoonIcon from "assets/NormalTypeIcons/icons8-moon-white-96.png"
 import { ThemeManagerStore, } from "store/ThemeStore/ThemeManagerStore"
 import EditorIcon from "shared/EditorIcon"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 
 function ThemeButton() {
 

@@ -2,7 +2,7 @@ import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
 import blackItalicIcon from "assets/NormalTypeIcons/icons8-italic-black-96.png"
 import whiteItalicIcon from "assets/NormalTypeIcons/icons8-italic-white-96.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 

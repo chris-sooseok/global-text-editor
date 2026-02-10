@@ -2,7 +2,7 @@ import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
 import blackSubscriptIcon from "assets/NormalTypeIcons/subscript-black.png"
 import whiteSubscriptIcon from "assets/NormalTypeIcons/subscript-white.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 function SubscriptButton() {
