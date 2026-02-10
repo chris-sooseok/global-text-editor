@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import Sidebar from './Sidebar'
+import type { FsNode, FsNodeRow } from 'store/SidebarStore/FsTreeTypes'
+import { SidebarStore } from 'store/SidebarStore/SidebarStore'
+import { parseLocalStorage, formatMMDDYYYY } from 'shared/helperFunctions'
+
+import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import settingIcon from 'assets/Sidebar/icons8-settings-white-96.png'
-import { parseLocalStorage } from 'shared/parseLocalStorage'
 import ToolbarIcon from 'shared/ToolbarIcon'
 import newFolderIcon from 'assets/Sidebar/icons8-new-folder-96.png'
 import newFileIcon from 'assets/Sidebar/icons8-new-file-96.png'
@@ -116,6 +119,26 @@ function SidebarRenderer() {
     if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
   }
 
+  async function createTodayNode() {
+    const { activeFolder, insertFsNodeRow } = SidebarStore.getState()
+    const parentId = activeFolder?.id ?? 0
+    try {
+      const res = await window.api.createFsNode('file', parentId, formatMMDDYYYY(new Date()), 'today')
+      if (res.ok) {
+        const newNode: FsNodeRow = res.row
+        const newFsNode: FsNode = insertFsNodeRow(newNode)
+        setTimeout(() => {
+          const el = document.querySelector( `[data-node-id="${newFsNode.id}"]`) as HTMLElement | null
+          el?.focus()
+        }, 0)
+      } else {
+        console.error(res.message)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   return (
     <div
       style={{
@@ -176,7 +199,7 @@ function SidebarRenderer() {
             </button>
             <button
               tabIndex={-1}
-              // onClick={() => createNewNode('today')}
+              onClick={() => createTodayNode()}
               data-new-node-btn="true"
             >
               <ToolbarIcon whiteIcon={todayIcon} onlyWhiteIcon={true} />

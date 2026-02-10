@@ -20,6 +20,7 @@ export function makeFileNode(r: FsNodeRow): FileNode {
     id: r.id,
     uuid: r.uuid,
     type: "file",
+    fileType: r.fileType ?? 'markdown',
     isRoot: r.isRoot,
     parentId: r.parentId,
     name: r.name,

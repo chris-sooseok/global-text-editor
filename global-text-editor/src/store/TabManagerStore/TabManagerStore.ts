@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { parseLocalStorage } from 'shared/parseLocalStorage'
+import { parseLocalStorage } from 'shared/helperFunctions'
 import type { FileNode } from '../SidebarStore/FsTreeTypes'
 import { tabStateCommiter } from './TabMangerStoreHelper'
 import { SidebarStore } from 'store/SidebarStore/SidebarStore'

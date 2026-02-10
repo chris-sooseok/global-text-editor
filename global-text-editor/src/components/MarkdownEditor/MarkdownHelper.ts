@@ -1,4 +1,5 @@
 import { TextStyle } from "@tiptap/extension-text-style"
+import type { JSONContent } from "@tiptap/core"
 
 const TextStyleMarkdown = TextStyle.extend({
   renderMarkdown: (node, helpers) => {
@@ -11,3 +12,17 @@ const TextStyleMarkdown = TextStyle.extend({
 })
 
 export default TextStyleMarkdown
+
+export function makeDefaultDocTemplate(title: string): JSONContent {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "heading",
+        attrs: { level: 1 },
+        content: [{ type: "text", text: title }],
+      },
+      { type: "paragraph" },
+    ],
+  }
+}

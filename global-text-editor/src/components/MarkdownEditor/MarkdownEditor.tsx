@@ -19,19 +19,17 @@ import {
   onEditorContentUpdated,
 } from "store/EditorContentStore/EditorSyncBus"
 import TextStyleWithMarkdown from "./MarkdownHelper"
+import { makeDefaultDocTemplate } from "./MarkdownHelper"
 
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-const DEFAULT_DOC_TEMPLATE = {
-  type: "doc",
-  content: [
-    { type: "heading", attrs: { level: 1 } },
-    { type: "paragraph" },
-  ],
+type MarkdownEditorProps = {
+  activeFile: FileNode,
+  tabId: string,
 }
 
-function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: string}) {
+function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
 
   const [isMarkdownView, setIsMarkdownView] = useState(false)
   const [markdownText, setMarkdownText] = useState("")
@@ -133,14 +131,14 @@ function MarkdownEditor({activeFile, tabId}:{ activeFile : FileNode, tabId: stri
       if (cancelled) return
 
       if (!contentRes.ok) {
-        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        editor.commands.setContent(makeDefaultDocTemplate(activeFile.name), { emitUpdate: false })
         if (isMarkdownView) setMarkdownText(editor.getMarkdown())
         return
       }
 
       const raw = contentRes.fileContent
       if (!raw) {
-        editor.commands.setContent(DEFAULT_DOC_TEMPLATE, { emitUpdate: false })
+        editor.commands.setContent(makeDefaultDocTemplate(activeFile.name), { emitUpdate: false })
         if (isMarkdownView) setMarkdownText(editor.getMarkdown())
         focusEditor()
         return

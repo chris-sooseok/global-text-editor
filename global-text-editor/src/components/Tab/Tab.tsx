@@ -8,8 +8,11 @@ import ToolbarIcon from "shared/ToolbarIcon"
 import { DropdownOverlay } from "shared/DropdownOverlay"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
 
+type TabProps = {
+  tabId: string
+}
 
-function Tab({tabId}: {tabId: string}) {
+export default function Tab({tabId}: TabProps) {
 
   // styles
   const { 
@@ -19,27 +22,25 @@ function Tab({tabId}: {tabId: string}) {
     activeFileBackground 
   } =ThemeManagerStore.getState()
 
+  // tab logics
+  const activeTabId = TabManagerStore((s) => s.activeTabId)
+  const activeFile: FileNode | null =  TabManagerStore((s) => s.activeFileByTabIds)[tabId] ?? null
+  const files = TabManagerStore((s) => s.filesByTabIds)[tabId] ?? []
+  const isActiveTab = tabId === activeTabId
+  
+  if (!activeFile) return undefined
+  
+  const { 
+    switchActiveTab, 
+    switchActiveFile,
+    openNewTab,
+    closeFileInTab,
+    closeTab 
+  } = TabManagerStore.getState()
+
   // dropdown
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   const [dropdownFile, setDropdownFile] = useState<FileNode | null>(null)
-
-  // tab logics
-  const activeTabId = TabManagerStore((s) => s.activeTabId)
-  const activeFileByTabIds = TabManagerStore((s) => s.activeFileByTabIds)
-  const filesByTabIds = TabManagerStore((s) => s.filesByTabIds)
-  const activeFile: FileNode = activeFileByTabIds[tabId]
-  const files = filesByTabIds[tabId] ?? []
-  const isActiveTab = tabId === activeTabId
-
-  const switchActiveTab = TabManagerStore((s) => s.switchActiveTab)
-  const switchActiveFile = TabManagerStore((s) => s.switchActiveFile)
-  const openNewTab = TabManagerStore((s) => s.openNewTab)
-  const closeFile = TabManagerStore((s) => s.closeFileInTab)
-  const closeTab = TabManagerStore((s) => s.closeTab)
-
-  /** TODO: It is possible that localStorage may get corrupted, 
-   * In that case, I need some strategy to normalize data
-  */
 
   return (
   <>
@@ -138,10 +139,10 @@ function Tab({tabId}: {tabId: string}) {
               {file.name}
             </button>
   
-            {/* File Clost Button */}
+            {/* File Close Button */}
             <button
               tabIndex={-1}
-              onClick={() => closeFile(tabId, file)}
+              onClick={() => closeFileInTab(tabId, file)}
               style={{
                 paddingRight: "5px", // align padding with filename padding
                 cursor: "pointer",
@@ -189,12 +190,14 @@ function Tab({tabId}: {tabId: string}) {
       minWidth: 0, // force width to shrink
       minHeight: 0, // force height to shrink 
     }}>
-      <MarkdownEditor key="normal" activeFile={activeFile} tabId={tabId} />
+      <MarkdownEditor 
+        key="normal" 
+        activeFile={activeFile} 
+        tabId={tabId} 
+      />
     </div>
 
   </div>
   </>
   )
 }
-
-export default Tab

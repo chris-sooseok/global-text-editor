@@ -4,8 +4,9 @@ import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { SidebarStore } from "store/SidebarStore/SidebarStore"
 import type { DragState } from "./Sidebar"
 import ToolbarIcon from "shared/ToolbarIcon"
-import folderIcon from 'assets/Sidebar/icons8-folder-96.png'
-import fileIcon from 'assets/Sidebar/language-markdown-3135632568.png'
+import folderIcon from 'assets/Sidebar/icons8-folder-white-96.png'
+import markdownIcon from 'assets/Sidebar/icons8-markdown-white-96.png'
+import dateIcon from 'assets/Sidebar/icons8-date-white-96.png'
 import rightIcon from "assets/Sidebar/icons8-right-white-96.png"
 import downIcon from "assets/Sidebar/icons8-dropdown-white-96.png"
 
@@ -25,7 +26,9 @@ export async function submitNewNodePromptHandler(
     const name = newNodePromptInputRef.current.value
     // if selectedFolder is null, create it at the root level
     const parentId = activeFolder?.id ?? 0
-    const res = await window.api.createFsNode(newNodeType, parentId, name)
+    const fileType = newNodeType === 'file' ? 'markdown' : null
+
+    const res = await window.api.createFsNode(newNodeType, parentId, name, fileType)
     if (res.ok) {
       const newNode: FsNodeRow = res.row
       const newFsNode: FsNode = insertFsNodeRow(newNode)
@@ -73,7 +76,7 @@ export function renderNewNodePromptHandler(
         }}
       >
         <ToolbarIcon
-          whiteIcon={newNodeType === 'folder' ? folderIcon : fileIcon}
+          whiteIcon={newNodeType === 'folder' ? folderIcon : markdownIcon}
           onlyWhiteIcon={true}
         />
         {/* New Node Prompt Input */}
@@ -217,10 +220,18 @@ export function renderNodeHandler(
               />
               : undefined
             }
-            {/* File Icon */}
-            { node.type === 'file' 
+            {/* Markdown Icon */}
+            { node.type === 'file' && node.fileType === 'markdown'
               ? <ToolbarIcon
-              whiteIcon={fileIcon}
+              whiteIcon={markdownIcon}
+              onlyWhiteIcon={true}
+              />
+              : undefined
+            }
+            {/* Date Icon */}
+            { node.type === 'file' && node.fileType === 'today'
+              ? <ToolbarIcon
+              whiteIcon={dateIcon}
               onlyWhiteIcon={true}
               />
               : undefined

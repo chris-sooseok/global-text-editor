@@ -4,6 +4,7 @@ export type FsNodeRow = {
   id: number
   uuid: string
   type: "folder" | "file"
+  fileType: 'markdown' | 'today' | null
   isRoot: boolean
   parentId: number
   name: string
@@ -30,6 +31,7 @@ export type FileNode = {
   id: number
   uuid: string
   type: "file"
+  fileType: 'markdown' | 'today'
   isRoot: boolean
   parentId: number
   name: string
