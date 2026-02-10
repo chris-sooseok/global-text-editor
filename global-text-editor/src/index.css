@@ -1,70 +1,74 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
+html, body, #root {
+  height: 100%;
+  width: 100%;
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
   margin: 0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+
+/*** Normal editor only ***/
+.normal-editor {
+  flex: 1;
+  width: 100%;
+  padding: 12px;
+  min-height: 100%;
+  outline: none;
+  font-size: 20px;
+  line-height: 1.0;
+}
+
+/* List */
+.normal-editor ul, .normal-editor ol { padding-left: 1.4em; }
+
+/* task list container */
+.normal-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* baseline alignment is the key */
+.normal-editor li[data-type="taskItem"] {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  align-items: baseline;   /* ✅ baseline, not center */
+  gap: 8px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* checkbox column */
+.normal-editor li[data-type="taskItem"] > label {
+  line-height: 1;
+  display: flex;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* kill default checkbox spacing + nudge */
+.normal-editor li[data-type="taskItem"] > label input[type="checkbox"] {
+  margin: 0;
+  transform: translateY(2px); /* ✅ tweak 1–3px if needed */
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* text column */
+.normal-editor li[data-type="taskItem"] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.normal-editor li[data-type="taskItem"] p {
+  margin: 0;
+}
+
+/* link */
+.normal-editor a {
+  text-decoration: underline;
 }

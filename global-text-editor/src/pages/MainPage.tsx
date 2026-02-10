@@ -1,13 +1,13 @@
-import SidebarRenderer from '../components/Sidebar/SidebarRenderer'
-import FileContent from '../components/FileContent/FileContent'
+import SidebarRenderer from "../components/Sidebar/SidebarRenderer"
+import TabRenderer from "../components/Tab/TabRenderer"
 
-function MainPage() {
-    return (
-        <>
-            <SidebarRenderer />
-            <FileContent />
-        </>
-    )
+export default function MainPage() {
+  return (
+    <div style={{ display: "flex", width: "100%", height: "100vh", overflow: "hidden" }}>
+      <SidebarRenderer />
+      <div style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden" }}>
+        <TabRenderer />
+      </div>
+    </div>
+  )
 }
-
-export default MainPage

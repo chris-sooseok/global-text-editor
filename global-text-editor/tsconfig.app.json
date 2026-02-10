@@ -1,11 +1,11 @@
-
-/* This is for React renderer app */
+/* React renderer ts check rules */
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"], /* browser-stype code */
+    // allow browser globals (`window`, `document`)
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "types": ["vite/client"],
     "skipLibCheck": true,
@@ -15,6 +15,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    // ts doesn't output JS; Vite handles build
     "noEmit": true,
     "jsx": "react-jsx",
 
@@ -24,8 +25,18 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* available path alias */
+    "baseUrl": ".",
+    "paths": {
+      "assets/*": ["src/assets/*"],
+      "shared/*": ["src/shared/*"],
+      "store/*": ["src/store/*"],
+      "api/*": ["src/api/*"]
+    }
   },
 
-  "include": ["src"] /* only checks files in /src */
+  // apply React ts config to all files under src
+  "include": ["src"]
 }

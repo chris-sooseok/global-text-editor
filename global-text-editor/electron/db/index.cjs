@@ -6,6 +6,11 @@ const Database = require('better-sqlite3')
 
 let db = null
 
+/** 
+ * If db instance is already initialized, connect_db will return the existing
+ * instance.  
+ * 
+ */
 function connect_db() {
     // if db is already connected, reuse it
     if (db) return db

@@ -1,0 +1,12 @@
+.dropdownOverlayMenu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.dropdownOverlayMenu button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin-top: 3px;
+  padding-top: 3px;
+}

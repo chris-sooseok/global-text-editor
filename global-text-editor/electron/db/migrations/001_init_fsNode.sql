@@ -1,73 +1,59 @@
 CREATE TABLE IF NOT EXISTS fsNode (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    is_root BOOLEAN NOT NULL,
+    uuid TEXT NOT NULL UNIQUE,
     type TEXT NOT NULL CHECK (type IN ('folder', 'file')),
-    parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE, -- nullable for roots
+    -- nodes under seed node are root nodes
+    is_root INTEGER NOT NULL CHECK (is_root IN (0, 1)),
+    -- nullable for seed node
+    parent_id INTEGER REFERENCES fsNode(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    storage_path TEXT, -- nullable for folder
-    size_bytes INTEGER, -- nullable for folder
-    mime_type TEXT, -- nullable for folder
+    storage_path TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-
-    CHECK ( 
-        -- folder restrictions
-        (type = 'folder' AND storage_path IS NULL AND size_bytes IS NULL AND mime_type IS NULL)
-        OR 
-        -- file restrictions
-        --! need to include mime-type later
-        (type = 'file' AND storage_path IS NOT NULL AND size_bytes >= 0)
-    )
+    sort_order INTEGER NOT NULL
 );
-
 
 CREATE INDEX IF NOT EXISTS idx_fsNode_parent_id ON fsNode(parent_id);
 
--- enforce: every fsNode file storage_path must be unique
-CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_storage_path_for_files
+-- enforce: ensure unique name under same parent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_name_nocase
+ON fsNode(COALESCE(parent_id, -1), name COLLATE NOCASE);
+
+-- enforce: ensure file node has unique storage path
+CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_file_storage_path
 ON fsNode(storage_path)
 WHERE type = 'file';
 
--- enforce: every fsNode siblings must have unique sort_order
-CREATE UNIQUE INDEX IF NOT EXISTS idx_fsNode_unique_sibling_sort_order
-  -- COALESCE allows parend_id null values to be treated as -1 since sql doesn't regard null as a value
-  -- enforce: within the same parent directory, sort_order must be unique
-ON fsNode(COALESCE(parent_id, -1), sort_order); 
+-- seed: create seed node (id=0)
+INSERT OR IGNORE INTO fsNode
+  (id, uuid, type, parent_id, is_root, name, storage_path, created_at, updated_at, sort_order)
+VALUES
+  (
+    0,
+    '00000000-0000-0000-0000-000000000000',
+    'folder',
+    NULL,
+    1,
+    'root',
+    '',
+    (CAST(strftime('%s','now') AS INTEGER) * 1000),
+    (CAST(strftime('%s','now') AS INTEGER) * 1000),
+    0
+  );
 
--- enforce: any fsNode's parent must be a folder when insert
-CREATE TRIGGER IF NOT EXISTS trg_fsNode_parent_must_be_folder_insert
-BEFORE INSERT ON fsNode
+-- enforce: protect seed node from deletion
+CREATE TRIGGER IF NOT EXISTS fsNode_no_delete_root
+BEFORE DELETE ON fsNode
 FOR EACH ROW
-WHEN NEW.parent_id IS NOT NULL
+WHEN OLD.id = 0
 BEGIN
-  SELECT CASE
-    -- check if inserted parent has 'folder' type
-    WHEN (SELECT type FROM fsNode WHERE id = NEW.parent_id) <> 'folder'
-    THEN RAISE(ABORT, 'parent must be a folder')
-  END;
+  SELECT RAISE(ABORT, 'Cannot delete root node');
 END;
-
--- enforce: any fsNode's parent must be a folder when update
-CREATE TRIGGER IF NOT EXISTS trg_fsNode_parent_must_be_folder_update
-BEFORE UPDATE OF parent_id ON fsNode
+-- enforce: protect seed node from update
+CREATE TRIGGER IF NOT EXISTS fsNode_no_update_root
+BEFORE UPDATE ON fsNode
 FOR EACH ROW
-WHEN NEW.parent_id IS NOT NULL
+WHEN OLD.id = 0
 BEGIN
-  SELECT CASE
-    -- when if new parent has 'folder' type
-    WHEN (SELECT type FROM fsNode WHERE id = NEW.parent_id) <> 'folder'
-    THEN RAISE(ABORT, 'parent must be a folder')
-  END;
-END;
-
--- trigger that updates updated_at
-CREATE TRIGGER IF NOT EXISTS trg_fsNode_updated_at
-AFTER UPDATE ON fsNode
-FOR EACH ROW
-WHEN NEW.updated_at = OLD.updated_at
-BEGIN
-  UPDATE fsNode
-  SET updated_at = strftime('%s','now')*1000
-  WHERE id = OLD.id;
+  SELECT RAISE(ABORT, 'Cannot modify root node');
 END;

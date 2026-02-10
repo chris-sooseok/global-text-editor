@@ -1,10 +1,9 @@
+
+// tsconfig root
 {
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
-  "compilerOptions": {
-    "allowJs": true // temporaily allows js for easiler dev process
-  }
+    { "path": "./tsconfig.node.json" },
+  ]
 }

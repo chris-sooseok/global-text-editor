@@ -1,239 +1,338 @@
-import { useState, useContext, useEffect, useRef } from 'react'
-import { FsTreeContext } from '../../context/FsTreeContext'
-import type { FsNode } from '../../context/FsTreeTypes'
-import { 
-  submitNewNodePromptHelper, 
-  cancelNewNodePromptHelper, 
-  renderNewNodePromptHelper,
-  renderNodeHelper,
-  EMPTY_SELECTED_NODE
-} from './SidebarHelper'
-import type { SelectedNodeType } from './SidebarHelper'
-import newFolderIcon from '../../assets/icons8-add-folder-96-black.png'
-import newFileIcon from '../../assets/icons8-add-file-96-black.png'
-import IconButton from './IconButton'
+import { useState, useEffect, useRef } from 'react'
+import { type RefObject, type Dispatch, type SetStateAction } from 'react'
+import type { FsNode } from 'store/SidebarStore/FsTreeTypes'
+import { SidebarStore } from '../../store/SidebarStore/SidebarStore'
+import { ThemeManagerStore } from 'store/ThemeStore/ThemeManagerStore'
+import { submitNewNodePromptHandler, renderNewNodePromptHandler, renderNodeHandler } from './SidebarHandler'
 
+type SidebarProps = {
+  newNodeType: 'folder' | 'file' | null
+  newNodePromptRef: RefObject<HTMLDivElement | null>
+  newNodePromptInputRef: RefObject<HTMLInputElement | null>
+  setNewNodeType: Dispatch<SetStateAction<'folder' | 'file' | null>>
+}
 
-export default function Sidebar() {
-  const FsTree = useContext(FsTreeContext)
+export type DragState = {
+    draggingNode: FsNode
+    x: number
+    y: number
+    targetNodeId: number | null
+    targetParentId: number | null
+    dropPosition: "before" | "inside" | "after"
+}
 
-  const [selectedNode, setSelectedNode] = useState<SelectedNodeType>(EMPTY_SELECTED_NODE)
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set())
-  const [newNodeType, setNewNodeType] = useState<'folder' | 'file' | null>(null)
-  // used to render newNodePromptInput and control outside-click boundary
-  const newNodePromptRef = useRef<HTMLDivElement | null>(null)
-  // used for new fsNode prompt input and focus control
-  const newNodePromptInputRef = useRef<HTMLInputElement | null>(null) 
+export default function Sidebar({ 
+  newNodeType, newNodePromptRef, newNodePromptInputRef, setNewNodeType 
+}: SidebarProps) {
+  
+  const roots = SidebarStore((s) => s.roots)
+  const nodes = SidebarStore((s) => s.nodes)
+  const loadFsNodes = SidebarStore((s) => s.loadFsNodes)
 
-  // Focus newNodePromptInputRef when newNodeType has some type
+  /** Load FsTree */
   useEffect(() => {
-    if (!newNodeType) return
-    
-    if (newNodePromptInputRef.current) {
-       newNodePromptInputRef.current.focus()
-    }
-  }, [newNodeType])
+    void loadFsNodes(window.api)
+  }, [loadFsNodes])
 
-
-  /** Global click behaviors aside from file/folder row clicks
-   * - While new node prompt is activated, click anywhere outside prompt or toolbar closes the prompt
-   * */
+  const activeFile = SidebarStore((s) => s.activeFile)
+  const activeFolder = SidebarStore((s) => s.activeFolder)
+  const toggledFolderIds = SidebarStore((s) => s.toggledFolderIds)
+  const { setActiveFolder, renameFsNode, removeFsNode, moveFsNode } = SidebarStore.getState()
+  const { nodeFontSize } = ThemeManagerStore.getState()
+ 
+  /** Folder Nullifying Global MouseEvent */
   useEffect(() => {
     function onMouseDown(e: MouseEvent) {
       const target = e.target as HTMLElement | null
       if (!target) return
+      if (!activeFolder) return
+      const clickedIconButton = !!target.closest('[data-new-node-btn="true"]')
+      const clickedNode = !!target.closest('[data-node-id]')
+      if (!clickedIconButton && !clickedNode) {
+        setActiveFolder(null)
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown, true)
+    return () => document.removeEventListener("mousedown", onMouseDown, true)
+  }, [])
 
-      const clickedInPrompt = !!(newNodePromptRef.current && newNodePromptRef.current.contains(target))
-      const clickedIconButton = !!target.closest('[new-node-creation-btn="true"]')
-      // click anywhere outside prompt => delete the prompt
-      // (toolbar is allowed so you can switch folder/file without the prompt instantly disappearing)
-      if (newNodeType && !clickedInPrompt && !clickedIconButton) {
-        setNewNodeType(null)
-        if (newNodePromptInputRef.current) {
-          newNodePromptInputRef.current.value = ''
+  /*** FsTree Manipulation ***/
+  const [renameNodeId, setRenameNodeId] = useState<number | null>(null)
+  const renameInputRef = useRef<HTMLInputElement | null>(null)
+  const [dragState, setDragState] = useState<DragState | null>(null)
+  const dragNodeRef = useRef<{draggingNode: FsNode, startX: number, startY: number} | null>(null)
+
+  function renameNodeHandler(renameNode: FsNode, newName: string) {
+    renameFsNode(renameNode, newName)
+  }
+
+  function cancelRenameHandler() {
+    setRenameNodeId(null)
+    if (renameInputRef.current) renameInputRef.current.value = ''
+  }
+
+  function removeNodeHandler(removeNode: FsNode) {
+    const ok = window.confirm(`Confirm to delete\n\n${removeNode.name}\n`)
+    if (!ok) return
+    removeFsNode(removeNode)
+  }
+
+  // Update dragNodeRef on Every Node Selection
+  function onPointerDownNode(e: React.PointerEvent, node: FsNode) {
+    // only left click
+    if (e.button !== 0) return
+    // not applicable during rename
+    if (renameNodeId !== null) return
+
+    dragNodeRef.current = {
+      draggingNode: node,
+      startX: e.clientX,
+      startY: e.clientY,
+    }
+  }
+
+  /** 
+   * Node Move and Drop Rules
+   * 1. dropPostion must be "inside" for moving into folders
+   * 2. Otherwise, "before" & "after" must be set
+   * 3. Folders can't be dropped into its descendant folders
+   * */
+  useEffect(() => {
+
+    /** Global mouse movement listener */
+    function onMouseMove(e: PointerEvent) {
+      // If no node is selected, bail out
+      if (!dragNodeRef.current && !dragState) return
+
+      // Initialize dragState once selected node is draggged off
+      if (dragNodeRef.current && !dragState) {
+        const dx = e.clientX - dragNodeRef.current.startX
+        const dy = e.clientY - dragNodeRef.current.startY
+        if (Math.hypot(dx, dy) < 6) return
+        setDragState({
+          draggingNode: dragNodeRef.current.draggingNode,
+          x: e.clientX,
+          y: e.clientY,
+          targetNodeId: null,
+          targetParentId: null,
+          dropPosition: "after",
+        })
+        return
+      }
+
+      // During activated drag, provide real-time update of drag position
+      setDragState((prev) => {
+        if (!prev) return prev
+
+        const mouseTarget = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+        const targetNodeEl = mouseTarget?.closest?.("[data-node-id]") as HTMLElement | null
+        const targetNodeId = targetNodeEl ? Number(targetNodeEl.getAttribute("data-node-id")) : null
+        
+        let targetParentId: number
+        let dropPosition: "before" | "inside" | "after" = "after"
+      
+        // draggingNode itself can't be targetNode
+        if (targetNodeId != null && targetNodeId !== prev.draggingNode.id) {
+          const targetNode = nodes.get(targetNodeId) ?? null
+          // Compute relative position on TargetNode
+          if (targetNode) {
+            // r gives top and height of the target element
+            const r = targetNodeEl!.getBoundingClientRect()
+            const relativePos = (e.clientY - r.top) / r.height
+            // compute drop position
+            if (targetNode.type === 'folder') {
+              if (relativePos < 0.25) dropPosition = "before"
+              else if (relativePos > 0.75) dropPosition = "after"
+              else dropPosition = "inside"
+            } else {
+              dropPosition = relativePos < 0.5 ? "before" : "after"
+            }
+            // if targetNode is a folder, set the folder to the targetParent
+            // otherwise, set targetNode's parent to targetParentId
+            if (dropPosition === "inside" && targetNode.type === "folder") {
+              targetParentId = targetNode.id
+            } else {
+              targetParentId = targetNode.parentId
+            }
+            return {
+              ...prev,
+              x: e.clientX,
+              y: e.clientY,
+              targetNodeId,
+              targetParentId,
+              dropPosition,
+            }
+          }
+        }
+
+        return {
+          ...prev,
+          x: e.clientX,
+          y: e.clientY,
+        }
+
+      })
+    }
+
+    // Based on computed dragState, handle reposition of nodes 
+    async function onMouseUp() {
+      if (dragState) {
+        const draggingNode = dragState.draggingNode
+        const targetNodeId = dragState.targetNodeId
+        const targetParentId = dragState.targetParentId
+        const dropPosition = dragState.dropPosition
+
+        if (draggingNode && targetNodeId) {
+          const targetNode = nodes.get(targetNodeId)
+          if (targetNode) {
+            moveFsNode(draggingNode, targetNode, targetParentId, dropPosition)
+          }
         }
       }
-
-      // when selectedNode is a folder, clicking outside other folders, or icon buttons, should unhighlight folder
-      const clickedFolder = !!target.closest('[folder-node-row]')
-      if (!clickedFolder && selectedNode.type == 'folder' && !clickedIconButton && !newNodeType) {
-        setSelectedNode(EMPTY_SELECTED_NODE)
-      }
-
+      dragNodeRef.current = null
+      setDragState(null)
     }
-
-    // capture phase so it runs even if other handlers stopPropagation later
-    window.addEventListener('mousedown', onMouseDown, true)
+    window.addEventListener("pointermove", onMouseMove, true)
+    window.addEventListener("pointerup", onMouseUp, true)
 
     return () => {
-      window.removeEventListener('mousedown', onMouseDown, true)
+      window.removeEventListener("pointermove", onMouseMove, true)
+      window.removeEventListener("pointerup", onMouseUp, true)
     }
-  }, [newNodeType, selectedNode])
+  }, [nodes, dragState])
 
   /** 
-   * Updates newNodeType to selected type  
-   * Once the state changes, renderNewNodePrompt will re-evaludate
-   * whether to display <li> element that contains 
-   * newNodePromptRef and newNodePromptInputRef
-   * */
-  function createNewNode(type: 'folder' | 'file') {
-    // if new node type is already set, skip
-    if (newNodeType == type) return
-    
-    // set new node type and rase newNodePromptInput if any
-    setNewNodeType(type)
-    if (newNodePromptInputRef.current) {
-        newNodePromptInputRef.current.value = ''
-    }
-  }
-
-  function toggleFolder(nodeId: number) {
-    setExpandedFolderIds((prev) => {
-        const next = new Set(prev)
-        if (next.has(nodeId)) next.delete(nodeId)
-        else next.add(nodeId)
-        return next
-    }) 
-  }
-
-  /**
-   * Submits FsNode creation
-   */
-  async function submitNewNodePrompt() {
-    await submitNewNodePromptHelper({
-      newNodePromptInputRef, // new FsNode name and reset the input once submit
-      newNodeType, // new FsNode type
-      selectedNode, // new FsNode parentId and to decide isRoot
-      setSelectedNode, // used to highlight newly created node
-      setNewNodeType, // reset the type once submit
-      FsTree,
-      toggleFolder
-    })
-  }
-
-  /**
-   * Wipes out NewNodeType and PromptInput, which will remove <li> element
-   * that displayed newNodePrompt
-   */
-  function cancelNewNodePrompt() {
-    cancelNewNodePromptHelper({
-      setNewNodeType: setNewNodeType, // erasing selected type
-      newNodePromptInputRef: newNodePromptInputRef // erasing prompt input
-    })
-  }
-
-  /** 
-   * Render newNodePromptRef and newNodePromptInputRef under
-   * either root or child direcotry under <ul> element
-   */
+   * Render <li> element that contains prompt refs which is to 
+   * be inserted under the current selectedFolder inside <ul> element */
   function renderNewNodePrompt(depth: number) {
-    return renderNewNodePromptHelper({
-      newNodeType, // newNodeType
-      selectedNode, // recognize parent under new node
-      depth, // indentation
-      newNodePromptRef, // rendering newNodePrompt 
-      newNodePromptInputRef, // rendering newNodePromptInput
-      submitNewNodePrompt, // handle prompt submission
-      cancelNewNodePrompt // handle prompt cancel
-    })
+    return renderNewNodePromptHandler( 
+      newNodeType, // prompt type
+      depth, // indent
+      activeFolder,
+      newNodePromptRef,
+      newNodePromptInputRef,
+      submitNewNodePrompt, // prompt submission
+      cancelNewNodePrompt // prompt cancel
+    )
   }
 
   /**
-   * Render entire FsNode including roots and their children
-   */
+   * Create a new FsNode
+   * Once submitted, it updates FsTree
+   * and the new node to be highlighted */
+  async function submitNewNodePrompt() {
+    await submitNewNodePromptHandler(
+      activeFolder,
+      newNodePromptInputRef,
+      newNodeType,
+      cancelNewNodePrompt, 
+    )
+  }
+
+  /**
+   * Cancel newNodePrompt
+   * This should be used whenever new node prompt to be cancelled */
+  function cancelNewNodePrompt() {
+    setNewNodeType(null)
+    if (newNodePromptInputRef.current) newNodePromptInputRef.current.value = ''
+  }
+
+  /** Render FsNode Recursively */
   function renderNode(node: FsNode, depth = 0) {
-    return renderNodeHelper({
-      // file/folder needed
-      node, // each node being rendered
-      depth, // each node depth
-      selectedNode, // used to highlight the selectedNode
-      setSelectedNode, // used to set selectedNode
-      // only folder needed
+    return renderNodeHandler(
+      // both file/folder
+      node,
+      depth,
+      activeFile,
+      activeFolder,
+      // folder
+      toggledFolderIds,
       renderNode, // recursively rendering fsNode
       newNodeType, // used to render renderNewNodePrompt
-      expandedFolderIds, // keep track of folder node ids to expand
-      toggleFolder,
       renderNewNodePrompt, // rendering newNodePrompt under folders
-    })
+      // remove
+      removeNodeHandler,
+      // renaming
+      renameNodeId,
+      renameInputRef,
+      setRenameNodeId,
+      renameNodeHandler,
+      cancelRenameHandler,
+      // dragging
+      dragState,
+      onPointerDownNode
+    )
   }
 
   function renderFsTree() {
-    return (
-      <>
-      {FsTree.fsTree.roots.length === 0 ? (
+    return (<>
+      {/* FsNodes Container */}
+      {roots.length === 0 ? (
           <>
-            {/* no items */}
-            {!newNodeType ?
-               <div style={{ opacity: 0.7 }}>No items</div> : null
+            {/* No Items and Root Prompt When No Items */}
+            {!newNodeType 
+              ? <div style={{ opacity: 0.7 }}>No items</div> 
+              : <ul style={{ padding: 4 }}>
+                  {renderNewNodePrompt(0)}
+                </ul>
             }
-           
-            {/* root prompt when no items */}
-            {newNodeType && selectedNode?.nodeId === null ? (
-              <ul style={{ margin: 0, paddingLeft: 2 }}>
-                {renderNewNodePrompt(0)}
-              </ul>
-            ) : null}
           </>
           ) : (
-            <ul style={{ margin: 0, paddingLeft: 2 }}>
-              {/* display root node */}
-              {FsTree.fsTree.roots.map((root) => renderNode(root, 0))}
-
-              {/* root prompt when items */}
-              {newNodeType && selectedNode?.nodeId  === null ? renderNewNodePrompt(0) : null}
+            <ul style={{ 
+              margin: 4,
+              overflowX: 'hidden',
+            }}>
+              {/* FsNodes Rendering */}
+              {roots.map((root) => renderNode(root, 0))}
+              {/* Root Prompt When Items */}
+              {newNodeType && !activeFolder ? renderNewNodePrompt(0) : null}
             </ul>
           )
         }
-      </>
-    )
+    </>)
   }
 
   return (
     <>
-      {/* Sidebar Content */}
-      <aside style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {/* Top-right icon buttons */}
+      {/* Sidebar Container */}
+      <aside style={{ 
+        height: "100%",
+        paddingLeft: "10px",
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+      }}>
+        
+      {/* FsNodes Container Rendering */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {renderFsTree()}
+      </div>
+
+      {/* Dragging Node Name */}
+      {dragState ? (
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 6,
+            position: "fixed",
+            left: dragState.x + 12,
+            top: dragState.y + 12,
+            pointerEvents: "none",
+            zIndex: 99999,
+            padding: "4px 8px",
+            background: "transparent",
+            fontSize: nodeFontSize,
+            whiteSpace: "nowrap",
           }}
         >
-          {/* left text */}
-          <div style={{ fontWeight: 600, fontSize: 20 }}>
-            Files
-          </div>
-
-          {/* right icons */}
-          <div 
-            style={{ display: 'flex', gap: 6 }}
-          >
-            <IconButton
-              new-node-creation-btn="true"
-              src={newFolderIcon}
-              label="Create folder"
-              buttonSize={28}
-              iconSize={16}
-              background="white"
-              onClick={() => createNewNode('folder')}
-            />
-
-            <IconButton
-              new-node-creation-btn="true"
-              src={newFileIcon}
-              label="Create file"
-              buttonSize={28}
-              iconSize={16}
-              background="white"
-              onClick={() => createNewNode('file')}
-            />
-          </div>
+          {dragState.draggingNode.name}
         </div>
-
-        {/* Roots list */}
-        {renderFsTree()}
+      ) : null}
       </aside>
     </>
   )
