@@ -126,7 +126,7 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
   useEffect(() => {
     async function loadJsonContent() {
       const res = await window.api.loadJsonContent(activeFile.storagePath)
-
+      
       if (!res.ok) {
         console.error(res.message)
         return
@@ -135,9 +135,6 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
       try {
         const json = JSON.parse(res.jsonContent)
         editor.commands.setContent(json, { emitUpdate: false })
-        setTimeout(() => {
-          editor.commands.focus("start")
-        }, 0)
       } catch {
         console.error('File content could not be loaded')
         return
