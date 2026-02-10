@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core"
+import { useEditorState } from "@tiptap/react"
 import ToolbarIcon from "shared/ToolbarIcon"
 
 import blackSubscriptIcon from "assets/NormalTypeIcons/subscript-black.png"
@@ -8,10 +9,16 @@ function SubscriptButton({
   editor,
   fileId
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
-  if (!editor) return null
+
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor}: { editor: Editor}) => ({
+      isSubscript: editor.isActive("subscript")
+    })
+  })
 
   return (
       <button
@@ -26,6 +33,7 @@ function SubscriptButton({
           blackIcon={blackSubscriptIcon}
           whiteIcon={whiteSubscriptIcon}
           fileId={fileId}
+          isActive={editorState.isSubscript}
         />
       </button>
   )

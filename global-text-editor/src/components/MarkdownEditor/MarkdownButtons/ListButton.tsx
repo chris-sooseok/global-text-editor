@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
+import { useEditorState } from "@tiptap/react"
 import { DropdownOverlay } from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackBulletIcon from "assets/NormalTypeIcons/icons8-list-black-96.png"
@@ -14,19 +15,27 @@ function ListButton({
   editor,
   fileId,
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
-  if (!editor) return null
 
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor}: { editor: Editor}) => ({
+      isBulletList: editor.isActive('bulletList'),
+      isNumberedList: editor.isActive('orderedList'),
+      isTaskList: editor.isActive('taskList')
+    })
+  })
+
   const activeIcons =
-    editor.isActive("taskList")
-      ? { black: blackTaskIcon, white: whiteTaskIcon }
-      : editor.isActive("orderedList")
+    editorState.isBulletList
+      ? { black: blackBulletIcon, white: whiteBulletIcon }
+      : editorState.isNumberedList
         ? { black: blackNumberedIcon, white: whiteNumberedIcon }
-        : { black: blackBulletIcon, white: whiteBulletIcon }
+        : { black: blackTaskIcon, white: whiteTaskIcon }
 
   return (
     <div style={{ 
@@ -66,6 +75,7 @@ function ListButton({
             blackIcon={blackBulletIcon} 
             whiteIcon={whiteBulletIcon} 
             onlyBlackIcon={true}
+            isActive={editorState.isBulletList}
           />
           <span>Bullet list</span>
         </button>
@@ -78,6 +88,7 @@ function ListButton({
             blackIcon={blackNumberedIcon} 
             whiteIcon={whiteNumberedIcon} 
             onlyBlackIcon={true}
+            isActive={editorState.isNumberedList}
           />
           <span>Ordered list</span>
         </button>
@@ -90,6 +101,7 @@ function ListButton({
             blackIcon={blackTaskIcon} 
             whiteIcon={whiteTaskIcon}
             onlyBlackIcon={true}
+            isActive={editorState.isTaskList}
           />
           <span>Task list</span>
         </button>

@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core"
+import { useEditorState } from "@tiptap/react"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackItalicIcon from "assets/NormalTypeIcons/icons8-italic-black-96.png"
 import whiteItalicIcon from "assets/NormalTypeIcons/icons8-italic-white-96.png"
@@ -8,10 +9,16 @@ function ItalicButton({
   editor,
   fileId
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
-  if (!editor) return null
+  
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor}: { editor: Editor}) => ({
+      isItalic: editor.isActive("italic")
+    })
+  })
 
   return (
     <button
@@ -25,6 +32,7 @@ function ItalicButton({
         blackIcon={blackItalicIcon}
         whiteIcon={whiteItalicIcon}
         fileId={fileId}
+        isActive={editorState.isItalic}
       />
     </button>
   )

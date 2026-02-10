@@ -210,11 +210,7 @@ export default function Tab({tabId}: TabProps) {
       minWidth: 0, // force width to shrink
       minHeight: 0, // force height to shrink 
     }}>
-      <MarkdownEditor 
-        key="normal" 
-        activeFile={activeFile} 
-        tabId={tabId} 
-      />
+      <MarkdownEditor key={`${tabId}-editor`} tabId={tabId} />
     </div>
 
   </div>

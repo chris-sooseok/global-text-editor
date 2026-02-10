@@ -23,7 +23,7 @@ import ItalicButton from "./MarkdownButtons/ItalicButton"
 import HighlightButton from "./MarkdownButtons/HighlightButton"
 import LinkButton from "./MarkdownButtons/LinkButton"
 import CodeBlockButton from "./MarkdownButtons/CodeBlockButton"
-import CodeButton from "../Buttons/CodeButton"
+import CodeButton from "./MarkdownButtons/CodeButton"
 import SuperscriptButton from "./MarkdownButtons/SuperscriptButton"
 import SubscriptButton from "./MarkdownButtons/SubscriptButton"
 import ImageButton from "./MarkdownButtons/ImageButton"
@@ -43,12 +43,11 @@ const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-type MarkdownEditorProps = {
-  activeFile: FileNode,
-  tabId: string,
-}
 
-function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
+function MarkdownEditor({tabId}: {tabId: string} ) {
+
+  const activeFile: FileNode =  TabManagerStore((s) => s.activeFileByTabIds)[tabId]
+  if (!activeFile) return undefined
 
   const editor = useEditor({
     extensions: [
@@ -89,7 +88,7 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
     },
   })
 
-  if (!editor) return
+  if (!editor) return undefined
 
   /** Editor Config */
   const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
@@ -224,8 +223,8 @@ function MarkdownEditor({activeFile, tabId}: MarkdownEditorProps) {
           position: "sticky",
           top: 0,
           zIndex: 10,
-          padding: "5px 20px",
-          minHeight: 30,
+          padding: "7px 20px",
+          minHeight: 3,
           borderBottom: `1px solid ${editorTheme === "black" ? "#333" : "#ddd"}`,
           // change toolbar theme color and border color
           background: editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE

@@ -16,13 +16,11 @@ function ExportButton({
   editor,
   fileId
 }: {
-  editor: Editor | null
+  editor: Editor
   fileId: number
 }) {
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
-
-  if (!editor) return null
 
   return (
     <div style={{ position: "relative", display: "flex", alignItems: "center" }}>

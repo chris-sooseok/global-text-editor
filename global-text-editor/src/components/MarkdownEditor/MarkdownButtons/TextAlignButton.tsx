@@ -1,5 +1,6 @@
 import { useState, useRef} from "react"
 import type { Editor } from "@tiptap/core"
+import { useEditorState } from "@tiptap/react"
 import {DropdownOverlay} from "shared/DropdownOverlay"
 import ToolbarIcon from "shared/ToolbarIcon"
 import blackLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-black-96.png"
@@ -10,7 +11,7 @@ import blackCenterAlignIcon from "assets/NormalTypeIcons/icons8-align-center-bla
 import whiteCenterAlignIcon from "assets/NormalTypeIcons/icons8-align-center-white-96.png"
 import blackJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-black-96.png"
 import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-white-96.png"
-
+import TextAlign from "@tiptap/extension-text-align"
 
 function TextAlignButton({
   editor,
@@ -20,18 +21,33 @@ function TextAlignButton({
   fileId: number
 }) {
 
-  if (!editor) return null
-
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
-  const activeAlignIcons =
-  editor.isActive({ textAlign: "center" })
-    ? { black: blackCenterAlignIcon, white: whiteCenterAlignIcon }
-    : editor.isActive({ textAlign: "right" })
-      ? { black: blackRightAlignIcon, white: whiteRightAlignIcon }
-      : editor.isActive({ textAlign: "justify" })
-        ? { black: blackJustifyAlignIcon, white: whiteJustifyAlignIcon }
-        : { black: blackLeftAlignIcon, white: whiteLeftAlignIcon }
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor }) => {
+      const headingAlign = editor.getAttributes("heading").textAlign as string | null
+      const paragraphAlign = editor.getAttributes("paragraph").textAlign as string | null
+      const align = headingAlign ?? paragraphAlign ?? "left"
+      return {
+        isJustify: align === "justify",
+        isLeft: align === "left",
+        isCenter: align === "center",
+        isRight: align === "right",
+      }
+    },
+  })
+
+  const activeAlignIcons = 
+    editorState.isJustify
+      ? { black: blackJustifyAlignIcon, white: whiteJustifyAlignIcon }
+      : editorState.isLeft
+        ? { black: blackLeftAlignIcon, white: whiteLeftAlignIcon }
+        : editorState.isCenter
+          ? { black: blackCenterAlignIcon, white: whiteCenterAlignIcon }
+          : editorState.isRight
+            ? { black: blackRightAlignIcon, white: whiteRightAlignIcon }
+            : { black: blackLeftAlignIcon, white: whiteLeftAlignIcon }
 
   return (
     <div style={{ 
@@ -59,11 +75,11 @@ function TextAlignButton({
         open={dropdown.open}
         x={dropdown.x}
         y={dropdown.y}
-        onClose={() => setDropdown({ open: false, x: 0, y: 0 }) }
+        onClose={() => setDropdown({ open: false, x: 0, y: 0 })}
       >
         {/* Justify */}
         <button
-          data-active-key="justify"
+          type="button"
           onMouseDown={(e) => {
             e.preventDefault()
             editor.chain().focus().setTextAlign("justify").run()
@@ -73,11 +89,12 @@ function TextAlignButton({
             blackIcon={blackJustifyAlignIcon} 
             whiteIcon={whiteJustifyAlignIcon}
             onlyBlackIcon={true}
+            isActive={editorState.isJustify}
           />
         </button>
         {/* Left */}
         <button
-          data-active-key="left"
+          type="button"
           onMouseDown={(e) => {
             e.preventDefault()
             editor.chain().focus().setTextAlign("left").run()
@@ -87,11 +104,12 @@ function TextAlignButton({
             blackIcon={blackLeftAlignIcon} 
             whiteIcon={whiteLeftAlignIcon} 
             onlyBlackIcon={true}
+            isActive={editorState.isLeft}
           />
         </button>
         {/* Center */}
         <button
-          data-active-key="center"
+          type="button"
           onMouseDown={(e) => {
             e.preventDefault()
             editor.chain().focus().setTextAlign("center").run()
@@ -101,11 +119,12 @@ function TextAlignButton({
             blackIcon={blackCenterAlignIcon} 
             whiteIcon={whiteCenterAlignIcon}
             onlyBlackIcon={true}
+            isActive={editorState.isCenter}
           />
         </button>
         {/* Right */}
         <button
-          data-active-key="right"
+          type="button"
           onMouseDown={(e) => {
             e.preventDefault()
             editor.chain().focus().setTextAlign("right").run()
@@ -115,6 +134,7 @@ function TextAlignButton({
             blackIcon={blackRightAlignIcon} 
             whiteIcon={whiteRightAlignIcon}
             onlyBlackIcon={true}
+            isActive={editorState.isRight}
           />
         </button>
       </DropdownOverlay>

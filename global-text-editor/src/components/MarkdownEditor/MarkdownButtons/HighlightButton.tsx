@@ -94,7 +94,7 @@ function HighlightButton({
   if (!editor) return null
 
   return (
-    <div ref={rootRef} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={rootRef} style={{ position: "relative", display: "flex" }}>
       <button
         tabIndex={-1}
         type="button"
