@@ -3,7 +3,7 @@ import type { FileNode, FolderNode, FsNode, FsNodeRow} from "store/SidebarStore/
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
 import { SidebarStore } from "store/SidebarStore/SidebarStore"
 import type { DragState } from "./Sidebar"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import folderIcon from 'assets/Sidebar/icons8-folder-white-96.png'
 import markdownIcon from 'assets/Sidebar/icons8-markdown-white-96.png'
 import dateIcon from 'assets/Sidebar/icons8-date-white-96.png'
@@ -75,10 +75,7 @@ export function renderNewNodePromptHandler(
           width: '100%'
         }}
       >
-        <ToolbarIcon
-          whiteIcon={newNodeType === 'folder' ? folderIcon : markdownIcon}
-          onlyWhiteIcon={true}
-        />
+        <Icon icon={newNodeType === 'folder' ? folderIcon : markdownIcon} />
         {/* New Node Prompt Input */}
         <input
           autoFocus
@@ -214,26 +211,17 @@ export function renderNodeHandler(
           }}>
             {/* Folder Icon */}
             {node.type === 'folder' 
-              ? <ToolbarIcon 
-                whiteIcon={isExpanded ? downIcon : rightIcon}
-                onlyWhiteIcon={true}
-              />
+              ? <Icon icon={isExpanded ? downIcon : rightIcon} />
               : undefined
             }
             {/* Markdown Icon */}
             { node.type === 'file' && node.fileType === 'markdown'
-              ? <ToolbarIcon
-              whiteIcon={markdownIcon}
-              onlyWhiteIcon={true}
-              />
+              ? <Icon icon={markdownIcon} />
               : undefined
             }
             {/* Date Icon */}
             { node.type === 'file' && node.fileType === 'today'
-              ? <ToolbarIcon
-              whiteIcon={dateIcon}
-              onlyWhiteIcon={true}
-              />
+              ? <Icon icon={dateIcon} />
               : undefined
             }
             {/* FsNode Name or Rename Prompt */}

@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/core"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import blackRedoIcon from "assets/NormalTypeIcons/icons8-redo-black-96.png"
 import whiteRedoIcon from "assets/NormalTypeIcons/icons8-redo-white-96.png"
 
@@ -26,7 +26,7 @@ function RedoButton({
         opacity: canRedo ? 1 : 0.4,
     }}
     >
-    <ToolbarIcon 
+    <Icon 
         blackIcon={blackRedoIcon}
         whiteIcon={whiteRedoIcon}
         fileId={fileId}

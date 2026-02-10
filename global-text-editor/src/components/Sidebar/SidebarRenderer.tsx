@@ -6,7 +6,7 @@ import { parseLocalStorage, formatMMDDYYYY } from 'shared/helperFunctions'
 
 import hideIcon from 'assets/Sidebar/icons8-hide-sidepanel-96.png'
 import settingIcon from 'assets/Sidebar/icons8-settings-white-96.png'
-import ToolbarIcon from 'shared/ToolbarIcon'
+import Icon from 'shared/Icon'
 import newFolderIcon from 'assets/Sidebar/icons8-new-folder-96.png'
 import newFileIcon from 'assets/Sidebar/icons8-new-file-96.png'
 import todayIcon from 'assets/Sidebar/icons8-today-white-96.png'
@@ -173,11 +173,7 @@ function SidebarRenderer() {
             marginLeft: "4px"
           }}
         >
-          <ToolbarIcon
-            whiteIcon={hideIcon}
-            onlyWhiteIcon={true}
-            size={20}
-          />
+          <Icon icon={hideIcon} />
         </button>
 
       {!sidebarCollapsed && (
@@ -187,7 +183,7 @@ function SidebarRenderer() {
               onClick={() => createNewNode('folder')}
               data-new-node-btn="true"
             >
-              <ToolbarIcon whiteIcon={newFolderIcon} onlyWhiteIcon={true} />
+              <Icon icon={newFolderIcon} />
             </button>
 
             <button
@@ -195,14 +191,14 @@ function SidebarRenderer() {
               onClick={() => createNewNode('file')}
               data-new-node-btn="true"
             >
-              <ToolbarIcon whiteIcon={newFileIcon} onlyWhiteIcon={true} />
+              <Icon icon={newFileIcon} />
             </button>
             <button
               tabIndex={-1}
               onClick={() => createTodayNode()}
               data-new-node-btn="true"
             >
-              <ToolbarIcon whiteIcon={todayIcon} onlyWhiteIcon={true} />
+              <Icon icon={todayIcon} />
             </button>
           </div>
         )}
@@ -241,11 +237,7 @@ function SidebarRenderer() {
         }}
       >
         <button type="button" tabIndex={-1}>
-          <ToolbarIcon 
-            whiteIcon={settingIcon}
-            onlyWhiteIcon={true}
-            size={20}
-          />
+          <Icon icon={settingIcon} />
         </button>
       </div>
 

@@ -1,5 +1,5 @@
 import type { Editor } from "@tiptap/core"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import blackUndoIcon from "assets/NormalTypeIcons/icons8-undo-black-96.png"
 import whiteUndoIcon from "assets/NormalTypeIcons/icons8-undo-white-96.png"
 
@@ -28,7 +28,7 @@ function UndoButton({
         opacity: canUndo ? 1 : 0.4,
     }}
     >
-    <ToolbarIcon 
+    <Icon 
         blackIcon={blackUndoIcon}
         whiteIcon={whiteUndoIcon}
         fileId={fileId}

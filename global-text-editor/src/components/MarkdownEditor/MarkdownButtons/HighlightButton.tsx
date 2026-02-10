@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import type { Editor } from "@tiptap/core"
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackHighlightIcon from "assets/NormalTypeIcons/icons8-highlight-black-96.png"
 import whiteHighlightIcon from "assets/NormalTypeIcons/icons8-highlight-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
 const COLORS = [
   "#f59e0b", // orange
@@ -13,18 +13,16 @@ const COLORS = [
 ]
 
 function HighlightButton({
-  editor,
-  fileId,
   isMarkdownView,
   markdownText,
   textareaRef,
 }: {
-  editor: Editor | null
-  fileId: number
   isMarkdownView: boolean
   markdownText: React.RefObject<string>
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
+
+  const { editor } = useMarkdownEditorContext()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -81,7 +79,6 @@ function HighlightButton({
   }
 
   function applyColorJson(color: string) {
-    if (!editor) return
     editor.chain().focus().setColor(color).run()
   }
 
@@ -91,7 +88,6 @@ function HighlightButton({
     setOpen(false)
   }
 
-  if (!editor) return null
 
   return (
     <div ref={rootRef} style={{ position: "relative", display: "flex" }}>
@@ -103,7 +99,7 @@ function HighlightButton({
           setOpen((v) => !v)
         }}
       >
-        <ToolbarIcon blackIcon={blackHighlightIcon} whiteIcon={whiteHighlightIcon} fileId={fileId} />
+        <EditorIcon blackIcon={blackHighlightIcon} whiteIcon={whiteHighlightIcon} />
       </button>
 
       {open ? (

@@ -1,19 +1,13 @@
 import { useRef, useState } from "react"
-import type { Editor } from "@tiptap/core"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackImageIcon from "assets/NormalTypeIcons/icons8-add-image-black-96.png"
 import whiteImageIcon from "assets/NormalTypeIcons/icons8-add-image-white-96.png"
+import EditorIcon from "shared/EditorIcon"
+import { useMarkdownEditorContext } from "context/EditorContext"
 
-function ImageButton({
-  editor,
-  fileId,
-  storagePath,
-}: {
-  editor: Editor | null
-  fileId: number
-  storagePath: string
-}) {
+function ImageButton({storagePath}: {storagePath: string}) {
+
+  const { editor } = useMarkdownEditorContext()
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   const [urlInput, setUrlInput] = useState("")
   const btnRef = useRef<HTMLButtonElement | null>(null)
@@ -55,7 +49,7 @@ function ImageButton({
           setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
-        <ToolbarIcon blackIcon={blackImageIcon} whiteIcon={whiteImageIcon} fileId={fileId} />
+        <EditorIcon blackIcon={blackImageIcon} whiteIcon={whiteImageIcon} />
       </button>
 
       {/* hidden file input */}

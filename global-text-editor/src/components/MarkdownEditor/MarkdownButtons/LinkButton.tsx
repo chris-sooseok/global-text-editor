@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from "react"
 import type { Editor } from "@tiptap/core"
 import { DropdownOverlay } from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import blackLinkIcon from "assets/NormalTypeIcons/icons8-attach-black-96.png"
 import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
+import EditorIcon from "shared/EditorIcon"
+import { useMarkdownEditorContext } from "context/EditorContext"
 
-function LinkButton({
-  editor,
-  fileId,
-}: {
-  editor: Editor | null
-  fileId: number
-}) {
+function LinkButton() {
+  const { editor } = useMarkdownEditorContext()
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
   const [href, setHref] = useState("")
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -67,7 +64,7 @@ function LinkButton({
           setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
-        <ToolbarIcon blackIcon={blackLinkIcon} whiteIcon={whiteLinkIcon} fileId={fileId} />
+        <EditorIcon blackIcon={blackLinkIcon} whiteIcon={whiteLinkIcon} />
       </button>
 
       <DropdownOverlay

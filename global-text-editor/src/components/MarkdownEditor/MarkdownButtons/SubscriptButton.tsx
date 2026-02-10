@@ -1,18 +1,13 @@
 import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
-import ToolbarIcon from "shared/ToolbarIcon"
-
 import blackSubscriptIcon from "assets/NormalTypeIcons/subscript-black.png"
 import whiteSubscriptIcon from "assets/NormalTypeIcons/subscript-white.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
-function SubscriptButton({ 
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function SubscriptButton() {
 
+  const { editor } = useMarkdownEditorContext()
   const editorState = useEditorState({
     editor,
     selector: ({ editor}: { editor: Editor}) => ({
@@ -29,10 +24,9 @@ function SubscriptButton({
           editor.chain().focus().toggleSubscript().run()
         }}
       >
-        <ToolbarIcon 
+        <EditorIcon 
           blackIcon={blackSubscriptIcon}
           whiteIcon={whiteSubscriptIcon}
-          fileId={fileId}
           isActive={editorState.isSubscript}
         />
       </button>

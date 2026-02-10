@@ -1,8 +1,7 @@
 import { useState, useRef} from "react"
-import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
 import {DropdownOverlay} from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import blackLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-black-96.png"
 import whiteLeftAlignIcon from "assets/NormalTypeIcons/icons8-align-left-white-96.png"
 import blackRightAlignIcon from "assets/NormalTypeIcons/icons8-align-right-black-96.png"
@@ -12,14 +11,12 @@ import whiteCenterAlignIcon from "assets/NormalTypeIcons/icons8-align-center-whi
 import blackJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-black-96.png"
 import whiteJustifyAlignIcon from "assets/NormalTypeIcons/icons8-align-justify-white-96.png"
 import TextAlign from "@tiptap/extension-text-align"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
-function TextAlignButton({
-  editor,
-  fileId
-}: {
-  editor: Editor
-  fileId: number
-}) {
+function TextAlignButton() {
+
+  const { editor } = useMarkdownEditorContext()
 
   const [dropdown, setDropdown] = useState({ open: false, x: 0, y: 0})
 
@@ -63,10 +60,9 @@ function TextAlignButton({
           setDropdown({ open: true, x: e.clientX, y: e.clientY })
         }}
       >
-        <ToolbarIcon 
+        <EditorIcon 
           blackIcon={activeAlignIcons.black}
           whiteIcon={activeAlignIcons.white}
-          fileId={fileId}
         />
       </button>
 
@@ -85,10 +81,9 @@ function TextAlignButton({
             editor.chain().focus().setTextAlign("justify").run()
           }}
         >
-          <ToolbarIcon 
+          <EditorIcon 
             blackIcon={blackJustifyAlignIcon} 
             whiteIcon={whiteJustifyAlignIcon}
-            onlyBlackIcon={true}
             isActive={editorState.isJustify}
           />
         </button>
@@ -100,10 +95,9 @@ function TextAlignButton({
             editor.chain().focus().setTextAlign("left").run()
           }}
         >
-          <ToolbarIcon
+          <EditorIcon
             blackIcon={blackLeftAlignIcon} 
             whiteIcon={whiteLeftAlignIcon} 
-            onlyBlackIcon={true}
             isActive={editorState.isLeft}
           />
         </button>
@@ -115,10 +109,9 @@ function TextAlignButton({
             editor.chain().focus().setTextAlign("center").run()
           }}
         >
-          <ToolbarIcon 
+          <EditorIcon 
             blackIcon={blackCenterAlignIcon} 
             whiteIcon={whiteCenterAlignIcon}
-            onlyBlackIcon={true}
             isActive={editorState.isCenter}
           />
         </button>
@@ -130,10 +123,9 @@ function TextAlignButton({
             editor.chain().focus().setTextAlign("right").run()
           }}
         >
-          <ToolbarIcon 
+          <EditorIcon 
             blackIcon={blackRightAlignIcon} 
             whiteIcon={whiteRightAlignIcon}
-            onlyBlackIcon={true}
             isActive={editorState.isRight}
           />
         </button>

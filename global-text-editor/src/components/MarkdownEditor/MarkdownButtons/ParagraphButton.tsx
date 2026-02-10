@@ -1,18 +1,15 @@
 import type { Editor } from "@tiptap/core"
 import { useEditorState } from '@tiptap/react'
-import ToolbarIcon from "shared/ToolbarIcon"
 import blackParagprahIcon from "assets/NormalTypeIcons/icons8-paragraph-black-96.png"
 import whiteParagraphIcon from "assets/NormalTypeIcons/icons8-paragraph-white-96.png"
+import { useMarkdownEditorContext } from "context/EditorContext"
+import EditorIcon from "shared/EditorIcon"
 
 
-function ParagraphButton({ 
-  editor,
-  fileId
-}: { 
-  editor: Editor
-  fileId: number
-}) {
+function ParagraphButton() {
   
+  const { editor } = useMarkdownEditorContext()
+
   const editorState = useEditorState({
     editor,
     selector: ({ editor}: { editor: Editor}) => ({
@@ -28,10 +25,9 @@ function ParagraphButton({
         editor.chain().focus().setParagraph().run()
       }}
     >
-      <ToolbarIcon 
+      <EditorIcon 
         blackIcon={blackParagprahIcon}
         whiteIcon={whiteParagraphIcon}
-        fileId={fileId}
         isActive={editorState.isParagraph}
       />
     </button>

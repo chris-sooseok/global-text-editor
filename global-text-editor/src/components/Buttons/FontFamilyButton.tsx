@@ -1,7 +1,7 @@
 import { useState, useRef } from "react"
 import type { Editor } from "@tiptap/core"
 import DropdownOverlay from "shared/DropdownOverlay"
-import ToolbarIcon from "shared/ToolbarIcon"
+import Icon from "shared/Icon"
 import blackFontIcon from "assets/NormalTypeIcons/icons8-font-black-96.png"
 import whiteFontIcon from "assets/NormalTypeIcons/icons8-font-white-96.png"
 
@@ -46,7 +46,7 @@ function FontFamilyButton({
           setDropdownIsOpen((v) => !v)
         }}
       >
-        <ToolbarIcon 
+        <Icon 
             blackIcon={blackFontIcon}
             whiteIcon={whiteFontIcon}
             fileId={fileId}
