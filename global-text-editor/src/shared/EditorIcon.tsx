@@ -1,5 +1,5 @@
 
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 type ToolbarIconProps = {
     blackIcon: string
     whiteIcon: string

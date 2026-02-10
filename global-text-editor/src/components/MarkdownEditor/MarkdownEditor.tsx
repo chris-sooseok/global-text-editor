@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import type { FileNode } from "store/SidebarStore/FsTreeTypes"
-import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
+import { MarkdownEditorContextProvider, type ContentConfig } from "context/MarkdownEditorContext"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
-import { MarkdownEditorProvider } from "context/EditorContext"
-
-import { EditorContent } from "@tiptap/react"
-import { useEditor } from "@tiptap/react"
+// Tiptap Configuration
+import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import { ListKit } from "@tiptap/extension-list"
 import TextAlign from "@tiptap/extension-text-align"
@@ -16,7 +14,8 @@ import Highlight from "@tiptap/extension-highlight"
 import Color from "@tiptap/extension-color"
 import Link from "@tiptap/extension-link"
 import { Markdown } from '@tiptap/markdown'
-
+import TextStyleWithMarkdown from "./MarkdownHelper"
+// Toolbar Buttons
 import ListButton from "./MarkdownButtons/ListButton"
 import BackQuoteButton from "./MarkdownButtons/BackQuoteButton"
 import BoldButton from "./MarkdownButtons/BoldButton"
@@ -35,8 +34,7 @@ import StrikethroughButton from "./MarkdownButtons/StrikethroughButton"
 import MarkdownButton from "./MarkdownButtons/MarkdownButton"
 import ParagraphButton from "./MarkdownButtons/ParagraphButton"
 import TextAlignButton from "./MarkdownButtons/TextAlignButton"
-
-import TextStyleWithMarkdown from "./MarkdownHelper"
+// Sync
 import { broadcastEditorContentUpdated, onEditorContentUpdated } from "./EditorSyncBus"
 
 const TOOLBAR_BACKGROUND_BLACK = import.meta.env.VITE_TOOLBAR_BACKGROUND_BLACK
@@ -44,11 +42,9 @@ const TOOLBAR_BACKGROUND_WHITE = import.meta.env.VITE_TOOLBAR_BACKGROUND_WHITE
 const EDITOR_BACKGROUND_BLACK = import.meta.env.VITE_EDITOR_BACKGROUND_BLACK
 const EDITOR_BACKGROUND_WHITE = import.meta.env.VITE_EDITOR_BACKGROUND_WHITE
 
-
 function MarkdownEditor({tabId}: {tabId: string} ) {
 
-  const activeFile: FileNode =  TabManagerStore((s) => s.activeFileByTabIds)[tabId]
-  if (!activeFile) return undefined
+  const activeFile: FileNode = TabManagerStore((s) => s.activeFileByTabIds)[tabId]
 
   const editor = useEditor({
     extensions: [
@@ -91,19 +87,28 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
 
   if (!editor) return undefined
 
-  /** Editor Config */
-  const editorTheme = ThemeManagerStore((s) => s.fileConfigByFileId[activeFile.id]?.editorTheme ?? "black")
-  
+  /** Load Content Config */
+  const contentConfig: ContentConfig = { editorTheme : "black"}
   useEffect(() => {
-    void ThemeManagerStore.getState().loadContentConfig(activeFile.id)
+    let cancelled = false
+    async function loadContentConfig() {
+      const res = await window.api.loadContentConfig(activeFile.id)
+      if (cancelled) return
+      if (res.ok) {
+          contentConfig.editorTheme = res.editorTheme
+      } 
+    }
+    void loadContentConfig()
+    return () => {
+      cancelled = true
+    }
   }, [activeFile.id])
 
   /** Supports Markdown */
   const [isMarkdownView, setIsMarkdownView] = useState(false)
   const markdownContentRef = useRef<string>("")
 
-  // const [markdownContent, setMarkdownContent] = useState("")
-  // currently used for highlight features
+  /** Markdown Manipulation */
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   function toggleMarkdownView() {
@@ -119,10 +124,9 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
 
   {/*** Load Json Content ***/}
   useEffect(() => {
-
     async function loadJsonContent() {
       const res = await window.api.loadJsonContent(activeFile.storagePath)
-
+      
       if (!res.ok) {
         console.error(res.message)
         return
@@ -131,9 +135,6 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
       try {
         const json = JSON.parse(res.jsonContent)
         editor.commands.setContent(json, { emitUpdate: false })
-        setTimeout(() => {
-          editor.commands.focus("start")
-        }, 0)
       } catch {
         console.error('File content could not be loaded')
         return
@@ -148,7 +149,6 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
   const saveTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
-
     function saveJsonContent() {
       const jsonContent = JSON.stringify(editor.getJSON())
       void window.api.saveJsonContent(activeFile.storagePath, jsonContent)
@@ -215,93 +215,94 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
+        background: contentConfig.editorTheme === "black" ? EDITOR_BACKGROUND_BLACK : EDITOR_BACKGROUND_WHITE,
       }}
     >
-      <MarkdownEditorProvider editor={editor} activeFile={activeFile} >
-      <div
-        style={{
-          // keep toolbar at the top and adove editor
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          padding: "7px 20px",
-          minHeight: 3,
-          borderBottom: `1px solid ${editorTheme === "black" ? "#333" : "#ddd"}`,
-          // change toolbar theme color and border color
-          background: editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE
-        }}
-      >
-        {/* Button List */}
-        <div 
-          style={{ 
-            display: "flex", // set center and right buttons
-            alignItems: "center",
-            gap: 12,
-          } 
-          }>
-            {/* Left Buttons: Scrollable */}
-            <div
-              className="toolbar-scroll"
-              style={{
-                flex: 1,
-                minWidth: 0,
-                display: "flex",
-                flexWrap: "nowrap",
-                alignItems: "center",
-              }}
-            >
+      <MarkdownEditorContextProvider editor={editor} contentConfig={contentConfig} >
+        <div
+          style={{
+            // keep toolbar at the top and adove editor
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            padding: "7px 20px",
+            minHeight: 3,
+            borderBottom: `1px solid ${contentConfig.editorTheme === "black" ? "#333" : "#ddd"}`,
+            // change toolbar theme color and border color
+            background: contentConfig.editorTheme === "black" ? TOOLBAR_BACKGROUND_BLACK : TOOLBAR_BACKGROUND_WHITE
+          }}
+        >
+          {/* Button List */}
+          <div 
+            style={{ 
+              display: "flex", // set center and right buttons
+              alignItems: "center",
+              gap: 12,
+            } 
+            }>
+              
+              {/* Left Buttons: Scrollable */}
               <div
+                className="toolbar-scroll"
                 style={{
+                  flex: 1,
+                  minWidth: 0,
                   display: "flex",
                   flexWrap: "nowrap",
                   alignItems: "center",
-                  gap: 16,
-                  width: "max-content", // forces buttons to overflow
                 }}
               >
-              {/* TODO
-              font style */}
-              <BoldButton />
-              <ParagraphButton />
-              <ItalicButton />
-              <UnderlineButton />
-              <StrikethroughButton />
-              <ListButton />
-              <TextAlignButton />
-              <HighlightButton
-                isMarkdownView={isMarkdownView}
-                markdownText={markdownContentRef}
-                textareaRef={textareaRef}
-              />
-              <SuperscriptButton />
-              <SubscriptButton />
-              <BackQuoteButton />
-              <CodeButton />
-              <CodeBlockButton />          
-              <LinkButton />
-              <ImageButton storagePath={activeFile.storagePath} />   
-            </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "nowrap",
+                    alignItems: "center",
+                    gap: 16,
+                    width: "max-content", // forces buttons to overflow
+                  }}
+                >
+                  {/* TODO
+                  font style */}
+                  <BoldButton />
+                  <ParagraphButton />
+                  <ItalicButton />
+                  <UnderlineButton />
+                  <StrikethroughButton />
+                  <ListButton />
+                  <TextAlignButton />
+                  <HighlightButton
+                    isMarkdownView={isMarkdownView}
+                    markdownText={markdownContentRef}
+                    textareaRef={textareaRef}
+                  />
+                  <SuperscriptButton />
+                  <SubscriptButton />
+                  <BackQuoteButton />
+                  <CodeButton />
+                  <CodeBlockButton />          
+                  <LinkButton />
+                  <ImageButton storagePath={activeFile.storagePath} />   
+                </div>
+              </div>
+              {/* Right Buttons */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 16,
+                  paddingLeft: "5px",
+                  flexShrink: 0,
+                }}
+              >
+                <MarkdownButton
+                  isMarkdownView={isMarkdownView}
+                  toggleMarkdownView={toggleMarkdownView}
+                />
+                <ThemeButton />
+                <ExportButton />
+              </div>
           </div>
-            {/* Right Buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: 16,
-                paddingLeft: "5px",
-                flexShrink: 0,
-              }}
-            >
-              <MarkdownButton
-                isMarkdownView={isMarkdownView}
-                toggleMarkdownView={toggleMarkdownView}
-              />
-              <ThemeButton />
-              <ExportButton />
-            </div>
-          </div>
-      </div>
-      </MarkdownEditorProvider>
+        </div>
+      </MarkdownEditorContextProvider>
 
       {/* Editor */}
       <div
@@ -327,14 +328,12 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
             height: "100%",
             minHeight: 0,
             boxSizing: "border-box",
-
             background: "transparent",
             outline: "none",
             resize: "none",
             fontSize: "16px",
             padding: 12,
             fontFamily: "monospace",
-
             whiteSpace: "pre-wrap",     // ✅ preserves newlines BUT wraps
             overflowWrap: "anywhere",   // ✅ breaks long tokens/URLs
             wordBreak: "break-word",    // ✅ extra safety
@@ -343,7 +342,7 @@ function MarkdownEditor({tabId}: {tabId: string} ) {
       ) : (
         <EditorContent
           editor={editor}
-          className={editorTheme === "black" ? "prose prose-invert max-w-none " : "prose max-w-none"}
+          className={contentConfig.editorTheme === "black" ? "prose prose-invert max-w-none " : "prose max-w-none"}
           onFocus={() => {
             TabManagerStore.getState().switchActiveTab(tabId)
             TabManagerStore.getState().switchActiveFile(tabId, activeFile)

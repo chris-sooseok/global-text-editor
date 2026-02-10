@@ -1,5 +1,5 @@
 // TabGroup.tsx
-import { useState, useRef } from "react"
+import { useState } from "react"
 import MarkdownEditor from "../MarkdownEditor/MarkdownEditor"
 import { TabManagerStore } from "store/TabManagerStore/TabManagerStore"
 import { ThemeManagerStore } from "store/ThemeStore/ThemeManagerStore"
@@ -194,7 +194,7 @@ export default function Tab({tabId}: {tabId: string}) {
       </div>
     </div>
 
-    {/* Editor Container */}
+    {/* Editor Renderer */}
     <div style={{ 
       flex: 1, // file editor takes up the renaming space
       minWidth: 0, // force width to shrink

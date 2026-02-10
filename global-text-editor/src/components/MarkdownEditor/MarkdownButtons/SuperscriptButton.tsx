@@ -2,7 +2,7 @@ import type { Editor } from "@tiptap/core"
 import { useEditorState } from "@tiptap/react"
 import blackSuperscriptIcon from "assets/NormalTypeIcons/superscript-black.png"
 import whiteSuperscriptIcon from "assets/NormalTypeIcons/superscript-white.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 function SuperscriptButton() {

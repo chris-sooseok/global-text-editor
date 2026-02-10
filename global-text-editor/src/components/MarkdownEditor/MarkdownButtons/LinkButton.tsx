@@ -5,7 +5,7 @@ import Icon from "shared/Icon"
 import blackLinkIcon from "assets/NormalTypeIcons/icons8-attach-black-96.png"
 import whiteLinkIcon from "assets/NormalTypeIcons/icons8-attach-white-96.png"
 import EditorIcon from "shared/EditorIcon"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 
 function LinkButton() {
   const { editor } = useMarkdownEditorContext()

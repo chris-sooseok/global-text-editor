@@ -9,7 +9,7 @@ import blackNumberedIcon from "assets/NormalTypeIcons/icons8-numbered-list-black
 import whiteNumberedIcon from "assets/NormalTypeIcons/icons8-numbered-list-white-96.png"
 import blackTaskIcon from "assets/NormalTypeIcons/icons8-task-list-black-96.png"
 import whiteTaskIcon from "assets/NormalTypeIcons/icons8-task-list-white-96.png"
-import { useMarkdownEditorContext } from "context/EditorContext"
+import { useMarkdownEditorContext } from "context/MarkdownEditorContext"
 import EditorIcon from "shared/EditorIcon"
 
 
